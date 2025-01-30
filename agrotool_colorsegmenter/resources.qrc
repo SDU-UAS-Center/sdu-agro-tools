@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/plugins/agrotool_colorsegmenter" >
+        <file>icon.png</file>
+    </qresource>
+</RCC>
