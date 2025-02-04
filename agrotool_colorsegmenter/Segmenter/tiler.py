@@ -402,7 +402,7 @@ class Tile:
         self.ulc_global = [
                 self.top - (self.ulc[0] * self.resolution[0]), 
                 self.left + (self.ulc[1] * self.resolution[1])]
-        ansform = Affine.translation(
+        self.transform = Affine.translation(
             self.ulc_global[1] + self.resolution[0] / 2,
             self.ulc_global[0] - self.resolution[0] / 2) * \
             Affine.scale(self.resolution[0], -self.resolution[0])
