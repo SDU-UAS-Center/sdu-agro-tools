@@ -115,7 +115,7 @@ class AgroTool_ColorSegmenterDialog(QtWidgets.QDialog, FORM_CLASS):
 
         
         # Refresh the combo boxes here
-        self.update_layers()
+        self.update_layers(clear_output = True)
         self.refPixel_selector(self.refPixel_tab.currentIndex())
     
     def validate_and_accept(self):
@@ -176,7 +176,7 @@ class AgroTool_ColorSegmenterDialog(QtWidgets.QDialog, FORM_CLASS):
         # Close GUI and start execution
         if ok: super().accept()
         
-    def update_layers(self):
+    def update_layers(self, clear_output = False):
         layers = QgsProject.instance().mapLayers().values()
 
         # Input raster
@@ -230,8 +230,9 @@ class AgroTool_ColorSegmenterDialog(QtWidgets.QDialog, FORM_CLASS):
         self.ReferenceImageSelector.blockSignals(False)
         self.ReferenceMaskSelector.blockSignals(False)
 
-        self.OutputRasterLineEdit.clear()
-        self.SaveTilesLineEdit.clear()
+        if clear_output:
+            self.OutputRasterLineEdit.clear()
+            self.SaveTilesLineEdit.clear()
 
 
     def select_raster_layer(self):

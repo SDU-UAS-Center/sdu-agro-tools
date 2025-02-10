@@ -6,9 +6,27 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>444</width>
-    <height>615</height>
+    <width>480</width>
+    <height>620</height>
    </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>480</width>
+    <height>620</height>
+   </size>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>480</width>
+    <height>620</height>
+   </size>
   </property>
   <property name="windowTitle">
    <string>AgroTool Color Segmenter</string>
@@ -19,9 +37,9 @@
   <widget class="QDialogButtonBox" name="ok_button">
    <property name="geometry">
     <rect>
-     <x>130</x>
-     <y>570</y>
-     <width>161</width>
+     <x>155</x>
+     <y>581</y>
+     <width>170</width>
      <height>32</height>
     </rect>
    </property>
@@ -49,8 +67,8 @@
    <property name="geometry">
     <rect>
      <x>0</x>
-     <y>110</y>
-     <width>431</width>
+     <y>120</y>
+     <width>491</width>
      <height>16</height>
     </rect>
    </property>
@@ -61,7 +79,7 @@
   <widget class="QLabel" name="label_5">
    <property name="geometry">
     <rect>
-     <x>150</x>
+     <x>190</x>
      <y>10</y>
      <width>101</width>
      <height>41</height>
@@ -98,12 +116,12 @@
     <rect>
      <x>10</x>
      <y>170</y>
-     <width>411</width>
+     <width>461</width>
      <height>131</height>
     </rect>
    </property>
    <property name="currentIndex">
-    <number>1</number>
+    <number>0</number>
    </property>
    <widget class="QWidget" name="ShapeFile_3">
     <property name="toolTip">
@@ -117,12 +135,12 @@
       <rect>
        <x>10</x>
        <y>-10</y>
-       <width>371</width>
+       <width>441</width>
        <height>51</height>
       </rect>
      </property>
      <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:7.5pt;&quot;&gt;In the input raster, pixels within the Shape File boundaries are selected to calculate &lt;br/&gt;the reference color distribution. A Shape File must first be defined over the raster.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:7.5pt;&quot;&gt;In the input raster, pixels within the Shape File boundaries are selected to calculate the reference &lt;br/&gt;color distribution. A Shape File must first be defined over the raster.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
      <property name="textFormat">
       <enum>Qt::MarkdownText</enum>
@@ -133,7 +151,7 @@
       <rect>
        <x>10</x>
        <y>40</y>
-       <width>251</width>
+       <width>311</width>
        <height>24</height>
       </rect>
      </property>
@@ -180,12 +198,12 @@
       <rect>
        <x>10</x>
        <y>-10</y>
-       <width>371</width>
+       <width>441</width>
        <height>51</height>
       </rect>
      </property>
      <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select a cropped image of the original raster and a mask of this image with the &lt;br/&gt;selection of pixels with which to calculate the color distribution.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select a cropped image of the original raster and a mask of this image with the selection of pixels &lt;br/&gt;with which to calculate the color distribution.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
      <property name="textFormat">
       <enum>Qt::MarkdownText</enum>
@@ -241,7 +259,7 @@
       <rect>
        <x>140</x>
        <y>40</y>
-       <width>251</width>
+       <width>301</width>
        <height>24</height>
       </rect>
      </property>
@@ -280,7 +298,7 @@
       <rect>
        <x>140</x>
        <y>70</y>
-       <width>251</width>
+       <width>301</width>
        <height>24</height>
       </rect>
      </property>
@@ -321,7 +339,7 @@
     <rect>
      <x>0</x>
      <y>300</y>
-     <width>431</width>
+     <width>491</width>
      <height>16</height>
     </rect>
    </property>
@@ -347,8 +365,8 @@
     <rect>
      <x>10</x>
      <y>330</y>
-     <width>371</width>
-     <height>51</height>
+     <width>471</width>
+     <height>31</height>
     </rect>
    </property>
    <property name="sizePolicy">
@@ -358,7 +376,7 @@
     </sizepolicy>
    </property>
    <property name="text">
-    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select the distance metric to calculate the difference between the color distribution &lt;br/&gt;and the pixel color.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select the distance metric to calculate the difference between the color distribution and the pixel color.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
    <property name="textFormat">
     <enum>Qt::MarkdownText</enum>
@@ -369,7 +387,7 @@
     <rect>
      <x>0</x>
      <y>430</y>
-     <width>431</width>
+     <width>491</width>
      <height>16</height>
     </rect>
    </property>
@@ -382,7 +400,7 @@
     <rect>
      <x>10</x>
      <y>460</y>
-     <width>411</width>
+     <width>461</width>
      <height>51</height>
     </rect>
    </property>
@@ -393,7 +411,7 @@
     </sizepolicy>
    </property>
    <property name="text">
-    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;Split the raster input layer into tiles that are processed in parallel. &lt;br/&gt;The alternative is processing the raster layer as a single tile. &lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Divide the raster input layer into tiles for parallel processing. Alternatively, process the raster layer &lt;br/&gt;as a single tile. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
    <property name="textFormat">
     <enum>Qt::MarkdownText</enum>
@@ -404,7 +422,7 @@
     <rect>
      <x>10</x>
      <y>60</y>
-     <width>391</width>
+     <width>461</width>
      <height>24</height>
     </rect>
    </property>
@@ -417,7 +435,14 @@
      </widget>
     </item>
     <item>
-     <widget class="QComboBox" name="InputRasterLayerSelector"/>
+     <widget class="QComboBox" name="InputRasterLayerSelector">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+     </widget>
     </item>
     <item>
      <widget class="QToolButton" name="InputRasterLayerButton">
@@ -432,14 +457,20 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>370</y>
-     <width>391</width>
+     <y>360</y>
+     <width>431</width>
      <height>31</height>
     </rect>
    </property>
    <layout class="QHBoxLayout" name="horizontalLayout_6">
     <item>
      <widget class="QLabel" name="label_13">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
       <property name="text">
        <string>Metric</string>
       </property>
@@ -448,7 +479,7 @@
     <item>
      <widget class="QComboBox" name="MetricSelector">
       <property name="sizePolicy">
-       <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
         <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
@@ -456,8 +487,14 @@
       <property name="toolTip">
        <string>Select the method for distance calculation. Mahalanobis or Gaussian Mixture Model distribution.</string>
       </property>
+      <property name="layoutDirection">
+       <enum>Qt::LeftToRight</enum>
+      </property>
       <property name="editable">
        <bool>true</bool>
+      </property>
+      <property name="currentText">
+       <string>Mahalanobis</string>
       </property>
       <property name="currentIndex">
        <number>0</number>
@@ -478,7 +515,29 @@
      </widget>
     </item>
     <item>
+     <spacer name="horizontalSpacer">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <property name="sizeType">
+       <enum>QSizePolicy::Fixed</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>30</width>
+        <height>20</height>
+       </size>
+      </property>
+     </spacer>
+    </item>
+    <item>
      <widget class="QLabel" name="label_15">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
       <property name="text">
        <string>Number of components</string>
       </property>
@@ -487,7 +546,7 @@
     <item>
      <widget class="QSpinBox" name="GMMSpinBox">
       <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
         <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
@@ -508,7 +567,7 @@
      <x>10</x>
      <y>400</y>
      <width>117</width>
-     <height>25</height>
+     <height>26</height>
     </rect>
    </property>
    <layout class="QHBoxLayout" name="horizontalLayout_7">
@@ -554,7 +613,7 @@
     <rect>
      <x>10</x>
      <y>450</y>
-     <width>124</width>
+     <width>127</width>
      <height>18</height>
     </rect>
    </property>
@@ -586,7 +645,7 @@
     <rect>
      <x>11</x>
      <y>90</y>
-     <width>391</width>
+     <width>461</width>
      <height>26</height>
     </rect>
    </property>
@@ -622,7 +681,7 @@
     <rect>
      <x>160</x>
      <y>500</y>
-     <width>271</width>
+     <width>314</width>
      <height>61</height>
     </rect>
    </property>
@@ -670,7 +729,7 @@
      <x>12</x>
      <y>502</y>
      <width>136</width>
-     <height>55</height>
+     <height>57</height>
     </rect>
    </property>
    <layout class="QGridLayout" name="gridLayout_2">
