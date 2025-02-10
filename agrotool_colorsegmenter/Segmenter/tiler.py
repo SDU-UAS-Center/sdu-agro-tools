@@ -14,6 +14,7 @@ from multiprocessing import shared_memory
 
 
 def get_tilelist_gdal(thread_pool, output_raster_layer, param):
+    
     # Init Tiles multiworker
     tile_manager = MultiTilesManager(thread_pool, 
                                      raster_layer = param.input_raster_layer, 
@@ -31,7 +32,6 @@ def get_tilelist_gdal(thread_pool, output_raster_layer, param):
 
     if param.save_tiles == True:
         tile_manager.save_tiles()
-    
 
     return tile_manager.get_tiles(), tile_manager
 
@@ -71,15 +71,15 @@ def get_single_tile(param):
 
     # Create a Tile object
     tile = Tile(
-        extension_geo,         # Geographic extent
-        extension_pixel,       # Pixel extent
-        [0, 0],                # Tile position (row, column)
-        raster_rows,           # Tile height (entire raster)
-        raster_columns,        # Tile width (entire raster)
-        resolution,      # Resolution
-        raster_layer.crs(),    # Coordinate Reference System (CRS)
-        min_x,                 # Left extent (geographic)
-        max_y,                 # Top extent (geographic)
+        extension_geo,           # Geographic extent
+        extension_pixel,         # Pixel extent
+        [0, 0],                  # Tile position (row, column)
+        raster_rows,             # Tile height (entire raster)
+        raster_columns,          # Tile width (entire raster)
+        resolution,              # Resolution
+        raster_layer.crs(),      # Coordinate Reference System (CRS)
+        min_x,                   # Left extent (geographic)
+        max_y,                   # Top extent (geographic)
         gdal_raster.RasterCount  # Number of bands in the raster
     )
 
@@ -204,8 +204,7 @@ class MultiTilesManager:
         # Define tiles borders:
         if self.raster_columns < self.tile_heigth and self.raster_rows < self.tile_width:
             raise QgsProcessingException("tile_size larger than orthomosaic")
-        
-        # Print message
+
         print('Defining tiles borders.')
 
         # Get the number of rows and columns of tiles based on pixel dimensions
@@ -220,7 +219,6 @@ class MultiTilesManager:
         tiles = []
 
         # Create Tiles object:
-        cont = 0
         for r in range(n_height + 1):
             for c in range(n_width + 1):
                 # Compute the top-left corner of the tile in pixel coordinates
@@ -238,8 +236,6 @@ class MultiTilesManager:
                 xoff, yoff, xend, yend = self.geo_to_pixel(tile_min_x, tile_max_x, tile_min_y, tile_max_y)
                 extension_pixel = QgsRectangle(xoff, yoff, xend, yend)
 
-                #print(f'Tile number {cont} = {rectangle_pixel[0]}:{rectangle_pixel[0] + rectangle_pixel[2]}, {rectangle_pixel[1]}:{rectangle_pixel[1] + rectangle_pixel[3]}')
-                cont += 1
                 tiles.append(Tile(extension_geo, extension_pixel, [r, c], self.tile_heigth, self.tile_width, 
                                 self.resolution, self.crs, self.left, self.top, self.n_bands))
 
@@ -269,7 +265,7 @@ class MultiTilesManager:
         print('Number of tiles: ', len(self.tiles_list))
 
     def extract_array_from_tile(self):
-        print('Converting tiles to np array GDAL test.')
+        print('Converting tiles to np array GDAL.')
         num_tiles = len(self.tiles_list)
         cont = 0
         for tile in self.tiles_list:
@@ -315,21 +311,14 @@ class MultiTilesManager:
         to later plug it into the output raster layer band.
         '''
         print('Stitching tiles to generate output raster.')
-         # Get the output raster's band and prepare an empty array
-        #band = self.output_raster_layer.GetRasterBand(1)
-        #stitching_array = np.zeros((band.YSize, band.XSize), dtype=np.uint8)  #GDAL have inverted axes x and y 
+        # Get the output raster's band and prepare an empty array
 
-        # n_width = np.ceil(self.raster_columns / (self.tile_width * (1 - self.overlap))).astype(int)
-        # n_height = np.ceil(self.raster_rows / (self.tile_heigth * (1 - self.overlap))).astype(int)
-        # output_width = n_width*self.tile_width
-        # output_height = n_height*self.tile_heigth
         stitching_array = np.zeros((self.raster_rows, self.raster_columns), dtype=np.uint8)  #GDAL have inverted axes x and y 
         #stitching_array = np.zeros((output_width, output_height), dtype=np.uint8)  #GDAL have inverted axes x and y 
 
         for tile in self.tiles_list:
             if tile.distance_img is not None:
                 img = np.squeeze(tile.distance_img)
-
                 
                 # Extract the rectangle coordinates in pixel space
                 rect = tile.rectangle_pixel  # QgsRectangle
@@ -344,41 +333,9 @@ class MultiTilesManager:
                 cropped_img = img[:y_max - y_min, :x_max - x_min]
 
                 # Place the distance image in the appropriate section of the stitching_array
-                
-                #try:
                 stitching_array[y_min:y_max, x_min:x_max] = cropped_img #img[:y_max - y_min,:x_max - x_min] #tile.distance_img[:y_max - y_min, :x_max - x_min]
-                print('Distance _ img shape :', cropped_img.shape)
-                print(f'To save into {y_max - y_min}, {x_max-x_min}' )
-                print('Sucess tile ', tile.tile_number)
-                print('')
-                #except:
-                    # #stitching_array[y_min:y_max, x_min:x_max] = img
-                    # print('Distance _ img shape :', cropped_img.shape)
-                    # print(f'To save into {y_max - y_min}, {x_max-x_min}' )
-                    # print('FAIL in tile ', tile.tile_number)
-                    # print('')
+                
 
-        # Write the joined array into the raster band
-        # band.SetNoDataValue(0)  # Set NoData value if needed
-        # band.WriteArray(stitching_array)
-
-        # # Build pyramids (overviews) for the raster
-        # pyramid_levels = [2, 4, 8, 16, 32, 64, 128]  # Define the resolution levels for pyramids
-        # gdal.SetConfigOption("COMPRESS_OVERVIEW", "LZW")  # Optional: Compression for overviews
-        # self.output_raster_layer.BuildOverviews("AVERAGE", pyramid_levels)
-
-        # band.FlushCache()  # Save the changes to the raster
-
-        # # Convert the in-memory raster to a QgsRasterLayer
-        # output_raster_name= 'distance_' + self.raster_layer.name()   # Temporary identifier
-        # output_raster_layer = QgsRasterLayer(self.output_raster_layer.GetDescription(), output_raster_name, "gdal")
-
-        # if not output_raster_layer.isValid():
-        #     raise RuntimeError("Failed to create QgsRasterLayer from in-memory raster.")
-        
-        # #print('Ensure pyramid creaded: ', output_raster_layer.GetOverviewCount())
-        # # Add the new raster layer to the QGIS workspace
-        # QgsProject.instance().addMapLayer(output_raster_layer)
 
         return stitching_array
 

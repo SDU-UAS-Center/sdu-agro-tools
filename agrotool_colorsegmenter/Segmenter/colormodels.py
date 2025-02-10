@@ -6,6 +6,7 @@ import cv2
 from qgis.core import QgsRasterLayer, QgsVectorLayer, QgsGeometry, QgsPointXY, QgsCoordinateReferenceSystem
 import time
 
+import copy
 
 
 class ReferencePixels_shape:
@@ -231,27 +232,50 @@ class MahalanobisDistance:
     def calculate_statistics(self, reference_pixels):
         self.covariance = np.cov(reference_pixels)
         self.average = np.average(reference_pixels, axis=1)
-       
+
         if self.covariance.shape is ():
             self.covariance=np.reshape(self.covariance,(1,1))
+        
+        self.inv_cov = np.linalg.inv(self.covariance)
 
         
-
-    def calculate_distance(self, image):
+    def calculate_distance_original(self, image):
         """
         For all pixels in the image, calculate the Mahalanobis distance
         to the reference color.
         """
-        
+      
+
         pixels = np.reshape(image[self.bands_to_use,:,:], (len(self.bands_to_use),-1)).transpose()
-        inv_cov = np.linalg.inv(self.covariance)
         diff = pixels - self.average
+        inv_cov = np.linalg.inv(self.covariance)
         modified_dot_product = diff * (diff @ inv_cov)
         distance = np.sum(modified_dot_product, axis=1)
         distance = np.sqrt(distance)
 
         distance_image = np.reshape(distance, (1,image.shape[1], image.shape[2]))
+        print(f'Green flag Maha {distance_image.shape}')
+        return distance_image
+    
+    def calculate_distance(self, image):
+        """
+        For all pixels in the image, calculate the Mahalanobis distance
+        to the reference color.
+        """
+        # Copy variables for save threading:
+        bands_to_use = self.bands_to_use.copy()  # Copia local de bands_to_use
+        covariance = self.covariance.copy()  # Copia local de covariance
+        average = self.average.copy()  # Copia local de average
+        inv_cov = np.linalg.inv(covariance)  # Calcular la inversa en una variable local
 
+        pixels = np.reshape(image[bands_to_use,:,:], (len(bands_to_use),-1)).transpose()
+        diff = pixels - average
+        modified_dot_product = diff * (diff @ inv_cov)
+        distance = np.sum(modified_dot_product, axis=1)
+        distance = np.sqrt(distance)
+
+        distance_image = np.reshape(distance, (1,image.shape[1], image.shape[2]))
+        print(f'Green flag Maha {distance_image}')
         return distance_image
     
 
@@ -330,14 +354,15 @@ class GaussianMixtureModelDistance:
 def initialize_colormodel(reference_pixels, param):
     model= None
     method = param.distance_metric
+    print('Bands to use: ', reference_pixels.bands_to_use)
 
     match method:
-        case 'mahalanobis':
+        case 'Mahalanobis':
             model=MahalanobisDistance()
-        case 'gmm':
+        case 'Gaussian Mixture Model':
             model=GaussianMixtureModelDistance(param.gmm_components)
         case _:
-            print("The method selected does not match any known colormodel methods, Mahalanobis Distance was used instead")
+            print(f"The method selected '{method}' does not match any known colormodel methods, Mahalanobis Distance was used instead")
             model=MahalanobisDistance()
     
     model.bands_to_use=reference_pixels.bands_to_use

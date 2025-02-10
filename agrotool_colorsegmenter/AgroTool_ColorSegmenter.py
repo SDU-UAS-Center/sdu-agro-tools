@@ -43,25 +43,25 @@ cmd_folder = os.path.split(inspect.getfile(inspect.currentframe()))[0]
 if cmd_folder not in sys.path:
     sys.path.insert(0, cmd_folder)
 
-from .Segmenter import colormodels, segmenter, tiler
+from .Segmenter import colormodels, segmenter, tiler, segmenter_thread
 
 def segment_main(param, output_raster):
-    
+
     # TODO: GPU integration
     gpu_available = False
     if gpu_available:
         pass
     else:
-        thread_pool = QThreadPool()  # Create pool of Thread
+        thread_pool = QThreadPool().globalInstance()  # Create pool of Thread
         thread_pool.setMaxThreadCount(os.cpu_count())  # Set number of cpu count
-    
+
     # Define color model - reference pixels
     start_time = time.time()
     referencepixels = colormodels.get_referencepixels(param)
     colormodel=colormodels.initialize_colormodel(referencepixels, param)
     ref_color_time = time.time()
     print('Ref color time: ', ref_color_time-start_time)
-    cbs = segmenter.ColorBasedSegmenter(thread_pool, colormodel, param)
+    #cbs = segmenter.ColorBasedSegmenter(thread_pool, colormodel, param)
 
     if param.tile_processing == True:
         # Define multiple tiles:
@@ -69,23 +69,29 @@ def segment_main(param, output_raster):
 
         tiler_time = time.time()
         print('Tiler time: ', tiler_time-ref_color_time)
+        #cbs.apply_colormodel_to_tiles_naive(tile_list)
+        #segmenter.apply_colormodel_to_tiles_QRunnable(colormodel,cbs, tile_list, param.save_tiles_distance, thread_pool)
+        cbs = segmenter_thread.ColorBasedSegmenter(tile_list, colormodel, param)
+        cbs.apply_colormodel_multi_tiles_naive()
 
-        cbs.apply_colormodel_to_tiles(tile_list)
+        # for tile in tile_list:
+        #     print(f'For tile {tile.tile_number} the distance image is empyt {tile.distance_img==None}')
+
         color_model_time = time.time()
         print('Apply color model time: ', color_model_time-tiler_time)
 
 
         distance_image = tile_manager.get_distance_raster()
         distance_image_time = time.time()
-        print('Apply color model time: ', distance_image_time-color_model_time)
+        print('Stitch tiles: ', distance_image_time-color_model_time)
 
     elif param.tile_processing == False:
         single_tile=tiler.get_single_tile(param)
         cbs.apply_colormodel_to_single_tile(single_tile)
 
         distance_image = np.squeeze(single_tile.distance_img)
-    
-    print(distance_image.shape)
+
+
     # Save result
     band = output_raster.GetRasterBand(1)
     # Write the distance image array into the raster band
@@ -100,15 +106,19 @@ def segment_main(param, output_raster):
     band.FlushCache()  # Save the changes to the raster
 
     # Convert the in-memory raster to a QgsRasterLayer
-    output_raster_name = 'distance_' + param.input_raster_layer.name()   # Temporary identifier
-    output_raster_layer = QgsRasterLayer(output_raster.GetDescription(), output_raster_name, "gdal")
+    output_name, _ = os.path.splitext(os.path.basename(param.output_file_path))
+    output_raster_layer = QgsRasterLayer(output_raster.GetDescription(), output_name, "gdal")
 
     if not output_raster_layer.isValid():
         raise RuntimeError("Failed to create QgsRasterLayer from in-memory raster.")
-    
+
     #print('Ensure pyramid creaded: ', output_raster_layer.GetOverviewCount())
     # Add the new raster layer to the QGIS workspace
     QgsProject.instance().addMapLayer(output_raster_layer)
+
+    end_time = time.time()
+    proces_time = end_time - start_time
+    print('Total processing time: ', int(proces_time//60), int(proces_time%60))
 
 class AgroTool_ColorSegmenter:
     """QGIS Plugin Implementation."""
