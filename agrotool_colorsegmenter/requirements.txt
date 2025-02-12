@@ -1,0 +1,5 @@
+rasterio
+scikit-learn
+opencv-python-headless
+tqdm
+numpy<2.0.0

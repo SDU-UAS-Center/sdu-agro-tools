@@ -38,19 +38,24 @@ LOCALES =
 # translation
 SOURCES = \
 	__init__.py \
-	AgroTool_ColorSegmenter.py AgroTool_ColorSegmenter_dialog.py
+	AgroTool_ColorSegmenter.py \
+	AgroTool_ColorSegmenter_dialog.py
 
 PLUGINNAME = AgroTool_ColorSegmenter
 
 PY_FILES = \
 	__init__.py \
-	AgroTool_ColorSegmenter.py AgroTool_ColorSegmenter_dialog.py
+	AgroTool_ColorSegmenter.py \
+	AgroTool_ColorSegmenter_dialog.py
 
 UI_FILES = AgroTool_ColorSegmenter_dialog_base.ui
 
-EXTRAS = metadata.txt icon.png
+EXTRAS = \
+	metadata.txt \
+	icon.png \
+	requirements.txt
 
-EXTRA_DIRS =
+EXTRA_DIRS = Segmenter
 
 COMPILED_RESOURCE_FILES = resources.py
 
@@ -59,13 +64,13 @@ PEP8EXCLUDE=pydev,resources.py,conf.py,third_party,ui
 # QGISDIR points to the location where your plugin should be installed.
 # This varies by platform, relative to your HOME directory:
 #	* Linux:
-#	  .local/share/QGIS/QGIS3/profiles/default/python/plugins/
+#	  .local/share/QGIS/QGIS3/profiles/default/
 #	* Mac OS X:
 #	  Library/Application Support/QGIS/QGIS3/profiles/default/python/plugins
 #	* Windows:
 #	  AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins'
 
-QGISDIR=C:\Users\aqu\AppData/Roaming/QGIS/QGIS3/profiles/default/python/plugins
+QGISDIR=.local/share/QGIS/QGIS3/profiles/default/
 
 #################################################
 # Normally you would not need to edit below here
@@ -119,7 +124,7 @@ deploy: compile doc transcompile
 	@echo "------------------------------------------"
 	# The deploy  target only works on unix like operating system where
 	# the Python plugin directory is located at:
-	# $HOME/$(QGISDIR)/python/plugins
+	# $(HOME)/$(QGISDIR)/python/plugins
 	mkdir -p $(HOME)/$(QGISDIR)/python/plugins/$(PLUGINNAME)
 	cp -vf $(PY_FILES) $(HOME)/$(QGISDIR)/python/plugins/$(PLUGINNAME)
 	cp -vf $(UI_FILES) $(HOME)/$(QGISDIR)/python/plugins/$(PLUGINNAME)
@@ -128,7 +133,7 @@ deploy: compile doc transcompile
 	cp -vfr i18n $(HOME)/$(QGISDIR)/python/plugins/$(PLUGINNAME)
 	cp -vfr $(HELP) $(HOME)/$(QGISDIR)/python/plugins/$(PLUGINNAME)/help
 	# Copy extra directories if any
-	(foreach EXTRA_DIR,(EXTRA_DIRS), cp -R (EXTRA_DIR) (HOME)/(QGISDIR)/python/plugins/(PLUGINNAME)/;)
+	$(foreach EXTRA_DIR,$(EXTRA_DIRS), cp -R $(EXTRA_DIR) $(HOME)/$(QGISDIR)/python/plugins/$(PLUGINNAME)/;)
 
 
 # The dclean target removes compiled python files from plugin directory
