@@ -239,13 +239,12 @@ class MahalanobisDistance:
         self.inv_cov = np.linalg.inv(self.covariance)
 
         
-    def calculate_distance_original(self, image):
+    def calculate_distance(self, image):
         """
         For all pixels in the image, calculate the Mahalanobis distance
         to the reference color.
         """
       
-
         pixels = np.reshape(image[self.bands_to_use,:,:], (len(self.bands_to_use),-1)).transpose()
         diff = pixels - self.average
         inv_cov = np.linalg.inv(self.covariance)
@@ -254,28 +253,6 @@ class MahalanobisDistance:
         distance = np.sqrt(distance)
 
         distance_image = np.reshape(distance, (1,image.shape[1], image.shape[2]))
-        print(f'Green flag Maha {distance_image.shape}')
-        return distance_image
-    
-    def calculate_distance(self, image):
-        """
-        For all pixels in the image, calculate the Mahalanobis distance
-        to the reference color.
-        """
-        # Copy variables for save threading:
-        bands_to_use = self.bands_to_use.copy()  # Copia local de bands_to_use
-        covariance = self.covariance.copy()  # Copia local de covariance
-        average = self.average.copy()  # Copia local de average
-        inv_cov = np.linalg.inv(covariance)  # Calcular la inversa en una variable local
-
-        pixels = np.reshape(image[bands_to_use,:,:], (len(bands_to_use),-1)).transpose()
-        diff = pixels - average
-        modified_dot_product = diff * (diff @ inv_cov)
-        distance = np.sum(modified_dot_product, axis=1)
-        distance = np.sqrt(distance)
-
-        distance_image = np.reshape(distance, (1,image.shape[1], image.shape[2]))
-        print(f'Green flag Maha {distance_image}')
         return distance_image
     
 

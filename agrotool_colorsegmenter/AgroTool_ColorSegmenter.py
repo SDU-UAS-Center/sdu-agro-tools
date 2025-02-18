@@ -24,9 +24,9 @@
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction, QDialog
-from qgis.core import QgsRasterLayer, QgsProcessingException, QgsProject
+from qgis.core import QgsRasterLayer, QgsProcessingException, QgsApplication, QgsProject, QgsTask, QgsMessageLog, Qgis
 from osgeo import gdal
-from PyQt5.QtCore import QThreadPool
+from PyQt5.QtCore import QThreadPool, pyqtSignal
 
 # Initialize Qt resources from file resources.py
 from .resources import *
@@ -43,82 +43,242 @@ cmd_folder = os.path.split(inspect.getfile(inspect.currentframe()))[0]
 if cmd_folder not in sys.path:
     sys.path.insert(0, cmd_folder)
 
-from .Segmenter import colormodels, segmenter, tiler, segmenter_thread
+from .Segmenter import colormodels, tiler, segmenter, segmenter_thread2
+from .Segmenter.main import SegmentationTask
+
+class SegmentationTask_dev(QgsTask):
+    # Define custom signals to update progress and deliver the result
+    progress_signal = pyqtSignal(int)
+    result_ready = pyqtSignal(np.ndarray)
+    def __init__(self, param, description="Segmentation Task"):
+        super().__init__(description, QgsTask.CanCancel)
+        self.param = param
+
+    def run(self):
+        global start_time
+        start_time = time.time()
+        try:
+            thread_pool = QThreadPool().globalInstance()  # Create pool of Thread
+            thread_pool.setMaxThreadCount(os.cpu_count())  # Set number of cpu count
+
+            # Initialize the color model using reference pixels
+            referencepixels = colormodels.get_referencepixels(self.param)
+            colormodel = colormodels.initialize_colormodel(referencepixels, self.param)
+            cbs = segmenter.ColorBasedSegmenter(colormodel, self.param)
+            self.progress_signal.emit(20)  # 20% progress
+
+            if self.param.tile_processing:
+                # For tile processing, generate tile list and manager
+                tile_list, tile_manager = tiler.get_tilelist_gdal(thread_pool, self.param)
+                self.progress_signal.emit(40)  # 40% progress
+                cbs.apply_colormodel_multi_tiles(tile_list)
+
+                # cbs = segmenter_thread2.ColorBasedSegmenter(tile_list, colormodel, self.param)
+                # cbs.apply_colormodel_multi_tiles_thread(thread_pool)
+                self.progress_signal.emit(80)  # 80% progress
+                distance_image = tile_manager.get_distance_raster()
+            else:
+                # For single-tile processing
+                single_tile = tiler.get_single_tile(self.param)
+                self.progress_signal.emit(40)  # 40% progress
+                cbs.apply_colormodel_single_tile(single_tile)
+                self.progress_signal.emit(80)  # 80% progress
+                distance_image = np.squeeze(single_tile.distance_img)
+
+            self.progress_signal.emit(90)  # 90% progress
+
+            QgsMessageLog.logMessage("Segmentation task finished successfully.", "AgroTool Color Segmenter", level=Qgis.Info)
+
+            
+            # end_time = time.time()
+            # minutes = int((end_time - start_time) // 60)
+            # seconds = int((end_time - start_time) % 60)
+            # QgsMessageLog.logMessage(f"Total processing time: {minutes} min {seconds} sec", "AgroTool Color Segmenter", level=Qgis.Info)
+            # print(f"Total processing time: {minutes} min {seconds} sec", "AgroTool Color Segmenter")
+            self.result_array = distance_image
+            self.result_ready.emit(distance_image)
+
+        except Exception as e:
+            QgsMessageLog.logMessage("Error during segmentation: " + str(e), "AgroTool Color Segmenter", level=Qgis.Critical)
+            return False  # Indicate failure
+
+        return True  # Indicate success
+
+    def finished(self, result):
+        """
+        This method is called in the main thread after run() completes.
+        It handles saving the result and adding the raster layer to QGIS.
+        """
+        if result:
+            QgsMessageLog.logMessage("Segmentation task finished successfully - Storing results.", "AgroTool Color Segmenter", level=Qgis.Info)
+            try:
+                # Create output raster layer:
+                # Extract raster information using GDAL
+                input_ds = gdal.Open(self.param.input_raster_layer.source())
+                if input_ds is None:
+                    raise RuntimeError("Failed to open input raster with GDAL.")
+
+                # Get raster geotransform and dimensions
+                geotransform = input_ds.GetGeoTransform()  # (x_min, pixel_width, 0, y_max, 0, -pixel_height)
+                #x_min, pixel_width, _, y_max, _, pixel_height = geotransform
+                x_res = input_ds.RasterXSize  # Number of pixels in the x-direction
+                y_res = input_ds.RasterYSize  # Number of pixels in the y-direction
+
+                print('Original ortho x and y size: ', x_res, y_res)
+                # Create the output raster using the same dimensions, geotransform, and projection
+                driver = gdal.GetDriverByName('GTiff')
+                #output_ds = driver.Create('/vsimem/temp_raster', x_res, y_res, 1, gdal.GDT_Byte)
+                output_ds = driver.Create(self.param.output_file_path, x_res, y_res, 1, gdal.GDT_Byte)
+                if output_ds is None:
+                    raise RuntimeError("Failed to create output raster.")
+
+                output_ds.SetGeoTransform(geotransform)  # Set the same geotransform as the input raster
+                output_ds.SetProjection(input_ds.GetProjection())  # Use the same projection as the input raster
+
+                # Save result: write array to raster and build overviews
+                band = output_ds.GetRasterBand(1)
+                band.SetNoDataValue(0)
+                band.WriteArray(self.result_array) # Build pyramids (overviews) for the raster
+                gdal.SetConfigOption("COMPRESS_OVERVIEW", "LZW")  # Optional: Compression for overviews
+                output_ds.BuildOverviews("AVERAGE", [2, 4, 8, 16, 32, 64, 128])
+                band.FlushCache()
+
+                # Create a QgsRasterLayer from the in-memory raster
+                output_name, _ = os.path.splitext(os.path.basename(self.param.output_file_path))
+                output_raster_layer = QgsRasterLayer(output_ds.GetDescription(), output_name, "gdal")
+
+                if not output_raster_layer.isValid():
+                    raise RuntimeError("Failed to create QgsRasterLayer from in-memory raster.")
+
+                QgsProject.instance().addMapLayer(output_raster_layer)
+                
+                QgsMessageLog.logMessage("Segmentation completed and added to QGIS.", "AgroTool Color Segmenter", level=Qgis.Info)
+
+                end_time = time.time()
+                minutes = int((end_time - start_time) // 60)
+                seconds = int((end_time - start_time) % 60)
+                QgsMessageLog.logMessage(f"Total processing time: {minutes} min {seconds} sec", "AgroTool Color Segmenter", level=Qgis.Info)
+                print(f"Total processing time: {minutes} min {seconds} sec", "AgroTool Color Segmenter")   
+            except Exception as e:
+                QgsMessageLog.logMessage("Error while saving result: " + str(e), "AgroTool Color Segmenter", level=Qgis.Critical)
+        else:
+            QgsMessageLog.logMessage("Segmentation task failed.", "AgroTool Color Segmenter", level=Qgis.Critical)
+        return
+
+def run_segmentation_task(param):
+    """
+    Helper function to launch the segmentation task.
+    The returned task object can be used to monitor progress or check for errors.
+    """
+    task = SegmentationTask(param)
+    QgsApplication.taskManager().addTask(task)
+    return task
+
+def handle_result(param, distance_image):
+    global start_time
+    try:
+
+        # Create output raster layer:
+        # Extract raster information using GDAL
+        input_ds = gdal.Open(param.input_raster_layer.source())
+        if input_ds is None:
+            raise RuntimeError("Failed to open input raster with GDAL.")
+
+        # Get raster geotransform and dimensions
+        geotransform = input_ds.GetGeoTransform()  # (x_min, pixel_width, 0, y_max, 0, -pixel_height)
+        #x_min, pixel_width, _, y_max, _, pixel_height = geotransform
+        x_res = input_ds.RasterXSize  # Number of pixels in the x-direction
+        y_res = input_ds.RasterYSize  # Number of pixels in the y-direction
+
+        print('Original ortho x and y size: ', x_res, y_res)
+        # Create the output raster using the same dimensions, geotransform, and projection
+        driver = gdal.GetDriverByName('GTiff')
+        #output_ds = driver.Create('/vsimem/temp_raster', x_res, y_res, 1, gdal.GDT_Byte)
+        output_ds = driver.Create(param.output_file_path, x_res, y_res, 1, gdal.GDT_Byte)
+        if output_ds is None:
+            raise RuntimeError("Failed to create output raster.")
+
+        output_ds.SetGeoTransform(geotransform)  # Set the same geotransform as the input raster
+        output_ds.SetProjection(input_ds.GetProjection())  # Use the same projection as the input raster
+
+        # Save result: write array to raster and build overviews
+        band = output_ds.GetRasterBand(1)
+        band.SetNoDataValue(0)
+        band.WriteArray(distance_image) # Build pyramids (overviews) for the raster
+        gdal.SetConfigOption("COMPRESS_OVERVIEW", "LZW")  # Optional: Compression for overviews
+        output_ds.BuildOverviews("AVERAGE", [2, 4, 8, 16, 32, 64, 128])
+        band.FlushCache()
+
+        # Create a QgsRasterLayer from the in-memory raster
+        output_name, _ = os.path.splitext(os.path.basename(param.output_file_path))
+        output_raster_layer = QgsRasterLayer(output_ds.GetDescription(), output_name, "gdal")
+
+        if not output_raster_layer.isValid():
+            raise RuntimeError("Failed to create QgsRasterLayer from in-memory raster.")
+
+        QgsProject.instance().addMapLayer(output_raster_layer)
+        
+        QgsMessageLog.logMessage("Segmentation completed and added to QGIS.", "AgroTool Color Segmenter", level=Qgis.Info)
+
+        end_time = time.time()
+        minutes = int((end_time - start_time) // 60)
+        seconds = int((end_time - start_time) % 60)
+        QgsMessageLog.logMessage(f"Total processing time: {minutes} min {seconds} sec", "AgroTool Color Segmenter", level=Qgis.Info)
+        print(f"Total processing time: {minutes} min {seconds} sec", "AgroTool Color Segmenter")
+    
+    except Exception as e:
+        QgsMessageLog.logMessage("Error while saving result: " + str(e), "AgroTool Color Segmenter", level=Qgis.Critical)
+            
 
 def segment_main(param, output_raster):
 
-    # TODO: GPU integration
-    gpu_available = False
-    if gpu_available:
-        pass
-    else:
-        thread_pool = QThreadPool().globalInstance()  # Create pool of Thread
-        thread_pool.setMaxThreadCount(os.cpu_count())  # Set number of cpu count
+    thread_pool = QThreadPool().globalInstance()  # Create pool of Thread
+    thread_pool.setMaxThreadCount(os.cpu_count())  # Set number of cpu count
 
-    # Define color model - reference pixels
-    start_time = time.time()
+    # Initialize the color model using reference pixels
     referencepixels = colormodels.get_referencepixels(param)
-    colormodel=colormodels.initialize_colormodel(referencepixels, param)
-    ref_color_time = time.time()
-    print('Ref color time: ', ref_color_time-start_time)
-    #cbs = segmenter.ColorBasedSegmenter(thread_pool, colormodel, param)
+    colormodel = colormodels.initialize_colormodel(referencepixels, param)
+    cbs = segmenter.ColorBasedSegmenter(colormodel, param)
 
-    if param.tile_processing == True:
-        # Define multiple tiles:
+    if param.tile_processing:
+        # For tile processing, generate tile list and manager
         tile_list, tile_manager = tiler.get_tilelist_gdal(thread_pool, output_raster, param)
+        cbs.apply_colormodel_multi_tiles(tile_list)
 
-        tiler_time = time.time()
-        print('Tiler time: ', tiler_time-ref_color_time)
-        #cbs.apply_colormodel_to_tiles_naive(tile_list)
-        #segmenter.apply_colormodel_to_tiles_QRunnable(colormodel,cbs, tile_list, param.save_tiles_distance, thread_pool)
-        cbs = segmenter_thread.ColorBasedSegmenter(tile_list, colormodel, param)
-        cbs.apply_colormodel_multi_tiles_naive()
-
-        # for tile in tile_list:
-        #     print(f'For tile {tile.tile_number} the distance image is empyt {tile.distance_img==None}')
-
-        color_model_time = time.time()
-        print('Apply color model time: ', color_model_time-tiler_time)
-
-
+        # cbs = segmenter_thread2.ColorBasedSegmenter(tile_list, colormodel, self.param)
+        # cbs.apply_colormodel_multi_tiles_thread(thread_pool)
         distance_image = tile_manager.get_distance_raster()
-        distance_image_time = time.time()
-        print('Stitch tiles: ', distance_image_time-color_model_time)
-
-    elif param.tile_processing == False:
-        single_tile=tiler.get_single_tile(param)
-        cbs.apply_colormodel_to_single_tile(single_tile)
-
+    else:
+        # For single-tile processing
+        single_tile = tiler.get_single_tile(param)
+        cbs.apply_colormodel_single_tile(single_tile)
         distance_image = np.squeeze(single_tile.distance_img)
+    
+    try:
+
+        # Save result: write array to raster and build overviews
+        band = output_raster.GetRasterBand(1)
+        band.SetNoDataValue(0)
+        band.WriteArray(distance_image) # Build pyramids (overviews) for the raster
+        gdal.SetConfigOption("COMPRESS_OVERVIEW", "LZW")  # Optional: Compression for overviews
+        output_raster.BuildOverviews("AVERAGE", [2, 4, 8, 16, 32, 64, 128])
+        band.FlushCache()
+
+        # Create a QgsRasterLayer from the in-memory raster
+        output_name, _ = os.path.splitext(os.path.basename(param.output_file_path))
+        output_raster_layer = QgsRasterLayer(output_raster.GetDescription(), output_name, "gdal")
+
+        if not output_raster_layer.isValid():
+            raise RuntimeError("Failed to create QgsRasterLayer from in-memory raster.")
+
+        QgsProject.instance().addMapLayer(output_raster_layer)
+        
+        QgsMessageLog.logMessage("Segmentation completed and added to QGIS.", "AgroTool Color Segmenter", level=Qgis.Info)
+    except Exception as e:
+        QgsMessageLog.logMessage("Error while saving result: " + str(e), "AgroTool Color Segmenter", level=Qgis.Critical)
+    
 
 
-    # Save result
-    band = output_raster.GetRasterBand(1)
-    # Write the distance image array into the raster band
-    band.SetNoDataValue(0)  # Set NoData value if needed
-    band.WriteArray(distance_image)
-
-    # Build pyramids (overviews) for the raster
-    pyramid_levels = [2, 4, 8, 16, 32, 64, 128]  # Define the resolution levels for pyramids
-    gdal.SetConfigOption("COMPRESS_OVERVIEW", "LZW")  # Optional: Compression for overviews
-    output_raster.BuildOverviews("AVERAGE", pyramid_levels)
-
-    band.FlushCache()  # Save the changes to the raster
-
-    # Convert the in-memory raster to a QgsRasterLayer
-    output_name, _ = os.path.splitext(os.path.basename(param.output_file_path))
-    output_raster_layer = QgsRasterLayer(output_raster.GetDescription(), output_name, "gdal")
-
-    if not output_raster_layer.isValid():
-        raise RuntimeError("Failed to create QgsRasterLayer from in-memory raster.")
-
-    #print('Ensure pyramid creaded: ', output_raster_layer.GetOverviewCount())
-    # Add the new raster layer to the QGIS workspace
-    QgsProject.instance().addMapLayer(output_raster_layer)
-
-    end_time = time.time()
-    proces_time = end_time - start_time
-    print('Total processing time: ', int(proces_time//60), int(proces_time%60))
 
 class AgroTool_ColorSegmenter:
     """QGIS Plugin Implementation."""
@@ -154,6 +314,8 @@ class AgroTool_ColorSegmenter:
         # Check if plugin was started the first time in current QGIS session
         # Must be set in initGui() to survive plugin reloads
         self.first_start = None
+
+        self.active_tasks = []
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -327,29 +489,19 @@ class AgroTool_ColorSegmenter:
 
             print('Input raster source: ', self.dlg.input_raster_layer.source())
             print('Ref image file: ', self.dlg.ref_image_path)
-            # Create output raster layer:
-            # Extract raster information using GDAL
-            input_ds = gdal.Open(self.dlg.input_raster_layer.source())
-            if input_ds is None:
-                raise RuntimeError("Failed to open input raster with GDAL.")
 
-            # Get raster geotransform and dimensions
-            geotransform = input_ds.GetGeoTransform()  # (x_min, pixel_width, 0, y_max, 0, -pixel_height)
-            #x_min, pixel_width, _, y_max, _, pixel_height = geotransform
-            x_res = input_ds.RasterXSize  # Number of pixels in the x-direction
-            y_res = input_ds.RasterYSize  # Number of pixels in the y-direction
 
-            print('Original ortho x and y size: ', x_res, y_res)
-            # Create the output raster using the same dimensions, geotransform, and projection
-            driver = gdal.GetDriverByName('GTiff')
-            #output_ds = driver.Create('/vsimem/temp_raster', x_res, y_res, 1, gdal.GDT_Byte)
-            output_ds = driver.Create(self.dlg.output_file_path, x_res, y_res, 1, gdal.GDT_Byte)
-            if output_ds is None:
-                raise RuntimeError("Failed to create output raster.")
+            #run_segmentation_task(param = self.dlg)
+            task = SegmentationTask(param = self.dlg)  
+            self.active_tasks.append(task)  
+            # NOTE: We need to keep a reference to task, otherwise is garbaged collected and the 
+            # 'SegmentationTask.finished' function is not executed
+            QgsApplication.taskManager().addTask(task)
 
-            output_ds.SetGeoTransform(geotransform)  # Set the same geotransform as the input raster
-            output_ds.SetProjection(input_ds.GetProjection())  # Use the same projection as the input raster
-
-            segment_main(self.dlg, output_ds)
+            # TODO: Connect to the signals to update the UI:
+            # self.task.progress_signal.connect(lambda value: self.update_progress_ui(value))
+            # self.task.finished_signal.connect(lambda result: self.handle_segmentation_result(result))
+            #
+       
 
             print('Finish main segmentation')
