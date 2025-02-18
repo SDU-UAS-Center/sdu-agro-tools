@@ -172,6 +172,9 @@ class AgroTool_ColorSegmenterDialog(QtWidgets.QDialog, FORM_CLASS):
                 if self.save_tiles_path == None:
                     ok = False
                     QMessageBox.warning(self, "Missing directory", "Please select a valid directory to save the tiles.")
+        else:
+            self.save_tiles = False
+            self.save_tiles_distance = False
 
         # Close GUI and start execution
         if ok: super().accept()
