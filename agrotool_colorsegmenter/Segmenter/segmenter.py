@@ -3,9 +3,15 @@ import numpy as np
 import rasterio
 
 
-class ColorBasedSegmenter():
-    def __init__(self, colormodel, param):
+from PyQt5.QtCore import QRunnable, pyqtSignal, QObject, QThreadPool, QEventLoop,  QMutex, QSemaphore
+
+class ColorBasedSegmenter(QObject):
+    progress_signal = pyqtSignal(int)
+
+    def __init__(self, colormodel, param, task):
         super().__init__()
+
+        self.task = task
 
         # Ensure parent directory exist
         if param.save_tiles_distance:
@@ -40,13 +46,24 @@ class ColorBasedSegmenter():
             self.save_distance_image(result, tile)
 
     def apply_colormodel_multi_tiles(self, tiles_list):
-        for tile in tiles_list:
+        for i, tile in enumerate(tiles_list):
+            # Check if the task has been cancelled
+            if self.task.isCanceled():
+                return False  # Exit early if canceled
+            
             result = self.process_tile(tile)
+
+            
             if isinstance(result, np.ndarray):
                 tile.distance_img = result
                 print(f"Result received: {tile.tile_number} with shape {tile.distance_img.shape}")
 
                 self.save_distance_image(result, tile)
+            
+            # Emit progress:
+            progress = int(40 + (80-40)*((i+1)/len(tiles_list)))
+            self.progress_signal.emit(progress)
+
 
     
     def process_tile(self, tile):

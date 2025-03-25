@@ -1,6 +1,6 @@
 from qgis.core import QgsRasterLayer, QgsProject, QgsTask, QgsMessageLog, Qgis
 from osgeo import gdal
-from PyQt5.QtCore import QThreadPool, pyqtSignal
+from PyQt5.QtCore import QThreadPool, pyqtSignal, QEventLoop
 
 import time
 import os
@@ -14,12 +14,24 @@ from . import colormodels, segmenter, tiler
 class SegmentationTask(QgsTask):
     # Define custom signals to update progress and deliver the result
     progress_signal = pyqtSignal(int)
-    
+    finish_signal = pyqtSignal()
+
     def __init__(self, param, description="Segmentation Task"):
         super().__init__(description, QgsTask.CanCancel)
         self.param = param
         self.start_time = time.time()
+        #self.event_loop = QEventLoop()
 
+    def cancel(self):
+        # Este método se invoca al llamar a task.cancel() desde la GUI.
+        super().cancel()
+        print('CANCELATION')
+        # Aquí puedes emitir la señal finish_signal para asegurarte que el event loop se cierra
+        self.finish_signal.emit()
+        #self.event_loop.quit()
+
+
+        
     def run(self):
         
         try:
@@ -27,30 +39,64 @@ class SegmentationTask(QgsTask):
             thread_pool.setMaxThreadCount(os.cpu_count())  # Set number of cpu count
 
             # Initialize the color model using reference pixels
+            self.progress_signal.emit(0)
             referencepixels = colormodels.get_referencepixels(self.param)
+
+            # Check if the task has been cancelled
+            if self.isCanceled():
+                return False  # Exit early if canceled
+        
             colormodel = colormodels.initialize_colormodel(referencepixels, self.param)
-            cbs = segmenter.ColorBasedSegmenter(colormodel, self.param)
+            cbs = segmenter.ColorBasedSegmenter(colormodel, self.param, task = self)
+            cbs.progress_signal.connect(self.progress_signal.emit)
             self.progress_signal.emit(20)  # 20% progress
+
+            # Check if the task has been cancelled
+            if self.isCanceled():
+                return False  # Exit early if canceled
+
+            # Define tile object:
+            tile_manager =  tiler.intilizatize_tiler_manager(thread_pool, self.param, task = self)
+            tile_manager.progress_signal.connect(self.progress_signal.emit)
 
             if self.param.tile_processing:
                 # For tile processing, generate tile list and manager
-                tile_list, tile_manager = tiler.get_tilelist_gdal(thread_pool, self.param)
-                self.progress_signal.emit(40)  # 40% progress
+                tile_list = tiler.get_tilelist_gdal(tile_manager, self.param)
+
+                # Check if the task has been cancelled
+                if self.isCanceled():
+                    return False  # Exit early if canceled
+            
+                #self.progress_signal.emit(40)  # 40% progress
                 cbs.apply_colormodel_multi_tiles(tile_list)
+
+                # Check if the task has been cancelled
+                if self.isCanceled():
+                    return False  # Exit early if canceled
 
                 # cbs = segmenter_thread2.ColorBasedSegmenter(tile_list, colormodel, self.param)
                 # cbs.apply_colormodel_multi_tiles_thread(thread_pool)
-                self.progress_signal.emit(80)  # 80% progress
+                #self.progress_signal.emit(80)  # 80% progress
                 distance_image = tile_manager.get_distance_raster()
             else:
                 print('AQUEIII')
                 # For single-tile processing
-                single_tile = tiler.get_single_tile2(self.param)
+                single_tile = tiler.get_single_tile(tile_manager, self.param)
                 self.progress_signal.emit(40)  # 40% progress
+                # Check if the task has been cancelled
+                if self.isCanceled():
+                    return False  # Exit early if canceled
+            
                 cbs.apply_colormodel_single_tile(single_tile)
                 self.progress_signal.emit(80)  # 80% progress
+
+                # Check if the task has been cancelled
+                if self.isCanceled():
+                    return False  # Exit early if canceled
+            
                 distance_image = np.squeeze(single_tile.distance_img)
                 print('Termina')
+
             self.progress_signal.emit(90)  # 90% progress
 
             QgsMessageLog.logMessage("Segmentation task finished successfully.", "AgroTool Color Segmenter", level=Qgis.Info)
@@ -124,4 +170,6 @@ class SegmentationTask(QgsTask):
                 QgsMessageLog.logMessage("Error while saving result: " + str(e), "AgroTool Color Segmenter", level=Qgis.Critical)
         else:
             QgsMessageLog.logMessage("Segmentation task failed.", "AgroTool Color Segmenter", level=Qgis.Critical)
+        
+        self.finish_signal.emit()
         return

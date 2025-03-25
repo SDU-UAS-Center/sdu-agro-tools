@@ -8,18 +8,25 @@ from osgeo import gdal
 from qgis.core import QgsProcessingException
 from PyQt5.QtCore import QRunnable, pyqtSignal, QObject, pyqtSlot, QEventLoop, QMutex
 
-from multiprocessing import shared_memory
 
+def intilizatize_tiler_manager(thread_pool, param, task):
+    return MultiTilesManager(thread_pool,
+                             task,
+                            raster_layer = param.input_raster_layer,  
+                            tile_size = (param.tiles_width, param.tiles_height), 
+                            overlap = param.overlap, 
+                            bands_to_use = param.bands_to_use, 
+                            output_dir=param.save_tiles_path)
 
-def get_tilelist_gdal(thread_pool, param):
+def get_tilelist_gdal(tile_manager, param):
     
-    # Init Tiles multiworker
-    tile_manager = MultiTilesManager(thread_pool, 
-                                     raster_layer = param.input_raster_layer,  
-                                     tile_size = (param.tiles_width, param.tiles_height), 
-                                     overlap = param.overlap, 
-                                     bands_to_use = param.bands_to_use, 
-                                     output_dir=param.save_tiles_path)
+    # # Init Tiles multiworker
+    # tile_manager = MultiTilesManager(thread_pool,
+    #                                  raster_layer = param.input_raster_layer,  
+    #                                  tile_size = (param.tiles_width, param.tiles_height), 
+    #                                  overlap = param.overlap, 
+    #                                  bands_to_use = param.bands_to_use, 
+    #                                  output_dir=param.save_tiles_path)
 
     # Define multiple tiles:
     tile_manager.define_multiples_tiles()
@@ -30,17 +37,17 @@ def get_tilelist_gdal(thread_pool, param):
     if param.save_tiles == True:
         tile_manager.save_tiles()
 
-    return tile_manager.get_tiles(), tile_manager
+    return tile_manager.get_tiles()
 
-def get_single_tile(param):
+def get_single_tile(tile_manager, param):
     
     # Init Tiles multiworker
-    tile_manager = MultiTilesManager(thread_pool = None, 
-                                     raster_layer = param.input_raster_layer,  
-                                     tile_size = (param.tiles_width, param.tiles_height), 
-                                     overlap = param.overlap, 
-                                     bands_to_use = param.bands_to_use, 
-                                     output_dir=param.save_tiles_path)
+    # tile_manager = MultiTilesManager(thread_pool = None, 
+    #                                  raster_layer = param.input_raster_layer,  
+    #                                  tile_size = (param.tiles_width, param.tiles_height), 
+    #                                  overlap = param.overlap, 
+    #                                  bands_to_use = param.bands_to_use, 
+    #                                  output_dir=param.save_tiles_path)
     # Define single tile:
     tile_manager.define_single_tile()
 
@@ -60,11 +67,15 @@ class MultiTilesManager(QObject):
         2- Create Tiles object: Tiles properties + tile np.array
     '''
 
-    all_results_ready = pyqtSignal() # Handle end of execution
+    finish_signal = pyqtSignal() # Handle end of execution
+    cancel_singal = pyqtSignal()
+    progress_signal = pyqtSignal(int)
 
-    def __init__(self, thread_pool, raster_layer: QgsRaster, tile_size, overlap, bands_to_use = None, output_dir = None):
+    def __init__(self, thread_pool, task, raster_layer: QgsRaster, tile_size, overlap, bands_to_use = None, output_dir = None):
         super().__init__()
         self.output_dir = output_dir
+
+        self.task = task
 
         # Save Tiles dimensions:
         if isinstance(tile_size, tuple):
@@ -122,6 +133,7 @@ class MultiTilesManager(QObject):
         self.mutex = QMutex()
         self.mutex_workers = QMutex()
         self.completed_task = 0
+
 
     def get_tiles(self):
         ''' Return list of Tile objects'''
@@ -276,15 +288,16 @@ class MultiTilesManager(QObject):
     def extract_arrya_from_single_tile(self):
         self.tiles_list.read_array_from_tile(self.gdal_raster)
 
-    # TODO: Remove this function
     def extract_array_from_tile(self):
         print('Converting tiles to np array GDAL.')
         for tile in self.tiles_list:
             tile.read_array_from_tile(self.gdal_raster)
+        
+        self.progress_signal.emit(40)
     
     def extract_array_from_tile_thread(self):
         print('Converting tiles to np array GDAL threads.')
-        for tile in self.tiles_list:
+        for tile in self.tiles_list:           
             worker = TileWorker(self.gdal_raster, tile, self.mutex_workers)
             worker.signals.result.connect(lambda result, t=tile: self.handle_result(t, result))
             worker.signals.error.connect(self.handle_error)
@@ -292,7 +305,8 @@ class MultiTilesManager(QObject):
             self.thread_pool.start(worker)
         # Wait for all tasks to complete, but don't block the GUI
         loop = QEventLoop()
-        self.all_results_ready.connect(loop.quit)  # When signal emitted, loop finish
+        self.finish_signal.connect(loop.quit)  # When signal emitted, loop finish
+        self.cancel_singal.connect(loop.quit)
         loop.exec_()  # Stop main script execution
 
     def handle_result(self, tile, img):
@@ -302,12 +316,23 @@ class MultiTilesManager(QObject):
         tile.img = np.array(img)
         self.completed_task += 1
 
+        # Compute progress:
+        progress = int(20 + (40-20)*(self.completed_task/len(self.tiles_list)))
+        self.progress_signal.emit(progress)
+
+        # Termination condition:
         if self.completed_task == len(self.tiles_list):
-            self.all_results_ready.emit()
+            self.finish_signal.emit()
+
+        # Check if the task has been cancelled
+        if self.task.isCanceled():
+            self.cancel_singal.emit()
+
         self.mutex.unlock()
 
     def handle_error(self, error_message):
-        self.all_results_ready.emit()
+        self.cancel_singal.emit()
+        #self.finish_signal.emit()
         # TODO: Change to QErrorMessage
         print(f"Error occurred: {error_message}")
 

@@ -45,6 +45,8 @@ class AgroTool_ColorSegmenterDialog(QtWidgets.QDialog, FORM_CLASS):
         # #widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
 
+        # Progress bar:
+        
         # TODO: Include band and overlap in GUI
         # Parameters:
         self.input_raster_layer = None
@@ -68,8 +70,8 @@ class AgroTool_ColorSegmenterDialog(QtWidgets.QDialog, FORM_CLASS):
         # Connect signals
         ############ INPUT RASTER LAYER ############       
         # Connect the combo box and button to methods
-        self.InputRasterLayerSelector.currentIndexChanged.connect(self.select_raster_layer)
-        self.InputRasterLayerButton.clicked.connect(self.load_raster_layer)
+        self.InputRasterLayerSelector.currentIndexChanged.connect(self.select_input_raster_layer)
+        self.InputRasterLayerButton.clicked.connect(self.load_input_aster_layer)
 
         ############ OUTPUT RASTER ############
         self.OutputRasterButton.clicked.connect(self.select_output_file)
@@ -96,13 +98,9 @@ class AgroTool_ColorSegmenterDialog(QtWidgets.QDialog, FORM_CLASS):
         ############ METRIC SELECTION ############
         self.GMMSpinBox.setEnabled(False)   # As default is Mahalanobis, number of component of GMM is desable initially
         self.MetricSelector.currentIndexChanged.connect(self.metric_selector)
-        self.GMMSpinBox.valueChanged.connect(self.GMM_components_selector)
-        self.ScaleFactorSpinBox.valueChanged.connect(self.scale_factor_selector)
 
         ############ TILE PROCESSING ############
         self.TilesProcessingCheckBox.stateChanged.connect(self.tiles_processing_checkbox)
-        self.TilesWidthSpinBox.valueChanged.connect(self.tiles_width_selector)
-        self.TilesHeigthSpinBox.valueChanged.connect(self.tiles_height_selector)
         self.SaveTilesCheckBox.stateChanged.connect(self.save_tiles_checkbox)
         self.SaveTilesDistanceCheckBox.stateChanged.connect(self.save_distance_tiles_checkbox)
         self.SaveTilesButton.setEnabled(False)
@@ -123,7 +121,7 @@ class AgroTool_ColorSegmenterDialog(QtWidgets.QDialog, FORM_CLASS):
         ok = True
 
         # Input layer:
-        self.select_raster_layer()
+        self.select_input_raster_layer()
         if self.input_raster_layer == None:
             ok = False
             QMessageBox.warning(self, "Missing input raster", "Please load a valid input raster layer.")
@@ -156,8 +154,11 @@ class AgroTool_ColorSegmenterDialog(QtWidgets.QDialog, FORM_CLASS):
                 QMessageBox.warning(self, "Missing reference mask", "Please seled a valid reference mask (.tiff or .jpg)")
         
         # Distance metric:
-        self.metric_selector()
-        self.scale_factor_selector = self.ScaleFactorSpinBox.value()
+        self.distance_metric = self.MetricSelector.currentText()
+        self.scale_factor = self.ScaleFactorSpinBox.value()
+        #self.scale_factor_selector = self.ScaleFactorSpinBox.value()
+        if self.distance_metric == 'Gaussian Mixture Model':
+            self.gmm_components = self.GMMSpinBox.value()
 
         # Tiles processing:
         self.tile_processing = self.TilesProcessingCheckBox.isChecked()
@@ -238,7 +239,7 @@ class AgroTool_ColorSegmenterDialog(QtWidgets.QDialog, FORM_CLASS):
             self.SaveTilesLineEdit.clear()
 
 
-    def select_raster_layer(self):
+    def select_input_raster_layer(self):
         """Handle changes in combo box selection."""
         # Get the currently selected layer name from the combo box
         selected_layer_name = self.InputRasterLayerSelector.currentText()
@@ -255,7 +256,7 @@ class AgroTool_ColorSegmenterDialog(QtWidgets.QDialog, FORM_CLASS):
         else:
             print(f"No matching input QgsRasterLayer found for: {self.input_raster_layer}")
 
-    def load_raster_layer(self):
+    def load_input_aster_layer(self):
         """Opens a dialog to select a .tiff raster file and load it into QGIS"""
         # Open a file dialog to select a .tiff file
         filename, _filter = QFileDialog.getOpenFileName(self, "Select Raster File", "", "*.tif")
@@ -348,31 +349,11 @@ class AgroTool_ColorSegmenterDialog(QtWidgets.QDialog, FORM_CLASS):
     def image_format_selector(self):
         " This function serve a double purpose: select the image format and also update the available layer to select"
         image_format = self.ImageFormatSelector.currentText()
-        # self.ReferenceImageSelector.blockSignals(True)
-        # self.ReferenceMaskSelector.blockSignals(True)
         if image_format == '.tiff':
-            # self.ReferenceImageSelector.clear()
-            # self.ReferenceMaskSelector.clear()
-            # # Populate the comboBox with names of all the loaded layers
-            # tiff_layers_names = [layer.name() for layer in QgsProject.instance().mapLayers().values() if isinstance(layer, QgsRasterLayer) and layer.source().lower().endswith('.tif')]
-            # self.ReferenceImageSelector.addItems(tiff_layers_names)
-            # self.ReferenceMaskSelector.addItems(tiff_layers_names)
             self.refPixel_method = 1
         elif image_format == '.jpg':
-            # self.ReferenceImageSelector.clear()
-            # self.ReferenceMaskSelector.clear()
-            # # Populate the comboBox with names of all the loaded layers
-            # jpg_layers_names = [layer.name() for layer in QgsProject.instance().mapLayers().values() if isinstance(layer, QgsRasterLayer) and (layer.source().lower().endswith('.jpg') or layer.source().lower().endswith('.jpeg'))]
-            # self.ReferenceImageSelector.addItems(jpg_layers_names)
-            # self.ReferenceMaskSelector.addItems(jpg_layers_names)
             self.refPixel_method = 2
-        self.update_layers()
-        # self.ReferenceImageSelector.blockSignals(False)
-        # self.ReferenceMaskSelector.blockSignals(False)
-        
-
-            
-        
+        self.update_layers()      
     
     def refimage_selector(self):
         """Handle changes in combo box selection."""
@@ -500,19 +481,7 @@ class AgroTool_ColorSegmenterDialog(QtWidgets.QDialog, FORM_CLASS):
             self.gmm_components = self.GMMSpinBox.value()
         else:
             self.GMMSpinBox.setEnabled(False)
-    
-    def GMM_components_selector(self, value):
-        self.gmm_components = value
-    
-    def scale_factor_selector(self, value):
-        self.scale_factor = value
-    
-    def tiles_width_selector(self, value):
-        self.tiles_width = value
-    
-    def tiles_height_selector(self, value):
-        self.tiles_height = value
-
+            
     def save_tiles_checkbox(self, state):
         if state == 2:
             self.save_tiles = True
