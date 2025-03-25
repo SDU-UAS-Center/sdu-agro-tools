@@ -5,7 +5,7 @@ import rasterio
 from rasterio.transform import Affine
 from qgis.core import QgsRaster, QgsRectangle
 from osgeo import gdal
-from qgis.core import QgsProcessingException
+from qgis.core import QgsProcessingException, QgsMessageLog
 from PyQt5.QtCore import QRunnable, pyqtSignal, QObject, pyqtSlot, QEventLoop, QMutex
 
 
@@ -18,41 +18,25 @@ def intilizatize_tiler_manager(thread_pool, param, task):
                             bands_to_use = param.bands_to_use, 
                             output_dir=param.save_tiles_path)
 
-def get_tilelist_gdal(tile_manager, param):
-    
-    # # Init Tiles multiworker
-    # tile_manager = MultiTilesManager(thread_pool,
-    #                                  raster_layer = param.input_raster_layer,  
-    #                                  tile_size = (param.tiles_width, param.tiles_height), 
-    #                                  overlap = param.overlap, 
-    #                                  bands_to_use = param.bands_to_use, 
-    #                                  output_dir=param.save_tiles_path)
-
+def get_multiples_tiles(tile_manager, param):
     # Define multiple tiles:
     tile_manager.define_multiples_tiles()
 
     # Convert raster to np array
-    tile_manager.extract_array_from_tile_thread()
+    tile_manager.extract_array_from_multi_tiles()
 
+    # Save tiles images
     if param.save_tiles == True:
         tile_manager.save_tiles()
 
     return tile_manager.get_tiles()
 
 def get_single_tile(tile_manager, param):
-    
-    # Init Tiles multiworker
-    # tile_manager = MultiTilesManager(thread_pool = None, 
-    #                                  raster_layer = param.input_raster_layer,  
-    #                                  tile_size = (param.tiles_width, param.tiles_height), 
-    #                                  overlap = param.overlap, 
-    #                                  bands_to_use = param.bands_to_use, 
-    #                                  output_dir=param.save_tiles_path)
     # Define single tile:
     tile_manager.define_single_tile()
 
     # Convert raster to np array
-    tile_manager.extract_array_from_tile()
+    tile_manager.extract_array_from_single_tile()
 
     if param.save_tiles == True:
         tile_manager.save_tiles()
@@ -226,13 +210,10 @@ class MultiTilesManager(QObject):
         if self.raster_columns < self.tile_heigth and self.raster_rows < self.tile_width:
             raise QgsProcessingException("tile_size larger than orthomosaic")
 
-        print('Defining tiles borders.')
-
         # Get the number of rows and columns of tiles based on pixel dimensions
         n_width = np.ceil(self.raster_columns / (self.tile_width * (1 - self.overlap))).astype(int)
         n_height = np.ceil(self.raster_rows / (self.tile_heigth * (1 - self.overlap))).astype(int)
 
-        print('N height and width: ', n_height, n_width)
         # Calculate step size in terms of pixels (not geographic units)
         step_height_pixels = self.tile_heigth * (1 - self.overlap)  # Pixel step for height
         step_width_pixels = self.tile_width * (1 - self.overlap)    # Pixel step for width
@@ -283,26 +264,21 @@ class MultiTilesManager(QObject):
                 tile.processing_range[1][1] = self.tile_width
 
         self.tiles_list = tiles
-        print('Number of tiles: ', len(self.tiles_list))
+        #print('Number of tiles: ', len(self.tiles_list))
 
-    def extract_arrya_from_single_tile(self):
-        self.tiles_list.read_array_from_tile(self.gdal_raster)
 
-    def extract_array_from_tile(self):
-        print('Converting tiles to np array GDAL.')
-        for tile in self.tiles_list:
-            tile.read_array_from_tile(self.gdal_raster)
-        
+    def extract_array_from_single_tile(self):
+        self.tile_list[0].read_array_from_tile(self.gdal_raster)
         self.progress_signal.emit(40)
     
-    def extract_array_from_tile_thread(self):
-        print('Converting tiles to np array GDAL threads.')
+    def extract_array_from_multi_tiles(self):
         for tile in self.tiles_list:           
             worker = TileWorker(self.gdal_raster, tile, self.mutex_workers)
             worker.signals.result.connect(lambda result, t=tile: self.handle_result(t, result))
             worker.signals.error.connect(self.handle_error)
             worker.signals.finished.connect(lambda t=tile: print(f"Extracting np array for tile {t.tile_number} finished"))
             self.thread_pool.start(worker)
+
         # Wait for all tasks to complete, but don't block the GUI
         loop = QEventLoop()
         self.finish_signal.connect(loop.quit)  # When signal emitted, loop finish
@@ -332,23 +308,19 @@ class MultiTilesManager(QObject):
 
     def handle_error(self, error_message):
         self.cancel_singal.emit()
-        #self.finish_signal.emit()
-        # TODO: Change to QErrorMessage
-        print(f"Error occurred: {error_message}")
-
+        QgsProcessingException(f"Error occurred: {error_message}")
+       
     def save_tiles(self):
         '''
         This function iterate over the tile list using SaveTileWorker for multithreading computing.
         '''
         num_tiles = len(self.tiles_list)
         if  self.output_dir is not None:
-            print('Saving tiles images.')
             for tile in self.tiles_list:
                 worker = SaveTileWorker(self.output_dir, tile, num_tiles)
                 worker.signals.finished.connect(lambda t=tile: print(f"Save image for tile {t.tile_number} finished"))
-                worker.signals.error.connect( lambda error_message: print(f"Saving Tile Image - Error occurred: {error_message}"))
+                worker.signals.error.connect(self.handle_error)
                 self.thread_pool.start(worker)
-                #tile.save_tile(self.output_dir)
             self.thread_pool.waitForDone()  #  Wait for threads to complete before moving forward.
 
     def get_distance_raster(self):
@@ -441,9 +413,11 @@ class Tile:
             new_dataset.close()    
         
     def read_array_from_tile(self, raster_gdal):
+        # Define tile image dimension:
         height, width = self.size
         xoff, yoff = int(self.rectangle_pixel.xMinimum()), int(self.rectangle_pixel.yMinimum())
         tile_width, tile_height = int(self.rectangle_pixel.width()), int(self.rectangle_pixel.height())
+
         # Init array:
         self.img = np.empty([self.n_bands, height, width], dtype = np.uint8)
         
@@ -453,8 +427,7 @@ class Tile:
 
             
             
-       
-
+############ Multi Thread workers ############
 
 class TileWorker(QRunnable):
     '''
@@ -473,7 +446,7 @@ class TileWorker(QRunnable):
     @pyqtSlot()
     def run(self):
         try:
-            # Call function to process each tile
+            # Define tile image size
             height, width = self.tile.size
 
             xoff, yoff = int(self.tile.rectangle_pixel.xMinimum()), int(self.tile.rectangle_pixel.yMinimum())
@@ -500,7 +473,7 @@ class SaveTileWorker(QRunnable):
     '''
         This class create a worker for Qgs Multithreading.
         It receives information from the MultiTilesManager and specific Tile and
-        invoke the function to extract specific tile region from raster_array
+        invoke the function to save the tile image
     '''
     def __init__(self, output_dir, tile, n_tiles):
         super().__init__()

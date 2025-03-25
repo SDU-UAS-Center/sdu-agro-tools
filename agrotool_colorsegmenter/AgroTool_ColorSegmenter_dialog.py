@@ -27,7 +27,7 @@ import os
 from qgis.PyQt import uic
 from qgis.PyQt import QtWidgets
 from qgis.PyQt.QtWidgets import QAction, QFileDialog, QMessageBox
-from qgis.core import QgsProject, QgsVectorLayer, QgsRasterLayer
+from qgis.core import QgsProject, QgsVectorLayer, QgsRasterLayer, QgsProcessingException
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
@@ -133,7 +133,6 @@ class AgroTool_ColorSegmenterDialog(QtWidgets.QDialog, FORM_CLASS):
 
 
         # Reference pixel selector:
-        #self.image_format_selector()
         self.refPixel_selector(self.refPixel_tab.currentIndex())
 
         if self.refPixel_method == 0:
@@ -177,6 +176,26 @@ class AgroTool_ColorSegmenterDialog(QtWidgets.QDialog, FORM_CLASS):
             self.save_tiles = False
             self.save_tiles_distance = False
 
+         # Verify if valid raster layer
+        if not self.input_raster_layer.isValid():
+            ok = False
+            raise QgsProcessingException('Unvalid input raster layer.')
+
+        if self.refPixel_method == 0:
+            if not self.shape_file.isValid():
+                ok = False
+                raise QgsProcessingException('Unvalid vector layer!')
+        elif self.refPixel_method == 1 or self.refPixel_method == 2:
+            if self.input_raster_layer.source() == self.ref_image_path:
+                ok = False
+                raise QgsProcessingException('Unvalid reference image: Reference image can not be the same as the input raster layer.')
+            if self.input_raster_layer.source() == self.ref_pixel_maks_path:
+                ok = False
+                raise QgsProcessingException('Unvalid reference mask: Reference mask can not be the same as the input raster layer.')
+            if self.ref_image_path == self.ref_pixel_maks_path:
+                ok = False
+                raise QgsProcessingException('Reference image and reference mask can not be the same.')
+            
         # Close GUI and start execution
         if ok: super().accept()
         

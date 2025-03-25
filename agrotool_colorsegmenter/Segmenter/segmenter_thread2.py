@@ -131,28 +131,12 @@ class ColorBasedSegmenter(QObject):
             print("not saving images")
 
     def process_tile_develop(self, tile_img, colormodel):
-        #tile_img=tile.read_tile()   # Change here
-        # if self.is_image_empty(tile_img):
-        #     print("EMPTY TILE")
-        #     return None
-        # else:
-        #     distance_image = colormodel.calculate_distance(tile_img)
-        #     distance = self.convertScaleAbs(distance_image, self.output_scale_factor)
-        #     distance = distance.astype(np.uint8)
-
-        #     return distance   
+ 
         print('Processing')
         return np.random.rand(1, tile_img.shape[1], tile_img.shape[2])
         
     def apply_colormodel_multi_tiles_thread(self, thread_pool):
-
-        max_worker = 4
-        active_threads = 0
-        # Start processing using QThreadPool
-        # thread_pool = QThreadPool()
-        # thread_pool.setMaxThreadCount(os.cpu_count())  # Set the number of threads based on CPU
-
-       
+      
         # Submit tasks to the thread pool
         for tile in self.tiles_list:
             
@@ -167,14 +151,6 @@ class ColorBasedSegmenter(QObject):
             worker.signals.error.connect(self.handle_error)
             worker.signals.finished.connect(lambda _, t=current_tile: print(f"Thread for tile {t.tile_number} finished"))
             thread_pool.start(worker)
-
-            # # cont+=1
-            # if active_threads > 4: 
-            #     thread_pool.waitForDone()
-            #     active_threads = 0
-
-            # del tile_image
-            # del local_colormodel
 
         # Wait for all tasks to complete, but don't block the GUI
         loop = QEventLoop()
