@@ -18,3 +18,4 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
+.. Run with make html in ubuntu

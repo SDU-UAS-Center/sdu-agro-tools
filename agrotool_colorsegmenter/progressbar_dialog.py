@@ -67,4 +67,4 @@ class AgroTool_ColorSegmenterProgressBar(QtWidgets.QDialog, FORM_CLASS):
         # Call the cancellation method of your task.
         self.singnal.cancel_singal.emit()
         print('Button pressed')
-        #self.close()  # Optionally close the progress dialog
+        self.close()  # Close the progress dialog

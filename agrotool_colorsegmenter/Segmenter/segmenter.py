@@ -26,8 +26,10 @@ class ColorBasedSegmenter(QObject):
             self.output_dir = None
     
         self.colormodel=colormodel  # Color model
+        
+        # Save as float uint8
+        self.convert = param.convert_uint8
         self.output_scale_factor = param.scale_factor   # Scale factor for output
-
 
     
     def is_image_empty(self, image):
@@ -73,16 +75,20 @@ class ColorBasedSegmenter(QObject):
             return None
         else:
             distance_image = self.colormodel.calculate_distance(tile_img)
-            distance = self.convertScaleAbs(distance_image, self.output_scale_factor)
-            distance = distance.astype(np.uint8)
-
-            return distance    
+            print("Tile type before ", type(distance_image.dtype))
+            # Convert from np.float64 to np.uint8 - save space
+            if self.convert:
+                distance_image = self.convertScaleAbs(distance_image, self.output_scale_factor)
+            #distance = distance.astype(np.uint8)
+            print("Tile type after ", type(distance_image.dtype))
+            return distance_image    
 
 
     def convertScaleAbs(self, img, alpha):
         """ Scales an image using a given factor while ensuring pixel values remain within valid range."""
         scaled_img=alpha*img
         scaled_img = np.minimum(scaled_img, 255) # NOTE: Vectorized operation, modification
+        scaled_img = scaled_img.astype(np.uint8)
         return scaled_img
     
     def save_distance_image(self, img, tile):

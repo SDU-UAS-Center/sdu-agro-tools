@@ -23,11 +23,108 @@
 """
 
 import os
+from qgis import processing
 
 from qgis.PyQt import uic
 from qgis.PyQt import QtWidgets
 from qgis.PyQt.QtWidgets import QAction, QFileDialog, QMessageBox
-from qgis.core import QgsProject, QgsVectorLayer, QgsRasterLayer, QgsProcessingException
+from PyQt5.QtCore import pyqtSignal, QObject
+from qgis.core import (QgsProject,
+                      QgsVectorLayer,
+                      QgsRasterLayer,
+                      QgsProcessingException,
+                      QgsProcessingContext,
+                      QgsProcessingFeedback,
+                      QgsProcessingAlgRunnerTask,
+                      QgsMessageLog,
+                      QgsApplication,
+                      QgsTask,
+                      Qgis)
+
+from .progressbar_dialog import AgroTool_ColorSegmenterProgressBar
+
+class SDUAgricultureAlgorithmTask(QgsTask):
+    """
+    Auxiliary class - wraps the algorithm in a QTask object which allows concurrent execution
+    and does not block the main QGIS thread.
+
+    Add OUTPUT to current QGIS project - need to do manually this with custom GUI
+
+    When you have a custom GUI, the execution of the algorithm must be done with this class:
+
+    task = MyProcessingTask(alg = self.alg, params = params)
+    self.active_task.append(task) -> Need to keep a reference to the task
+    QgsApplication.instance().taskManager().addTask(task)
+
+    """
+    def __init__(self, alg, params):
+        super().__init__('SDUAgricultureAlgorithmTask', QgsTask.CanCancel)
+        # Clonamos el algoritmo para no tocar el original
+        print("Init task")
+        self.alg = alg #.clone()
+        self.params = params
+        self.context = QgsProcessingContext()
+        self.context.setProject(QgsProject.instance())
+        self.feedback = QgsProcessingFeedback()
+
+        # Progress bar:
+        self.progressDlg = AgroTool_ColorSegmenterProgressBar()  # a custom QDialog subclass with a QProgressBar
+        self.progressDlg.setWindowTitle("AgroTool Color Segmenter-processing")
+        self.progressDlg.show()
+
+        # Progress bar feedback
+        self.feedback.progressChanged.connect(lambda progress: self.progressDlg.progressBar.setValue(int(progress)))
+        self.progressDlg.singnal.cancel_singal.connect(self.feedback.cancel)
+        self.progressDlg.singnal.cancel_singal.connect(self.cancel)
+
+        # Prepares the algorithm for execution - run in main thread
+        self.alg.prepare(self.params, self.context, self.feedback)
+
+
+    def run(self):
+
+        print("Start running task")
+        try:
+            # Runs the algorithm - run in background thread
+            results = self.alg.runPrepared(self.params, self.context, self.feedback)
+            
+            if self.feedback.isCanceled():
+                return False
+        
+            # Save result
+            self._results = results
+            print("Result saved!")
+            return True
+
+        except Exception as e:
+            QgsMessageLog.logMessage("Error during color segmenetation: " + str(e), "AgroTool Color Segmenter", level=Qgis.Critical)
+            return False
+
+    def finished(self, result):
+        # Cleaning and results in the main thread
+        final = self.alg.postProcess(self.context, self.feedback)
+
+        if result:
+            try:
+                # Add output raster to current project
+                print("Attempt to add layer")
+                name = os.path.splitext(os.path.basename(self._results["OUTPUT"]))[0]
+                layer = QgsRasterLayer(self._results["OUTPUT"], name)
+
+                if not layer.isValid():
+                    QgsMessageLog.logMessage("Failed to load raster output layer", "AgroTool", Qgis.Critical)
+                else:
+                    QgsProject.instance().addMapLayer(layer)
+                
+                QgsMessageLog.logMessage("Added raster layer to current project", "AgroTool Color Segmenter", level=Qgis.Info)
+            except Exception as e:
+                QgsMessageLog.logMessage("Error while saving result: " + str(e), "AgroTool Color Segmenter", level=Qgis.Critical)
+        else:
+            QgsMessageLog.logMessage("Segmentation task failed.", "AgroTool Color Segmenter", level=Qgis.Critical)
+
+        self.progressDlg.close()
+
+############## GRAPHIC USER INTERFACE ##############
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
@@ -35,7 +132,7 @@ FORM_CLASS, _ = uic.loadUiType(os.path.join(
 
 
 class AgroTool_ColorSegmenterDialog(QtWidgets.QDialog, FORM_CLASS):
-    def __init__(self, parent=None):
+    def __init__(self, alg, parent=None):
         """Constructor."""
         super(AgroTool_ColorSegmenterDialog, self).__init__(parent)
         # Set up the user interface from Designer through FORM_CLASS.
@@ -45,8 +142,10 @@ class AgroTool_ColorSegmenterDialog(QtWidgets.QDialog, FORM_CLASS):
         # #widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
 
-        # Progress bar:
-        
+        # Algorithm to run:
+        self.alg = alg
+        self.active_task = []
+
         # TODO: Include band and overlap in GUI
         # Parameters:
         self.input_raster_layer = None
@@ -57,8 +156,9 @@ class AgroTool_ColorSegmenterDialog(QtWidgets.QDialog, FORM_CLASS):
         self.ref_pixel_maks_path = None
         self.distance_metric = 'Mahalanobis'
         self.gmm_components = 2
+        self.convert_uint8 = True  
         self.scale_factor = 5
-        self.bands_to_use = [0,1,2] # NOTE: Need to be added to GUI
+        self.bands_to_use = [] 
         self.tile_processing = True
         self.tiles_width = 3000
         self.tiles_height = 3000
@@ -68,7 +168,7 @@ class AgroTool_ColorSegmenterDialog(QtWidgets.QDialog, FORM_CLASS):
         self.overlap = 0.01    # NOTE: Need to be added to GUI
 
         # Connect signals
-        ############ INPUT RASTER LAYER ############       
+        ############ INPUT RASTER LAYER ############
         # Connect the combo box and button to methods
         self.InputRasterLayerSelector.currentIndexChanged.connect(self.select_input_raster_layer)
         self.InputRasterLayerButton.clicked.connect(self.load_input_aster_layer)
@@ -76,6 +176,9 @@ class AgroTool_ColorSegmenterDialog(QtWidgets.QDialog, FORM_CLASS):
         ############ OUTPUT RASTER ############
         self.OutputRasterButton.clicked.connect(self.select_output_file)
 
+        ########### CONVERT UINT8 #############
+        self.ConvertScaleCheckBox.stateChanged.connect(self.convert_scale_checkbox)
+    
         ############ REF. PIXEL TAB SELECTION ############
         self.refPixel_tab.currentChanged.connect(self.refPixel_selector)
 
@@ -83,15 +186,15 @@ class AgroTool_ColorSegmenterDialog(QtWidgets.QDialog, FORM_CLASS):
         # Connect the combo box and button to methods
         self.InputShapeFileSelector.currentIndexChanged.connect(self.shapefile_selector)
         self.ShapeFileButton.clicked.connect(self.load_shapefile)
-        
+
 
         # Connect Image Widget
         self.ImageFormatSelector.currentIndexChanged.connect(self.image_format_selector)
-        
+
         # Connect the combo box and button to methods
         self.ReferenceImageSelector.currentIndexChanged.connect(self.refimage_selector)
         self.ReferenceImageButton.clicked.connect(self.load_refimage)
-        
+
         self.ReferenceMaskSelector.currentIndexChanged.connect(self.refmask_selector)
         self.ReferenceMaskButton.clicked.connect(self.load_maskimage)
 
@@ -111,11 +214,10 @@ class AgroTool_ColorSegmenterDialog(QtWidgets.QDialog, FORM_CLASS):
         """Override the showEvent to refresh available layers when the GUI is opened."""
         super().showEvent(event)  # Call the parent class's showEvent method
 
-        
         # Refresh the combo boxes here
         self.update_layers(clear_output = True)
         self.refPixel_selector(self.refPixel_tab.currentIndex())
-    
+
     def validate_and_accept(self):
         " Function to validate all parameters are loaded correctly"
         ok = True
@@ -125,12 +227,18 @@ class AgroTool_ColorSegmenterDialog(QtWidgets.QDialog, FORM_CLASS):
         if self.input_raster_layer == None:
             ok = False
             QMessageBox.warning(self, "Missing input raster", "Please load a valid input raster layer.")
-        
+
         # Output file:
         if self.output_file_path == None:
             ok = False
             QMessageBox.warning(self, "Missing output file", "Please select a valid output file.")
 
+        # Convert to uint8:
+        self.convert_uint8 = self.ConvertScaleCheckBox.isChecked()
+        if self.convert_uint8:
+            self.scale_factor = self.ScaleFactorSpinBox.value()
+        else:
+            self.scale_factor = None
 
         # Reference pixel selector:
         self.refPixel_selector(self.refPixel_tab.currentIndex())
@@ -146,28 +254,45 @@ class AgroTool_ColorSegmenterDialog(QtWidgets.QDialog, FORM_CLASS):
             if self.ref_image_path == None:
                 ok = False
                 QMessageBox.warning(self, "Missing reference image", "Please seled a valid reference image (.tiff or .jpg)")
-            
+
             self.refmask_selector()
             if self.ref_pixel_maks_path == None:
                 ok = False
                 QMessageBox.warning(self, "Missing reference mask", "Please seled a valid reference mask (.tiff or .jpg)")
-        
+
         # Distance metric:
         self.distance_metric = self.MetricSelector.currentText()
-        self.scale_factor = self.ScaleFactorSpinBox.value()
+        
+        # Band to use:
+        if self.R_button.isChecked():
+            self.bands_to_use.append(1)
+        if self.G_button.isChecked():
+            self.bands_to_use.append(2)
+        if self.B_button.isChecked():
+            self.bands_to_use.append(3)
+
         #self.scale_factor_selector = self.ScaleFactorSpinBox.value()
         if self.distance_metric == 'Gaussian Mixture Model':
             self.gmm_components = self.GMMSpinBox.value()
 
+        # Map distance name to numbers:
+        # Remap color model:
+        if self.distance_metric == "Mahalanobis":
+            self.distance_metric = 0
+        elif self.distance_metric == "Gaussian Mixture Model":
+            self.distance_metric = 1
+        else:
+            raise Exception
+        
         # Tiles processing:
         self.tile_processing = self.TilesProcessingCheckBox.isChecked()
         if self.tile_processing:
             self.tiles_width = self.TilesWidthSpinBox.value()
             self.tiles_height = self.TilesHeigthSpinBox.value()
-            
+
             self.save_tiles = self.SaveTilesCheckBox.isChecked()
             self.save_tiles_distance = self.SaveTilesDistanceCheckBox.isChecked()
-            
+
             if self.save_tiles or self.save_tiles_distance:
                 if self.save_tiles_path == None:
                     ok = False
@@ -195,10 +320,42 @@ class AgroTool_ColorSegmenterDialog(QtWidgets.QDialog, FORM_CLASS):
             if self.ref_image_path == self.ref_pixel_maks_path:
                 ok = False
                 raise QgsProcessingException('Reference image and reference mask can not be the same.')
-            
+
         # Close GUI and start execution
-        if ok: super().accept()
-        
+        if ok:
+            super().accept()
+
+            # Parameter dict map:
+            params = {
+                'INPUT': self.input_raster_layer,
+                'OUTPUT': self.output_file_path,
+                'REF_TYPE': self.refPixel_method,
+                'SHAPE_FILE': self.shape_file,
+                'REFERENCE': self.ref_image_path,
+                'ANNOTATED': self.ref_pixel_maks_path,
+                'COLOR_MODEL': self.distance_metric,
+                'GMM_PARAM': self.gmm_components,
+                'CONTERT_UINT': self.convert_uint8,
+                'SCALE': self.scale_factor,
+                'BANDS': self.bands_to_use,
+                'tile_processing': self.tile_processing,
+                'TILE_WIDTH': self.tiles_width,
+                'TILE_HEIGHT': self.tiles_height,
+                'SAVE_TILES_PATH': self.save_tiles_path,
+                'SAVE_TILES': self.save_tiles,
+                'SAVE_TILES_DISTANCE': self.save_tiles_distance,
+                #'overlap': self.overlap,
+            }
+            
+            try:
+                # Init algorithm as a QTask
+                task = SDUAgricultureAlgorithmTask(alg = self.alg, params = params)
+                self.active_task.append(task)
+                QgsApplication.instance().taskManager().addTask(task)
+            except Exception as e:
+                raise e
+
+
     def update_layers(self, clear_output = False):
         layers = QgsProject.instance().mapLayers().values()
 
@@ -215,7 +372,7 @@ class AgroTool_ColorSegmenterDialog(QtWidgets.QDialog, FORM_CLASS):
 
         # Shape file
         self.InputShapeFileSelector.blockSignals(True)
-        current_shape = self.InputShapeFileSelector.currentText()  # Save the current selection before clearing   
+        current_shape = self.InputShapeFileSelector.currentText()  # Save the current selection before clearing
         self.InputShapeFileSelector.clear()
         # Populate the comboBox with names of all the loaded layers
         shape_files_names = [layer.name() for layer in layers if isinstance(layer, QgsVectorLayer) and layer.providerType() == "ogr"]
@@ -267,7 +424,7 @@ class AgroTool_ColorSegmenterDialog(QtWidgets.QDialog, FORM_CLASS):
             if isinstance(layer, QgsRasterLayer) and layer.name() == selected_layer_name:
                 self.input_raster_layer = layer
                 break
-        
+
         # TODO: Delete following prints
         # Debugging output
         if self.input_raster_layer:
@@ -279,21 +436,21 @@ class AgroTool_ColorSegmenterDialog(QtWidgets.QDialog, FORM_CLASS):
         """Opens a dialog to select a .tiff raster file and load it into QGIS"""
         # Open a file dialog to select a .tiff file
         filename, _filter = QFileDialog.getOpenFileName(self, "Select Raster File", "", "*.tif")
-        
+
         # Check if the user selected a file
         if filename:
             # Create a new raster layer
             layer_name = os.path.splitext(os.path.basename(filename))[0]
             raster_layer = QgsRasterLayer(filename, layer_name)
-            
+
             # Check if the layer is valid
             if not raster_layer.isValid():
                 QMessageBox.warning(self, "Invalid Layer", "The selected layer is not valid.")
                 return
-            
+
             # Add the raster layer to the QGIS project
             QgsProject.instance().addMapLayer(raster_layer)
-            
+
             # Update combo box and set the last selected layer to the new raster layer
             self.InputRasterLayerSelector.addItem(raster_layer.name(), raster_layer.id())
             self.input_raster_layer = raster_layer  # Update with the newly loaded layer
@@ -309,15 +466,15 @@ class AgroTool_ColorSegmenterDialog(QtWidgets.QDialog, FORM_CLASS):
     def select_output_file(self):
         filename, _filter = QFileDialog.getSaveFileName(
             self, "Select output file ","", '*.tiff')
-        
+
         if filename:
             self.OutputRasterLineEdit.setText(filename)
             self.output_file_path = filename
         else:
             QMessageBox.warning(self, "No File Selected", "Please select a output file.")
-    
 
-        
+
+
     def shapefile_selector(self):
         """Handle changes in combo box selection."""
         # Get the currently selected layer name from the combo box
@@ -327,7 +484,7 @@ class AgroTool_ColorSegmenterDialog(QtWidgets.QDialog, FORM_CLASS):
             if isinstance(layer, QgsVectorLayer) and layer.name() == selected_layer_name:
                 self.shape_file = layer
                 break
-        
+
         # TODO: Delete following prints
         # Debugging output
         if self.shape_file:
@@ -358,7 +515,7 @@ class AgroTool_ColorSegmenterDialog(QtWidgets.QDialog, FORM_CLASS):
             self.InputShapeFileSelector.addItem(vector_layer.name(), vector_layer.id())
             self.shape_file = vector_layer  # Update with the newly loaded layer
             print(f"Selected shapefile layer object: {self.shape_file.name()}")
-            
+
             # Set combo box to the newly added layer's name
             self.InputShapeFileSelector.setCurrentText(vector_layer.name())
             self.update_layers()
@@ -372,8 +529,8 @@ class AgroTool_ColorSegmenterDialog(QtWidgets.QDialog, FORM_CLASS):
             self.refPixel_method = 1
         elif image_format == '.jpg':
             self.refPixel_method = 2
-        self.update_layers()      
-    
+        self.update_layers()
+
     def refimage_selector(self):
         """Handle changes in combo box selection."""
         # Get the currently selected layer name from the combo box
@@ -384,14 +541,14 @@ class AgroTool_ColorSegmenterDialog(QtWidgets.QDialog, FORM_CLASS):
             if isinstance(layer, QgsRasterLayer) and layer.name() == selected_layer_name:
                 self.ref_image_path = layer.source()
                 break
-    
+
         # TODO: Delete following prints
         # Debugging output
         if self.ref_image_path:
             print(f"Selected reference image object: {self.ref_image_path}")
         else:
             print(f"No matching reference image QgsRasterLayer found for: {self.ref_image_path}")
-    
+
     def refmask_selector(self):
         """Handle changes in combo box selection."""
         # Get the currently selected layer name from the combo box
@@ -401,7 +558,7 @@ class AgroTool_ColorSegmenterDialog(QtWidgets.QDialog, FORM_CLASS):
             if isinstance(layer, QgsRasterLayer) and layer.name() == selected_layer_name:
                 self.ref_pixel_maks_path = layer.source()
                 break
-    
+
         # TODO: Delete following prints
         # Debugging output
         if self.ref_pixel_maks_path:
@@ -422,15 +579,15 @@ class AgroTool_ColorSegmenterDialog(QtWidgets.QDialog, FORM_CLASS):
             # Create a new raster layer
             layer_name = os.path.splitext(os.path.basename(filename))[0]
             ref_image = QgsRasterLayer(filename, layer_name)
-            
+
             # Check if the layer is valid
             if not ref_image.isValid():
                 QMessageBox.warning(self, "Invalid Layer", "The selected layer is not valid.")
                 return
-            
+
             # Add the raster layer to the QGIS project
             QgsProject.instance().addMapLayer(ref_image)
-            
+
             # Update combo box and set the last selected layer to the new raster layer
             self.ReferenceImageSelector.addItem(ref_image.name(), ref_image.id())
             self.ref_image_path = ref_image.source()  # Update with the newly loaded layer
@@ -440,7 +597,7 @@ class AgroTool_ColorSegmenterDialog(QtWidgets.QDialog, FORM_CLASS):
             self.update_layers()
         else:
             QMessageBox.warning(self, "No File Selected", "Please select a valid file.")
-    
+
     def load_maskimage(self):
         """Opens a dialog to select a .tiff raster file and load it into QGIS"""
         # Open a file dialog to select a .tiff file
@@ -454,15 +611,15 @@ class AgroTool_ColorSegmenterDialog(QtWidgets.QDialog, FORM_CLASS):
             # Create a new raster layer
             layer_name = os.path.splitext(os.path.basename(filename))[0]
             ref_image = QgsRasterLayer(filename, layer_name)
-            
+
             # Check if the layer is valid
             if not ref_image.isValid():
                 QMessageBox.warning(self, "Invalid Layer", "The selected layer is not valid.")
                 return
-            
+
             # Add the raster layer to the QGIS project
             QgsProject.instance().addMapLayer(ref_image)
-            
+
             # Update combo box and set the last selected layer to the new raster layer
             self.ReferenceMaskSelector.addItem(ref_image.name(), ref_image.id())
             self.ref_pixel_maks_path = ref_image.source()  # Update with the newly loaded layer
@@ -478,13 +635,13 @@ class AgroTool_ColorSegmenterDialog(QtWidgets.QDialog, FORM_CLASS):
 
         if index == 0:  # Tab ShapeFie selected
             self.refPixel_method = 0
-            
+
         elif index == 1:  # Tab Image selected
             image_format = self.ImageFormatSelector.currentText()
             if image_format == '.tiff':
                 self.refPixel_method = 1
             elif image_format == '.jpg':
-                self.refPixel_method = 2 
+                self.refPixel_method = 2
         self.update_layers()
         print("Reference method ", self.refPixel_method)
 
@@ -500,7 +657,7 @@ class AgroTool_ColorSegmenterDialog(QtWidgets.QDialog, FORM_CLASS):
             self.gmm_components = self.GMMSpinBox.value()
         else:
             self.GMMSpinBox.setEnabled(False)
-            
+
     def save_tiles_checkbox(self, state):
         if state == 2:
             self.save_tiles = True
@@ -508,11 +665,11 @@ class AgroTool_ColorSegmenterDialog(QtWidgets.QDialog, FORM_CLASS):
             self.SaveTilesLineEdit.setEnabled(True)
         elif state == 0:
             self.save_tiles = False
-            
+
             if not self.SaveTilesDistanceCheckBox.isChecked():
                 self.SaveTilesButton.setEnabled(False)
                 self.SaveTilesLineEdit.setEnabled(False)
-        
+
     def save_distance_tiles_checkbox(self, state):
         if state == 2:
             self.save_tiles_distance = True
@@ -520,11 +677,19 @@ class AgroTool_ColorSegmenterDialog(QtWidgets.QDialog, FORM_CLASS):
             self.SaveTilesLineEdit.setEnabled(True)
         elif state == 0:
             self.save_tiles_distance = False
-            
+
             if not self.SaveTilesCheckBox.isChecked():
                 self.SaveTilesButton.setEnabled(False)
                 self.SaveTilesLineEdit.setEnabled(False)
 
+    def convert_scale_checkbox(self, state):
+        if state == 2:
+            self.convert_uint8 = True
+            self.ScaleFactorSpinBox.setEnabled(True)
+        elif state == 0:
+            self.convert_uint8 = False
+            self.ScaleFactorSpinBox.setEnabled(False)
+        
     def tiles_processing_checkbox(self, state):
         if state == 2:
             self.tile_processing = True
@@ -543,13 +708,13 @@ class AgroTool_ColorSegmenterDialog(QtWidgets.QDialog, FORM_CLASS):
             self.SaveTilesDistanceCheckBox.setEnabled(False)
             self.SaveTilesButton.setEnabled(False)
             self.SaveTilesLineEdit.setEnabled(False)
-    
+
     def select_tiles_output_dir(self):
          # Open a dialog to select an existing directory
         directory = QFileDialog.getExistingDirectory(
             self, "Select Output Directory", ""
         )
-        
+
         if directory:
             # Update the line edit with the selected directory path
             self.SaveTilesLineEdit.setText(directory)

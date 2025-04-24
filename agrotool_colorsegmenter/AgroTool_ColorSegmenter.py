@@ -24,7 +24,7 @@
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction, QDialog
-from qgis.core import QgsRasterLayer, QgsProcessingException, QgsApplication, QgsProject, QgsTask, QgsMessageLog, Qgis
+from qgis.core import QgsRasterLayer, QgsProcessingException, QgsApplication, QgsProject, QgsTask, QgsMessageLog, Qgis, QgsProcessingContext, QgsProcessingFeedback
 from osgeo import gdal
 from PyQt5.QtCore import QThreadPool, pyqtSignal
 
@@ -32,12 +32,16 @@ from PyQt5.QtCore import QThreadPool, pyqtSignal
 from .resources import *
 # Import the code for the dialog
 from .AgroTool_ColorSegmenter_dialog import AgroTool_ColorSegmenterDialog
-from .progressbar_dialog import AgroTool_ColorSegmenterProgressBar
+from .AgroTool_ColorSegmenter_algorithm import SDUAgricultureAlgorithm
+
+from .AgroTool_ColorSegmenter_provider import  SDUAgricultureProvider
+
 import os.path
 import time
 import sys
 import inspect
 import numpy as np
+from qgis import processing
 
 cmd_folder = os.path.split(inspect.getfile(inspect.currentframe()))[0]
 
@@ -183,11 +187,16 @@ class AgroTool_ColorSegmenter:
         self.add_action(
             icon_path,
             text=self.tr(u'AgroTool Color Segmenter'),
-            callback=self.run,
+            callback=self.run_color_segmeneter,
             parent=self.iface.mainWindow())
 
         # will be set False in run()
         self.first_start = True
+
+        # Init provider:
+        self.provider = SDUAgricultureProvider()
+        QgsApplication.processingRegistry().addProvider(self.provider)
+
 
 
     def unload(self):
@@ -198,39 +207,24 @@ class AgroTool_ColorSegmenter:
                 action)
             self.iface.removeToolBarIcon(action)
 
+        # Remove provider:
+        QgsApplication.processingRegistry().removeProvider(self.provider)
 
-    def run(self):
+    def run_color_segmeneter(self):
         """Run method that performs all the real work"""
-
-        # Create the dialog with elements (after translation) and keep reference
-        # Only create GUI ONCE in callback, so that it will only load when the plugin is started
-        if self.first_start == True:
-            self.first_start = False
-            self.dlg = AgroTool_ColorSegmenterDialog()
-
-        # show the dialog
-        self.dlg.show()
-
-        # Run the dialog event loop
-        result = self.dlg.exec_()
-
-        # See if OK was pressed
-        if result == QDialog.Accepted:
-            # Show progress GUI:
-            self.progressDlg = AgroTool_ColorSegmenterProgressBar()  # a custom QDialog subclass with a QProgressBar
-            self.progressDlg.setWindowTitle("AgroTool Color Segmenter-processing")
-            self.progressDlg.show()
-
-            # Create QTask:
-            task = SegmentationTask(param = self.dlg)  
-            
-            self.progressDlg.singnal.cancel_singal.connect(task.cancel)         # Cancel function
-            task.progress_signal.connect(self.progressDlg.progressBar.setValue) # Update progress bar
-            task.finish_signal.connect(self.progressDlg.close)                  # Finishing signal - close progress bar UI
-
-            self.active_tasks.append(task)  
-            # NOTE: We need to keep a reference to task, otherwise is garbaged collected and the 'SegmentationTask.finished' function is not executed
-
-            # Initialize processing:
-            QgsApplication.taskManager().addTask(task)
         
+        # from .AgroTool_ColorSegmenter_algorithm import SDUAgricultureAlgorithm
+
+        # alg = SDUAgricultureAlgorithm()
+        # dialog = alg.createCustomParametersWidget(parent=self.iface.mainWindow())
+
+        # # Show GUI:
+        # dialog.exec_()
+
+        from .AgroTool_ColorSegmenter_dialog import AgroTool_ColorSegmenterDialog
+
+        self.dlg = AgroTool_ColorSegmenterDialog()
+
+
+        #processing.run("SDU:color_distance_calculator", parameters = {})
+       

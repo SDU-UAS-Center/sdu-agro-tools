@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>480</width>
-    <height>620</height>
+    <height>645</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -19,13 +19,13 @@
   <property name="minimumSize">
    <size>
     <width>480</width>
-    <height>620</height>
+    <height>645</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
     <width>480</width>
-    <height>620</height>
+    <height>645</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -38,7 +38,7 @@
    <property name="geometry">
     <rect>
      <x>155</x>
-     <y>581</y>
+     <y>611</y>
      <width>170</width>
      <height>32</height>
     </rect>
@@ -54,7 +54,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>130</y>
+     <y>160</y>
      <width>301</width>
      <height>16</height>
     </rect>
@@ -67,7 +67,7 @@
    <property name="geometry">
     <rect>
      <x>0</x>
-     <y>120</y>
+     <y>150</y>
      <width>491</width>
      <height>16</height>
     </rect>
@@ -99,7 +99,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>140</y>
+     <y>170</y>
      <width>391</width>
      <height>31</height>
     </rect>
@@ -115,7 +115,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>170</y>
+     <y>200</y>
      <width>461</width>
      <height>131</height>
     </rect>
@@ -338,7 +338,7 @@
    <property name="geometry">
     <rect>
      <x>0</x>
-     <y>300</y>
+     <y>330</y>
      <width>491</width>
      <height>16</height>
     </rect>
@@ -351,7 +351,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>320</y>
+     <y>350</y>
      <width>301</width>
      <height>16</height>
     </rect>
@@ -364,7 +364,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>330</y>
+     <y>360</y>
      <width>471</width>
      <height>31</height>
     </rect>
@@ -386,7 +386,7 @@
    <property name="geometry">
     <rect>
      <x>0</x>
-     <y>430</y>
+     <y>460</y>
      <width>491</width>
      <height>16</height>
     </rect>
@@ -399,7 +399,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>460</y>
+     <y>490</y>
      <width>461</width>
      <height>51</height>
     </rect>
@@ -457,16 +457,19 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>360</y>
-     <width>431</width>
+     <y>390</y>
+     <width>461</width>
      <height>31</height>
     </rect>
    </property>
    <layout class="QHBoxLayout" name="horizontalLayout_6">
+    <property name="spacing">
+     <number>7</number>
+    </property>
     <item>
      <widget class="QLabel" name="label_13">
       <property name="sizePolicy">
-       <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
         <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
@@ -524,7 +527,7 @@
       </property>
       <property name="sizeHint" stdset="0">
        <size>
-        <width>30</width>
+        <width>20</width>
         <height>20</height>
        </size>
       </property>
@@ -533,7 +536,7 @@
     <item>
      <widget class="QLabel" name="label_15">
       <property name="sizePolicy">
-       <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
         <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
@@ -565,54 +568,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>400</y>
-     <width>117</width>
-     <height>26</height>
-    </rect>
-   </property>
-   <layout class="QHBoxLayout" name="horizontalLayout_7">
-    <item>
-     <widget class="QLabel" name="label_16">
-      <property name="text">
-       <string>Scale factor</string>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QSpinBox" name="ScaleFactorSpinBox">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="toolTip">
-       <string>Scale factor to adjust image intensity. A value of 1 keeps the original brightness, and values greater than 1 increase the brightness</string>
-      </property>
-      <property name="whatsThis">
-       <string/>
-      </property>
-      <property name="accessibleDescription">
-       <string/>
-      </property>
-      <property name="minimum">
-       <number>1</number>
-      </property>
-      <property name="singleStep">
-       <number>1</number>
-      </property>
-      <property name="value">
-       <number>5</number>
-      </property>
-     </widget>
-    </item>
-   </layout>
-  </widget>
-  <widget class="QWidget" name="layoutWidget">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>450</y>
+     <y>480</y>
      <width>127</width>
      <height>18</height>
     </rect>
@@ -680,7 +636,7 @@
    <property name="geometry">
     <rect>
      <x>160</x>
-     <y>500</y>
+     <y>530</y>
      <width>314</width>
      <height>61</height>
     </rect>
@@ -727,7 +683,7 @@
    <property name="geometry">
     <rect>
      <x>12</x>
-     <y>502</y>
+     <y>532</y>
      <width>136</width>
      <height>57</height>
     </rect>
@@ -782,6 +738,170 @@
       </property>
       <property name="value">
        <number>3000</number>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QWidget" name="horizontalLayoutWidget">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>120</y>
+     <width>251</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <layout class="QHBoxLayout" name="horizontalLayout_9">
+    <property name="spacing">
+     <number>13</number>
+    </property>
+    <item>
+     <widget class="QCheckBox" name="ConvertScaleCheckBox">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="toolTip">
+       <string>Option to save the output raster layer as a uint8 (default) or as a float. Float is heavier but retains more pixel information.</string>
+      </property>
+      <property name="layoutDirection">
+       <enum>Qt::RightToLeft</enum>
+      </property>
+      <property name="text">
+       <string>Save as uint8</string>
+      </property>
+      <property name="checkable">
+       <bool>true</bool>
+      </property>
+      <property name="checked">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_7">
+      <item>
+       <widget class="QLabel" name="label_16">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="toolTip">
+         <string>Size reduction factor when converted to uint8.</string>
+        </property>
+        <property name="text">
+         <string>Scale factor</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QSpinBox" name="ScaleFactorSpinBox">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="toolTip">
+         <string>Size reduction factor when converted to uint8.</string>
+        </property>
+        <property name="whatsThis">
+         <string/>
+        </property>
+        <property name="accessibleDescription">
+         <string/>
+        </property>
+        <property name="minimum">
+         <number>1</number>
+        </property>
+        <property name="singleStep">
+         <number>1</number>
+        </property>
+        <property name="value">
+         <number>5</number>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QWidget" name="horizontalLayoutWidget_2">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>420</y>
+     <width>223</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <layout class="QHBoxLayout" name="horizontalLayout_10">
+    <property name="spacing">
+     <number>15</number>
+    </property>
+    <item>
+     <widget class="QLabel" name="label_22">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="text">
+       <string>Band to use:</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QCheckBox" name="R_button">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="text">
+       <string>R</string>
+      </property>
+      <property name="checked">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QCheckBox" name="G_button">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="text">
+       <string>G</string>
+      </property>
+      <property name="checked">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QCheckBox" name="B_button">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="text">
+       <string>B</string>
+      </property>
+      <property name="checked">
+       <bool>true</bool>
       </property>
      </widget>
     </item>
