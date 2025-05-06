@@ -43,6 +43,7 @@ from qgis import processing
 from qgis.processing import alg
 
 import os
+from pathlib import Path 
 import inspect
 from qgis.PyQt.QtGui import QIcon
 
@@ -329,8 +330,6 @@ class SDUAgricultureAlgorithm(QgsProcessingAlgorithm):
         raster_output = self.parameterAsOutputLayer(parameters, self.OUTPUT, context)
 
         # NOTE: Changed index here - for me shape_file = 0 , reference image = 1
-        print(parameters)
-        print("input layer when processing: ", type(self.raster_input))
         if self.ref_type == 1:
             # load reference and annotated image for color_model
             reference = self.parameterAsRasterLayer(parameters, self.REFERENCE, context)
@@ -401,9 +400,14 @@ class SDUAgricultureAlgorithm(QgsProcessingAlgorithm):
         with rasterio.open(self.raster_input.source()) as src:
             profile = src.profile
             profile["count"] = 1
+
+            # Save result as float64:
+            if not self.convert_uint8:
+                profile.update(dtype="float64")
+
             overview_factors = src.overviews(src.indexes[0])
             with rasterio.open(raster_output, "w", **profile) as dst:
-
+                
                 def process(tile: CDC.Tile) -> None:
                     with read_lock:
                         img = src.read(window=tile.window_with_overlap)
@@ -419,11 +423,22 @@ class SDUAgricultureAlgorithm(QgsProcessingAlgorithm):
                         distance = distance.astype(np.uint8)
                     else:
                         distance = distance_image
+
                     output = tile.get_window_pixels(distance)
                     mask = tile.get_window_pixels(np.expand_dims(mask, 0)).squeeze()
                     with write_lock:
                         dst.write(output, window=tile.window)
                         dst.write_mask(mask, window=tile.window)
+
+                    # Save tiles images:
+                    if self.save_tiles:
+                        save_path = Path(os.path.join(self.save_tiles_path,"images"))
+                        os.makedirs(save_path, exist_ok = True)
+                        tile.save_tile(img, mask, save_path)
+                    if self.save_tiles_distance:
+                        save_path = Path(os.path.join(self.save_tiles_path,"distance"))
+                        os.makedirs(save_path, exist_ok = True)
+                        tile.save_tile(distance, mask, save_path)
 
                 with concurrent.futures.ThreadPoolExecutor(max_workers=context.maximumThreads()) as executor:
                     for current, _ in enumerate(executor.map(process, self.tiler.tiles)):
@@ -479,8 +494,8 @@ class SDUAgricultureAlgorithm(QgsProcessingAlgorithm):
     def createInstance(self):
         return SDUAgricultureAlgorithm()
     
-    def createCustomParametersWidget(self, parent):
-        return AgroTool_ColorSegmenterDialog(alg= self, parent=parent) 
+    def createCustomParametersWidget(self, parents):
+        return AgroTool_ColorSegmenterDialog(alg= self, parent=parents) 
 
     def icon(self):
         cmd_folder = os.path.split(inspect.getfile(inspect.currentframe()))[0]

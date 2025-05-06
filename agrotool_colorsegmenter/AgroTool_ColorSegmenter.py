@@ -48,8 +48,6 @@ cmd_folder = os.path.split(inspect.getfile(inspect.currentframe()))[0]
 if cmd_folder not in sys.path:
     sys.path.insert(0, cmd_folder)
 
-from .Segmenter.main import SegmentationTask
-
 
 class AgroTool_ColorSegmenter:
     """QGIS Plugin Implementation."""
@@ -222,9 +220,23 @@ class AgroTool_ColorSegmenter:
         # dialog.exec_()
 
         from .AgroTool_ColorSegmenter_dialog import AgroTool_ColorSegmenterDialog
+        from .AgroTool_ColorSegmenter_algorithm import SDUAgricultureAlgorithm
 
-        self.dlg = AgroTool_ColorSegmenterDialog()
+        # Build identification: "provider_name:algorithm_name"
+        alg_id = f"{self.provider.id()}:{SDUAgricultureAlgorithm().name()}"
+        alg = SDUAgricultureAlgorithm()
+        # Launch dialog - GUI
+        results = processing.execAlgorithmDialog(alg)
+        if results is None:
+            return
+    
+        # self.context = QgsProcessingContext()
+        # self.context.setProject(QgsProject.instance())
+        # self.feedback = QgsProcessingFeedback()
 
+        # self.dlg = AgroTool_ColorSegmenterDialog(alg=SDUAgricultureAlgorithm(), context = self.context, feedback = self.feedback)
+
+        # self.dlg.exec_()
 
         #processing.run("SDU:color_distance_calculator", parameters = {})
        

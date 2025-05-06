@@ -41,6 +41,7 @@ from qgis.core import (QgsProject,
                       QgsTask,
                       Qgis)
 
+from qgis.gui import QgsProcessingAlgorithmDialogBase
 from .progressbar_dialog import AgroTool_ColorSegmenterProgressBar
 
 class SDUAgricultureAlgorithmTask(QgsTask):
@@ -57,15 +58,22 @@ class SDUAgricultureAlgorithmTask(QgsTask):
     QgsApplication.instance().taskManager().addTask(task)
 
     """
-    def __init__(self, alg, params):
+    def __init__(self, alg, params, context, feedback):
         super().__init__('SDUAgricultureAlgorithmTask', QgsTask.CanCancel)
         # Clonamos el algoritmo para no tocar el original
         print("Init task")
         self.alg = alg #.clone()
         self.params = params
-        self.context = QgsProcessingContext()
-        self.context.setProject(QgsProject.instance())
-        self.feedback = QgsProcessingFeedback()
+        if context is None:
+            self.context = QgsProcessingContext()
+            self.context.setProject(QgsProject.instance())
+        else:
+            self.context = context
+        
+        if feedback is None:
+            self.feedback = QgsProcessingFeedback()
+        else:
+            self.feedback = feedback
 
         # Progress bar:
         self.progressDlg = AgroTool_ColorSegmenterProgressBar()  # a custom QDialog subclass with a QProgressBar
@@ -120,7 +128,19 @@ class SDUAgricultureAlgorithmTask(QgsTask):
             except Exception as e:
                 QgsMessageLog.logMessage("Error while saving result: " + str(e), "AgroTool Color Segmenter", level=Qgis.Critical)
         else:
-            QgsMessageLog.logMessage("Segmentation task failed.", "AgroTool Color Segmenter", level=Qgis.Critical)
+            if self.feedback.isCanceled():
+                QgsMessageLog.logMessage("Segmentation task cancelled.", "AgroTool Color Segmenter", level=Qgis.Critical)
+            else:
+                QgsMessageLog.logMessage("Segmentation task failed.", "AgroTool Color Segmenter", level=Qgis.Critical)
+            
+            # Delete output file:
+            try:
+                if os.path.exists(self.params["OUTPUT"]):
+                    os.remove(self.params["OUTPUT"])
+            except Exception as e:
+                QgsMessageLog.logMessage("Error while deleting result: " + str(e), "AgroTool Color Segmenter", level=Qgis.Critical)
+          
+            
 
         self.progressDlg.close()
 
@@ -132,7 +152,7 @@ FORM_CLASS, _ = uic.loadUiType(os.path.join(
 
 
 class AgroTool_ColorSegmenterDialog(QtWidgets.QDialog, FORM_CLASS):
-    def __init__(self, alg, parent=None):
+    def __init__(self, alg, parent=None, context = None, feedback = None):
         """Constructor."""
         super(AgroTool_ColorSegmenterDialog, self).__init__(parent)
         # Set up the user interface from Designer through FORM_CLASS.
@@ -141,31 +161,16 @@ class AgroTool_ColorSegmenterDialog(QtWidgets.QDialog, FORM_CLASS):
         # http://qt-project.org/doc/qt-4.8/designer-using-a-ui-file.html
         # #widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
+        self.ok = True # Bool determin if sucess in GUI
 
         # Algorithm to run:
         self.alg = alg
         self.active_task = []
+        self.context = context
+        self.feedback = feedback
 
-        # TODO: Include band and overlap in GUI
-        # Parameters:
-        self.input_raster_layer = None
-        self.output_file_path = None
-        self.refPixel_method = 0 # 0: ShapeFile, 1: Image .tiff, 2: Image .jpg
-        self.shape_file = None
-        self.ref_image_path = None
-        self.ref_pixel_maks_path = None
-        self.distance_metric = 'Mahalanobis'
-        self.gmm_components = 2
-        self.convert_uint8 = True  
-        self.scale_factor = 5
-        self.bands_to_use = [] 
-        self.tile_processing = True
-        self.tiles_width = 3000
-        self.tiles_height = 3000
-        self.save_tiles_path = None
-        self.save_tiles = False
-        self.save_tiles_distance = False
-        self.overlap = 0.01    # NOTE: Need to be added to GUI
+        # Initialize default values of parameters:
+        self.setParameters()
 
         # Connect signals
         ############ INPUT RASTER LAYER ############
@@ -210,6 +215,64 @@ class AgroTool_ColorSegmenterDialog(QtWidgets.QDialog, FORM_CLASS):
         self.SaveTilesLineEdit.setEnabled(False)
         self.SaveTilesButton.clicked.connect(self.select_tiles_output_dir)
 
+
+    def setParameters(self, parameters: dict = None):
+        """
+        Funciton that initialize Widget with default parameters values.
+        Needed to execute processing.execAlgorithmDialog
+        """
+        if parameters is None:
+             # TODO: Include band and overlap in GUI
+            # Parameters:
+            self.input_raster_layer = None
+            self.output_file_path = None
+            self.refPixel_method = 0 # 0: ShapeFile, 1: Image .tiff, 2: Image .jpg
+            self.shape_file = None
+            self.ref_image_path = None
+            self.ref_pixel_maks_path = None
+            self.distance_metric = 'Mahalanobis'
+            self.gmm_components = 2
+            self.convert_uint8 = True  
+            self.scale_factor = 5
+            self.bands_to_use = [] 
+            self.tile_processing = True
+            self.tiles_width = 3000
+            self.tiles_height = 3000
+            self.save_tiles_path = None
+            self.save_tiles = False
+            self.save_tiles_distance = False
+            self.overlap = 0.01    # NOTE: Need to be added to GUI
+
+            self.parameters = {
+                    'INPUT': self.input_raster_layer,
+                    'OUTPUT': self.output_file_path,
+                    'REF_TYPE': self.refPixel_method,
+                    'SHAPE_FILE': self.shape_file,
+                    'REFERENCE': self.ref_image_path,
+                    'ANNOTATED': self.ref_pixel_maks_path,
+                    'COLOR_MODEL': self.distance_metric,
+                    'GMM_PARAM': self.gmm_components,
+                    'CONTERT_UINT': self.convert_uint8,
+                    'SCALE': self.scale_factor,
+                    'BANDS': self.bands_to_use,
+                    'tile_processing': self.tile_processing,
+                    'TILE_WIDTH': self.tiles_width,
+                    'TILE_HEIGHT': self.tiles_height,
+                    'SAVE_TILES_PATH': self.save_tiles_path,
+                    'SAVE_TILES': self.save_tiles,
+                    'SAVE_TILES_DISTANCE': self.save_tiles_distance,
+                    #'overlap': self.overlap,
+                }
+        else:
+            self.parameters = parameters
+        
+    def results(self):
+        """"
+        Function that returns whether the GUI process has been successful
+        Needed to execute processing.execAlgorithmDialog  
+        """
+        return self.ok
+        
     def showEvent(self, event):
         """Override the showEvent to refresh available layers when the GUI is opened."""
         super().showEvent(event)  # Call the parent class's showEvent method
@@ -220,17 +283,17 @@ class AgroTool_ColorSegmenterDialog(QtWidgets.QDialog, FORM_CLASS):
 
     def validate_and_accept(self):
         " Function to validate all parameters are loaded correctly"
-        ok = True
+        self.ok = True
 
         # Input layer:
         self.select_input_raster_layer()
         if self.input_raster_layer == None:
-            ok = False
+            self.ok = False
             QMessageBox.warning(self, "Missing input raster", "Please load a valid input raster layer.")
 
         # Output file:
         if self.output_file_path == None:
-            ok = False
+            self.ok = False
             QMessageBox.warning(self, "Missing output file", "Please select a valid output file.")
 
         # Convert to uint8:
@@ -246,18 +309,18 @@ class AgroTool_ColorSegmenterDialog(QtWidgets.QDialog, FORM_CLASS):
         if self.refPixel_method == 0:
             self.shapefile_selector()
             if self.shape_file == None:
-                ok = False
+                self.ok = False
                 QMessageBox.warning(self, "Missing shape file", "Please seled a valid shape file.")
 
         elif self.refPixel_method == 1 or self.refPixel_method == 2:
             self.refimage_selector()
             if self.ref_image_path == None:
-                ok = False
+                self.ok = False
                 QMessageBox.warning(self, "Missing reference image", "Please seled a valid reference image (.tiff or .jpg)")
 
             self.refmask_selector()
             if self.ref_pixel_maks_path == None:
-                ok = False
+                self.ok = False
                 QMessageBox.warning(self, "Missing reference mask", "Please seled a valid reference mask (.tiff or .jpg)")
 
         # Distance metric:
@@ -295,7 +358,7 @@ class AgroTool_ColorSegmenterDialog(QtWidgets.QDialog, FORM_CLASS):
 
             if self.save_tiles or self.save_tiles_distance:
                 if self.save_tiles_path == None:
-                    ok = False
+                    self.ok = False
                     QMessageBox.warning(self, "Missing directory", "Please select a valid directory to save the tiles.")
         else:
             self.save_tiles = False
@@ -303,30 +366,31 @@ class AgroTool_ColorSegmenterDialog(QtWidgets.QDialog, FORM_CLASS):
 
          # Verify if valid raster layer
         if not self.input_raster_layer.isValid():
-            ok = False
+            self.ok = False
             raise QgsProcessingException('Unvalid input raster layer.')
 
         if self.refPixel_method == 0:
             if not self.shape_file.isValid():
-                ok = False
+                self.ok = False
                 raise QgsProcessingException('Unvalid vector layer!')
         elif self.refPixel_method == 1 or self.refPixel_method == 2:
             if self.input_raster_layer.source() == self.ref_image_path:
-                ok = False
+                self.ok = False
                 raise QgsProcessingException('Unvalid reference image: Reference image can not be the same as the input raster layer.')
             if self.input_raster_layer.source() == self.ref_pixel_maks_path:
-                ok = False
+                self.ok = False
                 raise QgsProcessingException('Unvalid reference mask: Reference mask can not be the same as the input raster layer.')
             if self.ref_image_path == self.ref_pixel_maks_path:
-                ok = False
+                self.ok = False
                 raise QgsProcessingException('Reference image and reference mask can not be the same.')
 
         # Close GUI and start execution
-        if ok:
+       
+        if self.ok:
             super().accept()
 
             # Parameter dict map:
-            params = {
+            self.params = {
                 'INPUT': self.input_raster_layer,
                 'OUTPUT': self.output_file_path,
                 'REF_TYPE': self.refPixel_method,
@@ -346,14 +410,16 @@ class AgroTool_ColorSegmenterDialog(QtWidgets.QDialog, FORM_CLASS):
                 'SAVE_TILES_DISTANCE': self.save_tiles_distance,
                 #'overlap': self.overlap,
             }
-            
+
             try:
                 # Init algorithm as a QTask
-                task = SDUAgricultureAlgorithmTask(alg = self.alg, params = params)
+                task = SDUAgricultureAlgorithmTask(alg = self.alg, params = self.params, context = self.context, feedback = self.feedback)
                 self.active_task.append(task)
                 QgsApplication.instance().taskManager().addTask(task)
             except Exception as e:
                 raise e
+            
+       
 
 
     def update_layers(self, clear_output = False):

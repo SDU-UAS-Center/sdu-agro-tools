@@ -10,7 +10,12 @@ Contents:
 
 .. toctree::
    :maxdepth: 2
-
+   installation
+   tutorials_guides
+   reference
+   CLI
+   contributing
+   notes
 Indices and tables
 ==================
 
