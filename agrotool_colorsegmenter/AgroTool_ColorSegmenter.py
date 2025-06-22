@@ -23,24 +23,17 @@
 """
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import QAction, QDialog
-from qgis.core import QgsRasterLayer, QgsProcessingException, QgsApplication, QgsProject, QgsTask, QgsMessageLog, Qgis, QgsProcessingContext, QgsProcessingFeedback
-from osgeo import gdal
-from PyQt5.QtCore import QThreadPool, pyqtSignal
+from qgis.PyQt.QtWidgets import QAction
+from qgis.core import QgsApplication
 
 # Initialize Qt resources from file resources.py
 from .resources import *
-# Import the code for the dialog
-from .AgroTool_ColorSegmenter_dialog import AgroTool_ColorSegmenterDialog
-from .AgroTool_ColorSegmenter_algorithm import SDUAgricultureAlgorithm
-
+# Import provider
 from .AgroTool_ColorSegmenter_provider import  SDUAgricultureProvider
 
 import os.path
-import time
 import sys
 import inspect
-import numpy as np
 from qgis import processing
 
 cmd_folder = os.path.split(inspect.getfile(inspect.currentframe()))[0]
@@ -210,33 +203,15 @@ class AgroTool_ColorSegmenter:
 
     def run_color_segmeneter(self):
         """Run method that performs all the real work"""
-        
-        # from .AgroTool_ColorSegmenter_algorithm import SDUAgricultureAlgorithm
 
-        # alg = SDUAgricultureAlgorithm()
-        # dialog = alg.createCustomParametersWidget(parent=self.iface.mainWindow())
-
-        # # Show GUI:
-        # dialog.exec_()
-
-        from .AgroTool_ColorSegmenter_dialog import AgroTool_ColorSegmenterDialog
         from .AgroTool_ColorSegmenter_algorithm import SDUAgricultureAlgorithm
 
         # Build identification: "provider_name:algorithm_name"
         alg_id = f"{self.provider.id()}:{SDUAgricultureAlgorithm().name()}"
         alg = SDUAgricultureAlgorithm()
+
         # Launch dialog - GUI
         results = processing.execAlgorithmDialog(alg)
         if results is None:
             return
-    
-        # self.context = QgsProcessingContext()
-        # self.context.setProject(QgsProject.instance())
-        # self.feedback = QgsProcessingFeedback()
-
-        # self.dlg = AgroTool_ColorSegmenterDialog(alg=SDUAgricultureAlgorithm(), context = self.context, feedback = self.feedback)
-
-        # self.dlg.exec_()
-
-        #processing.run("SDU:color_distance_calculator", parameters = {})
        

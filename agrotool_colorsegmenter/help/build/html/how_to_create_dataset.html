@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Create dataset guide &#8212; AgroTool_ColorSegmenter 0.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=2bf1fcf8" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=209837cd" />
+    
+    <script src="_static/documentation_options.js?v=2709fde1"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Reference" href="references.html" />
+    <link rel="prev" title="How-to Guide" href="how_to_guide.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="references.html" title="Reference"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="how_to_guide.html" title="How-to Guide"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">AgroTool_ColorSegmenter 0.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Create dataset guide</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="create-dataset-guide">
+<h1>Create dataset guide<a class="headerlink" href="#create-dataset-guide" title="Link to this heading">¶</a></h1>
+<p><em>QGIS AgrooTool Color Segmenter</em> needs a source of data to calculate the <a class="reference internal" href="background.html#color-distribution"><span class="std std-ref">Color Distribution</span></a>, whether:</p>
+<ul class="simple">
+<li><p><strong>Shape File</strong>: Define a region on the input orthomosaic which contain the pixel to be used as reference.</p></li>
+<li><p><strong>Reference image</strong> and <strong>Pixel Mask</strong>: A section of the input orthomsaic where the reference pixels are annoted. This options requires two files.</p></li>
+</ul>
+<p>In this guide we will show how to define a shape file or extract a section of a orthomosaic and how to annotate the section.</p>
+<p>This guide assumes we have an orthomosaic with the name <code class="docutils literal notranslate"><span class="pre">ortho.tif</span></code>. We will work on the pumpkins segmentation example from the <span class="xref std std-ref">Tutorial</span>.</p>
+<section id="shape-file">
+<span id="shapefile"></span><h2>Shape File<a class="headerlink" href="#shape-file" title="Link to this heading">¶</a></h2>
+<p>In this section, we explain how to create a <strong>QGIS Shape File</strong> created with polygon type. with polygon geometry. This is a vector file format that stores the geometries of closed areas (polygons). The pixel from <code class="docutils literal notranslate"><span class="pre">ortho.tif</span></code> within the shapefile are used to calculate the <a class="reference internal" href="background.html#color-distribution"><span class="std std-ref">Color Distribution</span></a> used for the distance calculation.</p>
+<ol class="arabic simple">
+<li><p><strong>Open your QGIS project</strong> with the input raster file <code class="docutils literal notranslate"><span class="pre">ortho.tif</span></code>.</p></li>
+</ol>
+<ol class="arabic simple" start="2">
+<li><p><strong>Create a new shapefile layer</strong> by navigating to the menu entry <code class="docutils literal notranslate"><span class="pre">Layer</span> <span class="pre">►</span> <span class="pre">Create</span> <span class="pre">Layer</span> <span class="pre">►</span> <span class="pre">New</span> <span class="pre">Shapefile</span> <span class="pre">Layer</span></code> or clicking the icon <img src="_static/icon/iconNewShapeFile.png" style="height:1.5em; vertical-align:middle;" alt="New Shapefile Layer  icon"> on the top toolbar. This will open the <span class="guilabel">New Shapefile Layer</span> dialog, where you can define the properties of your new layer.</p></li>
+<li><p>Click <span class="guilabel">…</span> for the <span class="guilabel">File Name</span> field to open a file browser. Choose a recognizable name and save the file. For this tutorial, we will use <code class="docutils literal notranslate"><span class="pre">shapefile.shp</span></code>.</p></li>
+<li><p>Under <span class="guilabel">Geometry Type</span>, select <strong>Polygon</strong>. You should see something similar to the following:</p></li>
+</ol>
+<figure class="align-default">
+<img alt="_images/ShapeFileDialog.png" src="_images/ShapeFileDialog.png" />
+</figure>
+<ol class="arabic simple" start="5">
+<li><p>Click <span class="guilabel">OK</span>. The new shapefile will now appear in your project. Initially this layer is empty, we have to define the region of interset on the <code class="docutils literal notranslate"><span class="pre">ortho.tif</span></code>.</p></li>
+</ol>
+<ol class="arabic simple" start="6">
+<li><p>In the <span class="guilabel">Layer</span> panel, select <code class="docutils literal notranslate"><span class="pre">shapefile</span></code>. Then, click the <img src="_static/icon/iconToogleEditing.png" style="height:1.5em; vertical-align:middle;" alt="Toggle Editing icon"> <sup>Toggle Editing</sup> button in the top toolbar, or right-click the shapefile and choose <img src="_static/icon/iconToogleEditing.png" style="height:1.5em; vertical-align:middle;" alt="Toggle Editing icon"> <span class="guilabel">Toggle Editing</span> from the context menu.</p></li>
+</ol>
+<ol class="arabic simple" start="7">
+<li><p>Once you enter edit mode, the digitizing tools become active. Click the <img src="_static/icon/iconCapturePolygon.png" style="height:1.5em; vertical-align:middle;" alt="Capture Polygon icon"><sup>Capture Polygon</sup> button to start drawing a polygon.</p></li>
+<li><p>With <code class="docutils literal notranslate"><span class="pre">ortho.tif</span></code> layer visible, left-click to place points around the area you want to outline. We recommend drawing several polygons with the color you want to use as a reference. For example, in the pumpkin segmentation use case, we selected multiple pumpkins, as shown in the figure below. After finishing each polygon, the <span class="guilabel">Attributes</span> dialog will appear asking you to set an ID for the polygon. This is not required by the plugin, so you can leave it blank.</p></li>
+</ol>
+<figure class="align-default">
+<img alt="_images/ShapeFile.png" src="_images/ShapeFile.png" />
+</figure>
+<ol class="arabic simple" start="9">
+<li><p>Remeber to unselect the <img src="_static/icon/iconToogleEditing.png" style="height:1.5em; vertical-align:middle;" alt="Toggle Editing icon"> <sup>Toggle Editing</sup> to save the changes. You have now created the required shapefile to use as a reference for color selection!</p></li>
+</ol>
+<p>If you encounter any issues or would like more detailed instructions, please consult the official QGIS documentation: <a class="reference external" href="https://docs.qgis.org/3.40/en/docs/training_manual/create_vector_data/create_new_vector.html#lesson-creating-a-new-vector-dataset">Creating a New Vector Dataset</a>.</p>
+<p>We now have all we need to <a class="reference internal" href="how_to_guide.html#calculate-color-distribution-shape"><span class="std std-ref">Calculate Color Distance from Shape File</span></a>:</p>
+<ul class="simple">
+<li><p>The orthomosaic <code class="docutils literal notranslate"><span class="pre">ortho.tif</span></code>.</p></li>
+<li><p>ShapeFile <code class="docutils literal notranslate"><span class="pre">shape_file.shp</span></code>.</p></li>
+</ul>
+</section>
+<section id="image">
+<span id="ref-image"></span><h2>Image<a class="headerlink" href="#image" title="Link to this heading">¶</a></h2>
+<p>It is possible to define a color reference directly from an image. In this section, we explain how to create a <span class="guilabel">Reference Image</span> as a <strong>cropped orthomosaic</strong>, along with a corresponding <span class="guilabel">Pixel Mask</span>.</p>
+<p>The <span class="guilabel">Pixel Mask</span> determines which pixels from the <span class="guilabel">Reference Image</span> will be used to compute the <a class="reference internal" href="background.html#color-distribution"><span class="std std-ref">Color Distribution</span></a>. These two files must be perfectly aligned, meaning they must have identical dimensions and pixel arrangements.</p>
+<section id="crop-orthomosaic">
+<h3>Crop orthomosaic<a class="headerlink" href="#crop-orthomosaic" title="Link to this heading">¶</a></h3>
+<p>To extract a specific area from the orthomosaic, we will use the <a class="reference external" href="https://gdal.org/en/stable/index.html">GDAL</a> tools integrated into the QGIS framework.</p>
+<ol class="arabic simple">
+<li><p><strong>Open your QGIS project</strong> containing the input raster file <code class="docutils literal notranslate"><span class="pre">ortho.tif</span></code>.</p></li>
+<li><p><strong>Create a shapefile that defines the cropping area.</strong>
+If you’re not familiar with this process, refer to the guide <span class="xref std std-ref">Create a ShapeFile</span>.
+In this case, instead of creating multiple polygons to select specific colors, you should draw a single, large polygon to define the area to crop — as shown in the example below.
+In this tutorial, we will name the shapefile <code class="docutils literal notranslate"><span class="pre">crop_shapefile.shp</span></code>.</p></li>
+</ol>
+<figure class="align-default">
+<img alt="_images/CropShapeFile.png" src="_images/CropShapeFile.png" />
+</figure>
+<ol class="arabic simple" start="3">
+<li><p>Navigate to <code class="docutils literal notranslate"><span class="pre">Raster</span> <span class="pre">►</span> <span class="pre">Extraction</span> <span class="pre">►</span> <span class="pre">Clip</span> <span class="pre">Raster</span> <span class="pre">by</span> <span class="pre">Mask</span> <span class="pre">Layer...</span></code>.
+This will open the <span class="guilabel">Raster Extraction</span> dialog.
+Select the input orthomosaic <code class="docutils literal notranslate"><span class="pre">ortho.tif</span></code> and the shapefile <code class="docutils literal notranslate"><span class="pre">crop_shapefile.shp</span></code> as the <span class="guilabel">Mask Layer</span>.
+You should see a screen similar to the one below:</p></li>
+</ol>
+<figure class="align-default">
+<img alt="_images/CropMenu.png" src="_images/CropMenu.png" />
+</figure>
+<ol class="arabic simple" start="4">
+<li><p>Scroll down to the <span class="guilabel">Clipped (mask)</span> section, click the <img src="_static/icon/icon_threedots.png" style="height:1.2em; vertical-align:middle;" alt="Three dots icon"> button, and select <code class="docutils literal notranslate"><span class="pre">Save</span> <span class="pre">to</span> <span class="pre">File...</span></code>.
+Choose a location and filename for the reference image — in this tutorial, we’ll save it as <code class="docutils literal notranslate"><span class="pre">ref_image.tif</span></code>.
+You may also save the reference image as a <code class="docutils literal notranslate"><span class="pre">.jpg</span></code> or <code class="docutils literal notranslate"><span class="pre">.jpeg</span></code>; these are the only three formats supported by the plugin.
+Click <span class="guilabel">Run</span>. The reference image will be added to your current project. The result should look similar to this:</p></li>
+</ol>
+<figure class="align-default">
+<img alt="_images/CropRefImage.png" src="_images/CropRefImage.png" />
+</figure>
+<dl class="simple">
+<dt>Regarding the color format of the reference image:</dt><dd><ul class="simple">
+<li><p>If saved as a <code class="docutils literal notranslate"><span class="pre">.tif</span></code> file, it will retain the original color bands from the input orthomosaic <code class="docutils literal notranslate"><span class="pre">ortho.tif</span></code>, typically in <strong>RGBA</strong> format.</p></li>
+<li><p>If saved as a <code class="docutils literal notranslate"><span class="pre">.jpg</span></code> or <code class="docutils literal notranslate"><span class="pre">.jpeg</span></code>, the alpha channel (<strong>A</strong>) will be discarded, resulting in an <strong>RGB</strong> image.</p></li>
+</ul>
+</dd>
+</dl>
+<p>If the source raster layer is not in RGBA format, the cropping process will still apply successfully, and the reference image will preserve the same color characteristics as the original layer.</p>
+</section>
+<section id="mask-annotation">
+<h3>Mask Annotation<a class="headerlink" href="#mask-annotation" title="Link to this heading">¶</a></h3>
+<p>Now we proceed to mark over the reference image the desired pixeles to use for the <a class="reference internal" href="background.html#color-distribution"><span class="std std-ref">Reference Color Distribution</span></a>.</p>
+<p>To annotate the mask we will use <a class="reference external" href="https://www.gimp.org/">GIMP</a>, but another image manipulations software can also be used.</p>
+<ol class="arabic simple">
+<li><p>Open the <code class="docutils literal notranslate"><span class="pre">ref_image.tif</span></code> we created earlier in GIMP.</p></li>
+<li><p>Set the color to red. E.g. RGB (255, 0, 0).</p></li>
+<li><p>Select the pencil tool and adjust size to preference.</p></li>
+<li><p>Paint on top of the desired pixels to include in the reference color. Not all pixels of the desired color have to be painted over but at least 100 pixels is necessary, but more is better.</p></li>
+</ol>
+<figure class="align-default">
+<img alt="_images/CropMask.png" src="_images/CropMask.png" />
+</figure>
+<ol class="arabic simple" start="5">
+<li><p>Export the image <code class="docutils literal notranslate"><span class="pre">File</span> <span class="pre">►</span> <span class="pre">Export</span> <span class="pre">as</span></code>. We save the annoted mas as <code class="docutils literal notranslate"><span class="pre">mask.tiff</span></code>.</p></li>
+</ol>
+<p>We now have all we need to <a class="reference internal" href="how_to_guide.html#calculate-color-distribution-image"><span class="std std-ref">Calculate Color Distance from Images</span></a>:</p>
+<ul class="simple">
+<li><p>The orthomosaic <code class="docutils literal notranslate"><span class="pre">ortho.tif</span></code>.</p></li>
+<li><p>Reference image <code class="docutils literal notranslate"><span class="pre">ref_image.tif</span></code>.</p></li>
+<li><p>Annotated image <code class="docutils literal notranslate"><span class="pre">mask.png</span></code>.</p></li>
+</ul>
+</section>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Create dataset guide</a><ul>
+<li><a class="reference internal" href="#shape-file">Shape File</a></li>
+<li><a class="reference internal" href="#image">Image</a><ul>
+<li><a class="reference internal" href="#crop-orthomosaic">Crop orthomosaic</a></li>
+<li><a class="reference internal" href="#mask-annotation">Mask Annotation</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="how_to_guide.html"
+                          title="previous chapter">How-to Guide</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="references.html"
+                          title="next chapter">Reference</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/how_to_create_dataset.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="references.html" title="Reference"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="how_to_guide.html" title="How-to Guide"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">AgroTool_ColorSegmenter 0.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Create dataset guide</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2013, Syddansk Universitet.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    </div>
+  </body>
+</html>

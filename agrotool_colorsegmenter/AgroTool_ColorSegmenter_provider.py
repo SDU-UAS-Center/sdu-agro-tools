@@ -30,10 +30,11 @@ __copyright__ = '(C) 2025 by SDU'
 
 __revision__ = '$Format:%H$'
 
-from qgis.core import QgsProcessingProvider
+
 import os
 import inspect
 from qgis.PyQt.QtGui import QIcon
+from qgis.core import QgsProcessingProvider
 
 from .AgroTool_ColorSegmenter_algorithm import SDUAgricultureAlgorithm
 

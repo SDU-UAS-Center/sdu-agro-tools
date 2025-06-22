@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Reference &#8212; AgroTool_ColorSegmenter 0.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=2bf1fcf8" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=209837cd" />
+    
+    <script src="_static/documentation_options.js?v=2709fde1"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Background" href="background.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="background.html" title="Background"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">AgroTool_ColorSegmenter 0.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Reference</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="reference">
+<span id="references"></span><h1>Reference<a class="headerlink" href="#reference" title="Link to this heading">¶</a></h1>
+<section id="color-distance-calculator">
+<h2>Color Distance Calculator<a class="headerlink" href="#color-distance-calculator" title="Link to this heading">¶</a></h2>
+<p>The core library used by this plugin is <strong>Color Distance Calculator (CDC)</strong>.</p>
+<p>CDC is an open-source tool that enables the calculation of color-based distance to a reference color for each pixel in a georeferenced orthomosaic.
+We encourage users to explore its full capabilities in the official <a class="reference external" href="https://henrikmidtiby.github.io/CDC/">CDC documentation</a>.</p>
+<section id="used-components">
+<h3>Used Components<a class="headerlink" href="#used-components" title="Link to this heading">¶</a></h3>
+<p>This plugin leverages several key components from the CDC library:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Color</span> <span class="pre">distribution</span> <span class="pre">calculator</span></code>: See the <a class="reference external" href="https://henrikmidtiby.github.io/CDC/reference/CDC.color_models.html#module-CDC.color_models">Color Model Reference Manual</a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Orthomosaic</span> <span class="pre">tiler</span></code>: See the <a class="reference external" href="https://henrikmidtiby.github.io/CDC/reference/CDC.orthomosaic_tiler.html#module-CDC.orthomosaic_tiler">Orthomosaic Tiler Reference Manual</a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Color-based</span> <span class="pre">distance</span> <span class="pre">calculator</span></code>: See the <a class="reference external" href="https://henrikmidtiby.github.io/CDC/reference/CDC.tiled_color_based_distance.html#module-CDC.tiled_color_based_distance">Color-Based Distance Calculation Reference Manual</a>.</p></li>
+</ul>
+</section>
+<section id="id1">
+<h3>References<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>CDC Package - Official documentation: <a class="reference external" href="https://henrikmidtiby.github.io/CDC/">https://henrikmidtiby.github.io/CDC/</a></p></li>
+</ul>
+</section>
+</section>
+<section id="multi-thread-task-execution">
+<span id="concurrent-futures"></span><h2>Multi-Thread Task Execution<a class="headerlink" href="#multi-thread-task-execution" title="Link to this heading">¶</a></h2>
+<p>The Python standard library module <strong>concurrent.futures</strong> is used to manage background task execution using threads or processes.
+In the context of this plugin, it is primarily used to imporve performance by allowing <strong>parallel calculation of multiple tiles color distance</strong>.</p>
+<p>Although <code class="docutils literal notranslate"><span class="pre">concurrent.futures</span></code> is design to avoid block the main computing thread, in the QGIS framework it is required to utilize QgsTask in orther to avoid blocking the QGIS user interfaces.
+Therefore, the multi-thread computaiton with <code class="docutils literal notranslate"><span class="pre">concurrent.futures</span></code> is implemented within a QgsTask. Find more about this in <a class="reference internal" href="#background-execution"><span class="std std-ref">Background Execution with QgsTask</span></a>.</p>
+<section id="id2">
+<h3>Used Components<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ThreadPoolExecutor</span></code>: Enables launching multiple threads for concurrent task execution.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Future</span></code>: An object representing an operation that will complete in the future.</p></li>
+</ul>
+</section>
+<section id="id3">
+<h3>References<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>Official documentation: <a class="reference external" href="https://docs.python.org/3/library/concurrent.futures.html">https://docs.python.org/3/library/concurrent.futures.html</a>.</p></li>
+</ul>
+</section>
+</section>
+<section id="background-execution-with-qgstask">
+<span id="background-execution"></span><h2>Background Execution with QgsTask<a class="headerlink" href="#background-execution-with-qgstask" title="Link to this heading">¶</a></h2>
+<p>Heavy, long-running geoprocessing tasks can freeze the QGIS interface if executed directly in the main (GUI) thread.
+To prevent this, QGIS provides the <a class="reference external" href="https://qgis.org/pyqgis/3.40/core/QgsTask.html">QgsTask</a> class—a lightweight wrapper for running tasks in a background thread.
+This enables asynchronous processing, keeping the QGIS interface responsive during execution.</p>
+<p>Tasks implemented with <code class="docutils literal notranslate"><span class="pre">QgsTask</span></code> can be integrated with Python’s <code class="docutils literal notranslate"><span class="pre">concurrent.futures</span></code> module to:</p>
+<ul class="simple">
+<li><p><strong>Offload heavy work</strong> (e.g., computing color distances between tiles) to background threads.</p></li>
+<li><p><strong>Avoid blocking the GUI</strong>, allowing users to interact with QGIS while the task runs.</p></li>
+<li><p><strong>Report progress and messages</strong> via the QGIS task manager.</p></li>
+<li><p><strong>Cancel tasks</strong> cleanly, without needing low-level Qt threading APIs.</p></li>
+</ul>
+<section id="minimal-example">
+<h3>Minimal Example<a class="headerlink" href="#minimal-example" title="Link to this heading">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">concurrent.futures</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qgis.core</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">QgsTask</span><span class="p">,</span> <span class="n">QgsApplication</span><span class="p">,</span> <span class="n">QgsMessageLog</span><span class="p">,</span> <span class="n">Qgis</span>
+<span class="p">)</span>
+
+<span class="c1"># Dummy function to simulate processing a tile</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">process_tile</span><span class="p">(</span><span class="n">tile_class</span><span class="p">):</span>
+    <span class="c1"># Simulated processing logic</span>
+    <span class="k">pass</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MultiThread_Tiles</span><span class="p">(</span><span class="n">QgsTask</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">description</span><span class="p">,</span> <span class="n">tiles</span><span class="p">,</span> <span class="n">max_threads</span><span class="o">=</span><span class="mi">4</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">description</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tiles</span> <span class="o">=</span> <span class="n">tiles</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_threads</span> <span class="o">=</span> <span class="n">max_threads</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Heavy processing in background thread</span>
+        <span class="k">with</span> <span class="n">concurrent</span><span class="o">.</span><span class="n">futures</span><span class="o">.</span><span class="n">ThreadPoolExecutor</span><span class="p">(</span><span class="n">max_workers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_threads</span><span class="p">)</span> <span class="k">as</span> <span class="n">executor</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">executor</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">process_tile</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tiles</span><span class="p">):</span>
+                <span class="k">pass</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">finished</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
+        <span class="c1"># Runs in the main thread after task completion</span>
+        <span class="k">if</span> <span class="n">result</span><span class="p">:</span>
+            <span class="n">QgsMessageLog</span><span class="o">.</span><span class="n">logMessage</span><span class="p">(</span><span class="s2">&quot;Task completed successfully.&quot;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="n">Qgis</span><span class="o">.</span><span class="n">Info</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">QgsMessageLog</span><span class="o">.</span><span class="n">logMessage</span><span class="p">(</span><span class="s2">&quot;Task was canceled or failed.&quot;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="n">Qgis</span><span class="o">.</span><span class="n">Warning</span><span class="p">)</span>
+
+<span class="c1"># Example usage</span>
+<span class="n">tiles_to_process</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>  <span class="c1"># Dummy tile list</span>
+<span class="n">task</span> <span class="o">=</span> <span class="n">MultiThread_Tiles</span><span class="p">(</span><span class="s2">&quot;Example background task&quot;</span><span class="p">,</span> <span class="n">tiles</span><span class="o">=</span><span class="n">tiles_to_process</span><span class="p">)</span>
+<span class="n">QgsApplication</span><span class="o">.</span><span class="n">instance</span><span class="p">()</span><span class="o">.</span><span class="n">taskManager</span><span class="p">()</span><span class="o">.</span><span class="n">addTask</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>References<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>QgsTask  – PyQGIS API Reference: <a class="reference external" href="https://qgis.org/pyqgis/3.40/core/QgsTask.html">https://qgis.org/pyqgis/3.40/core/QgsTask.html</a>.</p></li>
+<li><p>Tasks – PyQGIS Developer Cookbook: <a class="reference external" href="https://docs.qgis.org/latest/en/docs/pyqgis_developer_cookbook/tasks.html">https://docs.qgis.org/latest/en/docs/pyqgis_developer_cookbook/tasks.html</a>.</p></li>
+<li><p>QgsTaskManager - PyQGIS API Reference: <a class="reference external" href="https://qgis.org/pyqgis/3.40/core/QgsTaskManager.html">https://qgis.org/pyqgis/3.40/core/QgsTaskManager.html</a>.</p></li>
+</ul>
+</section>
+</section>
+<section id="aditional-packages">
+<h2>Aditional Packages<a class="headerlink" href="#aditional-packages" title="Link to this heading">¶</a></h2>
+<section id="numpy">
+<h3>NumPy<a class="headerlink" href="#numpy" title="Link to this heading">¶</a></h3>
+<p>Fundamental package for numerical computing in Python, utilized for array operations and numerical calculations.</p>
+</section>
+<section id="rasterio">
+<h3>Rasterio<a class="headerlink" href="#rasterio" title="Link to this heading">¶</a></h3>
+</section>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Reference</a><ul>
+<li><a class="reference internal" href="#color-distance-calculator">Color Distance Calculator</a><ul>
+<li><a class="reference internal" href="#used-components">Used Components</a></li>
+<li><a class="reference internal" href="#id1">References</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#multi-thread-task-execution">Multi-Thread Task Execution</a><ul>
+<li><a class="reference internal" href="#id2">Used Components</a></li>
+<li><a class="reference internal" href="#id3">References</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#background-execution-with-qgstask">Background Execution with QgsTask</a><ul>
+<li><a class="reference internal" href="#minimal-example">Minimal Example</a></li>
+<li><a class="reference internal" href="#id4">References</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#aditional-packages">Aditional Packages</a><ul>
+<li><a class="reference internal" href="#numpy">NumPy</a></li>
+<li><a class="reference internal" href="#rasterio">Rasterio</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="background.html"
+                          title="previous chapter">Background</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/references.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="background.html" title="Background"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">AgroTool_ColorSegmenter 0.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Reference</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2013, Syddansk Universitet.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    </div>
+  </body>
+</html>

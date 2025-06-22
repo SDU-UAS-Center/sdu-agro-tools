@@ -23,25 +23,21 @@
 """
 
 import os
-from qgis import processing
 
 from qgis.PyQt import uic
 from qgis.PyQt import QtWidgets
-from qgis.PyQt.QtWidgets import QAction, QFileDialog, QMessageBox
-from PyQt5.QtCore import pyqtSignal, QObject
+from qgis.PyQt.QtWidgets import QFileDialog, QMessageBox
 from qgis.core import (QgsProject,
                       QgsVectorLayer,
                       QgsRasterLayer,
                       QgsProcessingException,
                       QgsProcessingContext,
                       QgsProcessingFeedback,
-                      QgsProcessingAlgRunnerTask,
                       QgsMessageLog,
                       QgsApplication,
                       QgsTask,
                       Qgis)
 
-from qgis.gui import QgsProcessingAlgorithmDialogBase
 from .progressbar_dialog import AgroTool_ColorSegmenterProgressBar
 
 class SDUAgricultureAlgorithmTask(QgsTask):

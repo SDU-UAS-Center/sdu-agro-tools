@@ -140,7 +140,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:7.5pt;&quot;&gt;In the input raster, pixels within the Shape File boundaries are selected to calculate the reference &lt;br/&gt;color distribution. A Shape File must first be defined over the raster.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;In the input raster, pixels within the Shape File boundaries are selected to calculate the&lt;br/&gt;reference color distribution. A Shape File must first be defined over the raster.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
      <property name="textFormat">
       <enum>Qt::MarkdownText</enum>
@@ -203,7 +203,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select a cropped image of the original raster and a mask of this image with the selection of pixels &lt;br/&gt;with which to calculate the color distribution.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select a cropped image of the original raster and a mask of this image with the selection &lt;br/&gt;of pixelswith which to calculate the color distribution.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
      <property name="textFormat">
       <enum>Qt::MarkdownText</enum>
@@ -364,7 +364,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>360</y>
+     <y>364</y>
      <width>471</width>
      <height>31</height>
     </rect>
@@ -376,7 +376,7 @@
     </sizepolicy>
    </property>
    <property name="text">
-    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select the distance metric to calculate the difference between the color distribution and the pixel color.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select the distance metric to calculate the difference between the color distribution&lt;br/&gt;and the pixels values.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
    <property name="textFormat">
     <enum>Qt::MarkdownText</enum>
@@ -386,7 +386,7 @@
    <property name="geometry">
     <rect>
      <x>0</x>
-     <y>460</y>
+     <y>470</y>
      <width>491</width>
      <height>16</height>
     </rect>
@@ -399,7 +399,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>490</y>
+     <y>500</y>
      <width>461</width>
      <height>51</height>
     </rect>
@@ -457,7 +457,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>390</y>
+     <y>400</y>
      <width>461</width>
      <height>31</height>
     </rect>
@@ -568,7 +568,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>480</y>
+     <y>490</y>
      <width>127</width>
      <height>18</height>
     </rect>
@@ -636,7 +636,7 @@
    <property name="geometry">
     <rect>
      <x>160</x>
-     <y>530</y>
+     <y>540</y>
      <width>314</width>
      <height>61</height>
     </rect>
@@ -683,7 +683,7 @@
    <property name="geometry">
     <rect>
      <x>12</x>
-     <y>532</y>
+     <y>542</y>
      <width>136</width>
      <height>57</height>
     </rect>
@@ -835,7 +835,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>420</y>
+     <y>430</y>
      <width>223</width>
      <height>41</height>
     </rect>

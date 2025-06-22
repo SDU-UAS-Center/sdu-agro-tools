@@ -40,24 +40,14 @@ from rasterio.enums import Resampling
 import concurrent.futures
 
 from qgis import processing
-from qgis.processing import alg
 
 import os
 from pathlib import Path 
 import inspect
 from qgis.PyQt.QtGui import QIcon
 
-from qgis.PyQt.QtCore import QCoreApplication, pyqtSignal
-from qgis.core import (QgsProcessing,
-                       QgsFeatureSink,
-                       QgsTask,
-                       Qgis,
-                       QgsProcessingException,
-                       QgsMessageLog,
-                       QgsProject,
-                       QgsProcessingContext, 
-                       QgsProcessingFeedback,
-                       QgsProcessingAlgorithm,
+from qgis.PyQt.QtCore import QCoreApplication
+from qgis.core import (QgsProcessingAlgorithm,
                        QgsProcessingParameterBoolean,
                        QgsProcessingParameterFeatureSource,
                        QgsProcessingParameterRasterLayer,
