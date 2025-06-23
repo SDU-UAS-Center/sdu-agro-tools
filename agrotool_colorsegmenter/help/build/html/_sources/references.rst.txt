@@ -116,17 +116,3 @@ References
 
 
 
-
-
-Aditional Packages
------------------------
-
-
-NumPy
-~~~~~~~~~~~~~~~~
-
-Fundamental package for numerical computing in Python, utilized for array operations and numerical calculations.
-
-Rasterio
-~~~~~~~~~~~~~~~~
-
