@@ -29,7 +29,7 @@ from qgis.core import QgsApplication
 # Initialize Qt resources from file resources.py
 from .resources import *
 # Import provider
-from sdu_agro_tools.AgroTool_ColorSegmenter_provider import  SDUAgricultureProvider
+from .sdu_agro_tools.AgroTool_ColorSegmenter_provider import  SDUAgricultureProvider
 
 import os.path
 import sys
@@ -200,15 +200,17 @@ class AgroTool_ColorSegmenter:
 
         # Remove provider:
         QgsApplication.processingRegistry().removeProvider(self.provider)
+        # gives error on closing qgis
 
     def run_color_segmeneter(self):
         """Run method that performs all the real work"""
 
-        from sdu_agro_tools.AgroTool_ColorSegmenter_algorithm import SDUAgricultureAlgorithm
+        from .sdu_agro_tools.AgroTool_ColorSegmenter_algorithm import SDUAgricultureAlgorithm
 
         # Build identification: "provider_name:algorithm_name"
         alg_id = f"{self.provider.id()}:{SDUAgricultureAlgorithm().name()}"
         alg = SDUAgricultureAlgorithm()
+        # alg.createCustomParametersWidget(self.iface.mainWindow())
 
         # Launch dialog - GUI
         results = processing.execAlgorithmDialog(alg)

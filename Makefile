@@ -38,14 +38,14 @@ LOCALES =
 # translation
 SOURCES = \
 	__init__.py \
-	sdu_agro_tools/AgroTool_ColorSegmenter.py \
+	AgroTool_ColorSegmenter.py \
 	sdu_agro_tools/AgroTool_ColorSegmenter_dialog.py
 
 PLUGINNAME = AgroTool_ColorSegmenter
 
 PY_FILES = \
 	__init__.py \
-	sdu_agro_tools/AgroTool_ColorSegmenter.py \
+	AgroTool_ColorSegmenter.py \
 	sdu_agro_tools/AgroTool_ColorSegmenter_dialog.py
 
 UI_FILES = sdu_agro_tools/AgroTool_ColorSegmenter_dialog_base.ui
@@ -55,7 +55,7 @@ EXTRAS = \
 	icon.png \
 	requirements.txt
 
-EXTRA_DIRS = Segmenter sdu_agro_tools
+EXTRA_DIRS = sdu_agro_tools
 
 COMPILED_RESOURCE_FILES = resources.py
 

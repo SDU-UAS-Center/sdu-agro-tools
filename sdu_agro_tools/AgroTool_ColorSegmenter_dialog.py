@@ -38,7 +38,7 @@ from qgis.core import (QgsProject,
                       QgsTask,
                       Qgis)
 
-from sdu_agro_tools.progressbar_dialog import AgroTool_ColorSegmenterProgressBar
+from .progressbar_dialog import AgroTool_ColorSegmenterProgressBar
 
 class SDUAgricultureAlgorithmTask(QgsTask):
     """

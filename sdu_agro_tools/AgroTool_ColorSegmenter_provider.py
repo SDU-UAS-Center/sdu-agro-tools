@@ -36,7 +36,7 @@ import inspect
 from qgis.PyQt.QtGui import QIcon
 from qgis.core import QgsProcessingProvider
 
-from sdu_agro_tools.AgroTool_ColorSegmenter_algorithm import SDUAgricultureAlgorithm
+from .AgroTool_ColorSegmenter_algorithm import SDUAgricultureAlgorithm
 
 
 class SDUAgricultureProvider(QgsProcessingProvider):

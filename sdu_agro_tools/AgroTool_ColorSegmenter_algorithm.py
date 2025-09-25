@@ -58,7 +58,7 @@ from qgis.core import (QgsProcessingAlgorithm,
                        QgsProcessingParameterString,
                        QgsProcessingParameterFile)
 
-from sdu_agro_tools.AgroTool_ColorSegmenter_dialog import AgroTool_ColorSegmenterDialog
+from .AgroTool_ColorSegmenter_dialog import AgroTool_ColorSegmenterDialog
 
 class SDUAgricultureAlgorithm(QgsProcessingAlgorithm):
     """

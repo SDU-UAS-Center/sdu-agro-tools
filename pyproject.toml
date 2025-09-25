@@ -3,5 +3,6 @@ name = "sdu-agro-tools"
 version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
+    "pyqt5>=5.15.11",
     "sphinx>=8.2.3",
 ]
