@@ -3,6 +3,10 @@ name = "sdu-agro-tools"
 version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
+    "cdc>=1.1.2",
+    "numpy<2.0.0",
     "pyqt5>=5.15.11",
+    "qgis-stubs>=0.2.0.post1",
+    "rasterio>=1.4.3",
     "sphinx>=8.2.3",
 ]

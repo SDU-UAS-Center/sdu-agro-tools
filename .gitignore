@@ -55,3 +55,7 @@ uv.lock
 *.bak
 .DS_Store
 .vscode
+
+# QGIS
+resources.py
+resources_rc.py
