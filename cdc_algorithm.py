@@ -76,9 +76,7 @@ class CDCAlgorithm(QgsProcessingAlgorithm):
         self.color_model_choices = ["Mahalanobis", "Gaussian Mixture Model"]
         self.transform_choices = ["No transform", "Lambda expression", "Gamma"]
 
-        self.addParameter(
-            QgsProcessingParameterRasterLayer(self.INPUT, self.tr("Input layer"))
-        )
+        self.addParameter(QgsProcessingParameterRasterLayer(self.INPUT, self.tr("Input layer")))
         self.addParameter(
             QgsProcessingParameterBand(
                 self.BANDS,
@@ -98,21 +96,11 @@ class CDCAlgorithm(QgsProcessingAlgorithm):
                 defaultValue=0,
             )
         )
+        self.addParameter(QgsProcessingParameterRasterLayer(self.REFERENCE, self.tr("Reference Image"), optional=True))
         self.addParameter(
-            QgsProcessingParameterRasterLayer(
-                self.REFERENCE, self.tr("Reference Image"), optional=True
-            )
+            QgsProcessingParameterRasterLayer(self.ANNOTATED, self.tr("Reference Image Annotated"), optional=True)
         )
-        self.addParameter(
-            QgsProcessingParameterRasterLayer(
-                self.ANNOTATED, self.tr("Reference Image Annotated"), optional=True
-            )
-        )
-        self.addParameter(
-            QgsProcessingParameterFeatureSource(
-                self.SHAPE_FILE, self.tr("Shape file"), optional=True
-            )
-        )
+        self.addParameter(QgsProcessingParameterFeatureSource(self.SHAPE_FILE, self.tr("Shape file"), optional=True))
 
         self.addParameter(
             QgsProcessingParameterEnum(
@@ -172,11 +160,7 @@ class CDCAlgorithm(QgsProcessingAlgorithm):
                 defaultValue=0,
             )
         )
-        self.addParameter(
-            QgsProcessingParameterString(
-                self.LAMBDA, self.tr("Python Lambda Expression"), optional=True
-            )
-        )
+        self.addParameter(QgsProcessingParameterString(self.LAMBDA, self.tr("Python Lambda Expression"), optional=True))
         self.addParameter(
             QgsProcessingParameterNumber(
                 self.GAMMA,
@@ -189,11 +173,7 @@ class CDCAlgorithm(QgsProcessingAlgorithm):
             )
         )
 
-        self.addParameter(
-            QgsProcessingParameterRasterDestination(
-                self.OUTPUT, self.tr("Output Color Distance Layer")
-            )
-        )
+        self.addParameter(QgsProcessingParameterRasterDestination(self.OUTPUT, self.tr("Output Color Distance Layer")))
 
         self.addParameter(
             QgsProcessingParameterFile(
@@ -204,9 +184,7 @@ class CDCAlgorithm(QgsProcessingAlgorithm):
         )
 
         self.addParameter(
-            QgsProcessingParameterBoolean(
-                self.SAVE_TILES, self.tr("Save tiles images"), defaultValue=False
-            )
+            QgsProcessingParameterBoolean(self.SAVE_TILES, self.tr("Save tiles images"), defaultValue=False)
         )
 
         self.addParameter(
@@ -218,9 +196,7 @@ class CDCAlgorithm(QgsProcessingAlgorithm):
         )
 
         self.addParameter(
-            QgsProcessingParameterBoolean(
-                self.CONVERT_UINT, self.tr("Convert result to uint8"), defaultValue=True
-            )
+            QgsProcessingParameterBoolean(self.CONVERT_UINT, self.tr("Convert result to uint8"), defaultValue=True)
         )
 
     def prepareAlgorithm(self, parameters, context, feedback):
@@ -251,9 +227,7 @@ class CDCAlgorithm(QgsProcessingAlgorithm):
             self.transform = CDC.GammaTransform(gamma)
 
         self.ref_type = self.parameterAsEnum(parameters, self.REF_TYPE, context)
-        self.color_model_params = self.parameterAsEnum(
-            parameters, self.COLOR_MODEL, context
-        )
+        self.color_model_params = self.parameterAsEnum(parameters, self.COLOR_MODEL, context)
         self.gmm_params = self.parameterAsInt(parameters, self.GMM_PARAM, context)
 
         tiler_params = {
@@ -263,16 +237,10 @@ class CDCAlgorithm(QgsProcessingAlgorithm):
         self.tiler = CDC.OrthomosaicTiles(**tiler_params)
 
         # NOTE: Added
-        self.save_tiles_path = self.parameterAsFile(
-            parameters, self.SAVE_TILES_PATH, context
-        )
+        self.save_tiles_path = self.parameterAsFile(parameters, self.SAVE_TILES_PATH, context)
         self.save_tiles = self.parameterAsBoolean(parameters, self.SAVE_TILES, context)
-        self.save_tiles_distance = self.parameterAsBoolean(
-            parameters, self.SAVE_TILES_DISTANCE, context
-        )
-        self.convert_uint8 = self.parameterAsBoolean(
-            parameters, self.CONVERT_UINT, context
-        )
+        self.save_tiles_distance = self.parameterAsBoolean(parameters, self.SAVE_TILES_DISTANCE, context)
+        self.convert_uint8 = self.parameterAsBoolean(parameters, self.CONVERT_UINT, context)
 
         return super().prepareAlgorithm(parameters, context, feedback)
 
@@ -291,14 +259,10 @@ class CDCAlgorithm(QgsProcessingAlgorithm):
                 "transform": self.transform,
             }
             if self.color_model_params == 0:
-                color_model = CDC.MahalanobisDistance.from_image_annotation(
-                    **color_params
-                )
+                color_model = CDC.MahalanobisDistance.from_image_annotation(**color_params)
             elif self.color_model_params == 1:
                 color_params.update({"n_components": self.gmm_params})
-                color_model = CDC.GaussianMixtureModelDistance.from_image_annotation(
-                    **color_params
-                )
+                color_model = CDC.GaussianMixtureModelDistance.from_image_annotation(**color_params)
         elif self.ref_type == 0:
             # convert shape file polygons to point centered af pixels
             pixel_centroids_params = {
@@ -342,9 +306,7 @@ class CDCAlgorithm(QgsProcessingAlgorithm):
                 color_model = CDC.MahalanobisDistance.from_pixel_values(**color_params)
             elif self.color_model_params == 1:
                 color_params.update({"n_components": self.gmm_params})
-                color_model = CDC.GaussianMixtureModelDistance.from_pixel_values(
-                    **color_params
-                )
+                color_model = CDC.GaussianMixtureModelDistance.from_pixel_values(**color_params)
 
         # Tile orthomosaic and run in threads
         self.tiler.divide_orthomosaic_into_tiles()
@@ -397,12 +359,8 @@ class CDCAlgorithm(QgsProcessingAlgorithm):
                         os.makedirs(save_path, exist_ok=True)
                         tile.save_tile(distance, mask, save_path)
 
-                with concurrent.futures.ThreadPoolExecutor(
-                    max_workers=context.maximumThreads()
-                ) as executor:
-                    for current, _ in enumerate(
-                        executor.map(process, self.tiler.tiles)
-                    ):
+                with concurrent.futures.ThreadPoolExecutor(max_workers=context.maximumThreads()) as executor:
+                    for current, _ in enumerate(executor.map(process, self.tiler.tiles)):
                         if feedback.isCanceled():
                             return {}
                         feedback.setProgress(int(current * total))

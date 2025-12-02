@@ -1,5 +1,5 @@
-import os
 import inspect
+import os
 
 from qgis.core import (
     QgsApplication,
@@ -40,37 +40,21 @@ class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):
         self.logo.setPixmap(QPixmap(icon_path))
 
     def get_all_layers_filtered_by_type(self, layer_type):
-        return [
-            layer
-            for layer in QgsProject.instance().mapLayers().values()
-            if isinstance(layer, layer_type)
-        ]
+        return [layer for layer in QgsProject.instance().mapLayers().values() if isinstance(layer, layer_type)]
 
     def set_initial_param(self):
         self.input_file_combobox.addItems(
-            [
-                layer.name()
-                for layer in self.get_all_layers_filtered_by_type(QgsRasterLayer)
-            ]
+            [layer.name() for layer in self.get_all_layers_filtered_by_type(QgsRasterLayer)]
         )
         self.set_bands_to_use()
         self.shape_file_combobox.addItems(
-            [
-                layer.name()
-                for layer in self.get_all_layers_filtered_by_type(QgsVectorLayer)
-            ]
+            [layer.name() for layer in self.get_all_layers_filtered_by_type(QgsVectorLayer)]
         )
         self.ref_image_combobox.addItems(
-            [
-                layer.name()
-                for layer in self.get_all_layers_filtered_by_type(QgsRasterLayer)
-            ]
+            [layer.name() for layer in self.get_all_layers_filtered_by_type(QgsRasterLayer)]
         )
         self.pixel_mask_combobox.addItems(
-            [
-                layer.name()
-                for layer in self.get_all_layers_filtered_by_type(QgsRasterLayer)
-            ]
+            [layer.name() for layer in self.get_all_layers_filtered_by_type(QgsRasterLayer)]
         )
         self.metric_combo_box.addItems(["Mahalanobis", "GMM"])
 
@@ -103,9 +87,7 @@ class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):
                 return
 
     def load_input_raster(self):
-        raster_filename, _ = QFileDialog.getOpenFileName(
-            self, "Select Raster File", "", "*.tif"
-        )
+        raster_filename, _ = QFileDialog.getOpenFileName(self, "Select Raster File", "", "*.tif")
         # Check if the user selected a file
         if raster_filename:
             # Create a new raster layer
@@ -113,9 +95,7 @@ class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):
             raster_layer = QgsRasterLayer(raster_filename, layer_name)
             # Check if the layer is valid
             if not raster_layer.isValid():
-                QMessageBox.warning(
-                    self, "Invalid Layer", "The selected layer is not valid."
-                )
+                QMessageBox.warning(self, "Invalid Layer", "The selected layer is not valid.")
                 return
             # Add the raster layer to the QGIS project
             QgsProject.instance().addMapLayer(raster_layer)
@@ -125,18 +105,14 @@ class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):
             self.input_file_combobox.setCurrentText(raster_layer.name())
 
     def load_shape_file(self):
-        shape_filename, _ = QFileDialog.getOpenFileName(
-            self, "Select Shape File", "", "*.shp"
-        )
+        shape_filename, _ = QFileDialog.getOpenFileName(self, "Select Shape File", "", "*.shp")
         if shape_filename:
             # Create a new vector layer
             layer_name = os.path.splitext(os.path.basename(shape_filename))[0]
             vector_layer = QgsVectorLayer(shape_filename, layer_name, "ogr")
             # Check if the layer is valid
             if not vector_layer.isValid():
-                QMessageBox.warning(
-                    self, "Invalid Layer", "The selected shapefile is not valid."
-                )
+                QMessageBox.warning(self, "Invalid Layer", "The selected shapefile is not valid.")
                 return
             # Add the vector layer to the QGIS project
             QgsProject.instance().addMapLayer(vector_layer)
@@ -146,18 +122,14 @@ class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):
             self.shape_file_combobox.setCurrentText(vector_layer.name())
 
     def load_ref_image(self):
-        ref_image_filename, _ = QFileDialog.getOpenFileName(
-            self, "Select Reference Image", "", "*.tif *.jpg *jpeg"
-        )
+        ref_image_filename, _ = QFileDialog.getOpenFileName(self, "Select Reference Image", "", "*.tif *.jpg *jpeg")
         if ref_image_filename:
             # Create a new raster layer
             layer_name = os.path.splitext(os.path.basename(ref_image_filename))[0]
             ref_image = QgsRasterLayer(ref_image_filename, layer_name)
             # Check if the layer is valid
             if not ref_image.isValid():
-                QMessageBox.warning(
-                    self, "Invalid Layer", "The selected layer is not valid."
-                )
+                QMessageBox.warning(self, "Invalid Layer", "The selected layer is not valid.")
                 return
             # Add the raster layer to the QGIS project
             QgsProject.instance().addMapLayer(ref_image)
@@ -167,18 +139,14 @@ class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):
             self.ref_image_combobox.setCurrentText(ref_image.name())
 
     def load_pixel_mask(self):
-        pixel_mask_filename, _ = QFileDialog.getOpenFileName(
-            self, "Select Pixel Mask", "", "*.tif *.jpg *jpeg"
-        )
+        pixel_mask_filename, _ = QFileDialog.getOpenFileName(self, "Select Pixel Mask", "", "*.tif *.jpg *jpeg")
         if pixel_mask_filename:
             # Create a new raster layer
             layer_name = os.path.splitext(os.path.basename(pixel_mask_filename))[0]
             pixel_mask = QgsRasterLayer(pixel_mask_filename, layer_name)
             # Check if the layer is valid
             if not pixel_mask.isValid():
-                QMessageBox.warning(
-                    self, "Invalid Layer", "The selected layer is not valid."
-                )
+                QMessageBox.warning(self, "Invalid Layer", "The selected layer is not valid.")
                 return
             # Add the raster layer to the QGIS project
             QgsProject.instance().addMapLayer(pixel_mask)
@@ -206,18 +174,14 @@ class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):
         self.tile_overlap_spin_box.setEnabled(checked)
 
     def choose_save_file(self):
-        output_file, _ = QFileDialog.getSaveFileName(
-            self, "Select Output File", "", "*.tif"
-        )
+        output_file, _ = QFileDialog.getSaveFileName(self, "Select Output File", "", "*.tif")
         if output_file:
             self.output_line_edit.setText(output_file)
 
     def on_accepted(self):
         self.accept()
         params = {}
-        for layer in self.get_all_layers_filtered_by_type(
-            (QgsRasterLayer, QgsVectorLayer)
-        ):
+        for layer in self.get_all_layers_filtered_by_type((QgsRasterLayer, QgsVectorLayer)):
             if layer.name() == self.input_file_combobox.currentText():
                 params.update({"INPUT": layer})
             if layer.name() == self.shape_file_combobox.currentText():
@@ -227,23 +191,15 @@ class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):
             if layer.name() == self.pixel_mask_combobox.currentText():
                 params.update({"ANNOTATED": layer})
         if "INPUT" not in params:
-            QMessageBox.warning(
-                self, "Missing input raster", "Please load a valid input raster layer."
-            )
-        bands_to_use = [
-            int(b.split(":")[0]) for b in self.bands_to_use_combo_box.checkedItems()
-        ]
+            QMessageBox.warning(self, "Missing input raster", "Please load a valid input raster layer.")
+        bands_to_use = [int(b.split(":")[0]) for b in self.bands_to_use_combo_box.checkedItems()]
         if not bands_to_use:
-            QMessageBox.warning(
-                self, "No Bands selected", "Please select a which bands to use."
-            )
+            QMessageBox.warning(self, "No Bands selected", "Please select a which bands to use.")
         params.update({"BANDS": bands_to_use})
         params.update({"REF_TYPE": self.color_ref_tab_widget.currentIndex()})
         if params["REF_TYPE"] == 0:
             if "SHAPE_FILE" not in params:
-                QMessageBox.warning(
-                    self, "Missing shape file", "Please select a valid shape file."
-                )
+                QMessageBox.warning(self, "Missing shape file", "Please select a valid shape file.")
         else:
             if "REFERENCE" not in params:
                 QMessageBox.warning(
@@ -252,9 +208,7 @@ class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):
                     "Please seletc a valid reference image.",
                 )
             if "ANNOTATED" not in params:
-                QMessageBox.warning(
-                    self, "Missing pixel mask", "Please select a valid pixel mask."
-                )
+                QMessageBox.warning(self, "Missing pixel mask", "Please select a valid pixel mask.")
         if self.output_line_edit.text():
             params.update({"OUTPUT": self.output_line_edit.text()})
         else:
@@ -267,9 +221,7 @@ class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):
         params.update({"TILE_OVERLAP": self.tile_overlap_spin_box.value()})
         params.update({"CONVERT_UINT8": self.output_uint_checkbox.isChecked()})
         params.update({"SCALE": self.output_scale_spinbox.value()})
-        task = CDCToolbarTask(
-            alg=self.alg, params=params, context=self.context, feedback=self.feedback
-        )
+        task = CDCToolbarTask(alg=self.alg, params=params, context=self.context, feedback=self.feedback)
         print(task)
         QgsApplication.instance().taskManager().addTask(task)
         print("HERE")
@@ -312,16 +264,12 @@ class CDCToolbarTask(QgsTask):
             self.feedback = feedback
 
         # Progress bar:
-        self.progressDlg = (
-            TaskProgressBarDialog()
-        )  # a custom QDialog subclass with a QProgressBar
+        self.progressDlg = TaskProgressBarDialog()  # a custom QDialog subclass with a QProgressBar
         self.progressDlg.setWindowTitle("SDU Agro Tools CDC Processing")
         self.progressDlg.show()
 
         # Progress bar feedback
-        self.feedback.progressChanged.connect(
-            lambda progress: self.progressDlg.progressBar.setValue(int(progress))
-        )
+        self.feedback.progressChanged.connect(lambda progress: self.progressDlg.progressBar.setValue(int(progress)))
         self.progressDlg.signal.cancel_signal.connect(self.feedback.cancel)
         self.progressDlg.signal.cancel_signal.connect(self.cancel)
         print("PREPARE")

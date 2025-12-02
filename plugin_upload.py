@@ -19,13 +19,8 @@ def main(parameters, arguments):
     :param parameters: Command line parameters.
     :param arguments: Command line arguments.
     """
-    address = "{protocol}://{username}:{password}@{server}:{port}{endpoint}".format(
-        protocol=PROTOCOL,
-        username=parameters.username,
-        password=parameters.password,
-        server=parameters.server,
-        port=parameters.port,
-        endpoint=ENDPOINT,
+    address = (
+        f"{PROTOCOL}://{parameters.username}:{parameters.password}@{parameters.server}:{parameters.port}{ENDPOINT}"
     )
     print("Connecting to: %s" % hide_password(address))
 
@@ -33,9 +28,7 @@ def main(parameters, arguments):
 
     try:
         with open(arguments[0], "rb") as handle:
-            plugin_id, version_id = server.plugin.upload(
-                xmlrpc.client.Binary(handle.read())
-            )
+            plugin_id, version_id = server.plugin.upload(xmlrpc.client.Binary(handle.read()))
         print("Plugin ID: %s" % plugin_id)
         print("Version ID: %s" % version_id)
     except xmlrpc.client.ProtocolError as err:
@@ -84,9 +77,7 @@ if __name__ == "__main__":
         help="Username of plugin site",
         metavar="user",
     )
-    parser.add_option(
-        "-p", "--port", dest="port", help="Server port to connect to", metavar="80"
-    )
+    parser.add_option("-p", "--port", dest="port", help="Server port to connect to", metavar="80")
     parser.add_option(
         "-s",
         "--server",

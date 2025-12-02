@@ -37,9 +37,7 @@ class SDUAgroTools:
         self.plugin_dir = os.path.dirname(__file__)
         # initialize locale
         locale = QSettings().value("locale/userLocale")[0:2]
-        locale_path = os.path.join(
-            self.plugin_dir, "i18n", "AgroTool_ColorSegmenter_{}.qm".format(locale)
-        )
+        locale_path = os.path.join(self.plugin_dir, "i18n", f"AgroTool_ColorSegmenter_{locale}.qm")
 
         if os.path.exists(locale_path):
             self.translator = QTranslator()
@@ -121,7 +119,6 @@ class SDUAgroTools:
             added to self.actions list.
         :rtype: QAction
         """
-
         icon = QIcon(icon_path)
         action = QAction(icon, text, parent)
         action.triggered.connect(callback)
@@ -146,7 +143,6 @@ class SDUAgroTools:
 
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
-
         icon_path = os.path.join(os.path.join(cmd_folder, "icon.png"))
         self.add_action(
             icon_path,
@@ -177,4 +173,3 @@ class SDUAgroTools:
         alg = CDCAlgorithm()
         alg_dialog = CDCToolbarDialog(alg)
         alg_dialog.exec()
-
