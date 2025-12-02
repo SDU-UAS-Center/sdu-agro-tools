@@ -1,8 +1,10 @@
 import inspect
 import os
+from typing import Any
 
 from qgis.core import (
     QgsApplication,
+    QgsProcessingAlgorithm,
     QgsProcessingContext,
     QgsProcessingFeedback,
     QgsProject,
@@ -19,8 +21,14 @@ from .cdc_toolbar_dialog_ui import Ui_CDCToolbarDialog
 from .task_progress_bar import TaskProgressBarDialog
 
 
-class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):
-    def __init__(self, alg, parent=None, context=None, feedback=None):
+class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):  # type: ignore[misc]
+    def __init__(
+        self,
+        alg: QgsProcessingAlgorithm,
+        parent: QtWidgets.QWidget | None = None,
+        context: QgsProcessingContext | None = None,
+        feedback: QgsProcessingFeedback | None = None,
+    ) -> None:
         """Constructor."""
         super().__init__(parent)
         # Set up the user interface from Designer through FORM_CLASS.
@@ -35,14 +43,14 @@ class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):
 
         self.set_initial_param()
         self.connect_signals()
-        cmd_folder = os.path.split(inspect.getfile(inspect.currentframe()))[0]
+        cmd_folder = os.path.split(inspect.getfile(inspect.currentframe()))[0]  # type: ignore[arg-type]
         icon_path = os.path.join(os.path.join(cmd_folder, "sdu_logo_hs.jpg"))
         self.logo.setPixmap(QPixmap(icon_path))
 
-    def get_all_layers_filtered_by_type(self, layer_type):
+    def get_all_layers_filtered_by_type(self, layer_type: Any) -> list[Any]:
         return [layer for layer in QgsProject.instance().mapLayers().values() if isinstance(layer, layer_type)]
 
-    def set_initial_param(self):
+    def set_initial_param(self) -> None:
         self.input_file_combobox.addItems(
             [layer.name() for layer in self.get_all_layers_filtered_by_type(QgsRasterLayer)]
         )
@@ -58,7 +66,7 @@ class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):
         )
         self.metric_combo_box.addItems(["Mahalanobis", "GMM"])
 
-    def connect_signals(self):
+    def connect_signals(self) -> None:
         self.input_file_combobox.currentIndexChanged.connect(self.set_bands_to_use)
         self.input_file_button.clicked.connect(self.load_input_raster)
         self.shape_file_button.clicked.connect(self.load_shape_file)
@@ -71,7 +79,7 @@ class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):
         self.dialog_button_box.rejected.connect(self.on_rejected)
         self.dialog_button_box.helpRequested.connect(self.on_help)
 
-    def set_bands_to_use(self):
+    def set_bands_to_use(self) -> None:
         selected_raster_name = self.input_file_combobox.currentText()
         for layer in self.get_all_layers_filtered_by_type(QgsRasterLayer):
             if layer.name() == selected_raster_name:
@@ -86,7 +94,7 @@ class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):
                 self.bands_to_use_combo_box.toggleItemCheckState(len(band_list) - 1)
                 return
 
-    def load_input_raster(self):
+    def load_input_raster(self) -> None:
         raster_filename, _ = QFileDialog.getOpenFileName(self, "Select Raster File", "", "*.tif")
         # Check if the user selected a file
         if raster_filename:
@@ -104,7 +112,7 @@ class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):
             # Set combo box to the newly added layer's name
             self.input_file_combobox.setCurrentText(raster_layer.name())
 
-    def load_shape_file(self):
+    def load_shape_file(self) -> None:
         shape_filename, _ = QFileDialog.getOpenFileName(self, "Select Shape File", "", "*.shp")
         if shape_filename:
             # Create a new vector layer
@@ -121,7 +129,7 @@ class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):
             # Set combo box to the newly added layer's name
             self.shape_file_combobox.setCurrentText(vector_layer.name())
 
-    def load_ref_image(self):
+    def load_ref_image(self) -> None:
         ref_image_filename, _ = QFileDialog.getOpenFileName(self, "Select Reference Image", "", "*.tif *.jpg *jpeg")
         if ref_image_filename:
             # Create a new raster layer
@@ -138,7 +146,7 @@ class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):
             # Set combo box to the newly added layer's name
             self.ref_image_combobox.setCurrentText(ref_image.name())
 
-    def load_pixel_mask(self):
+    def load_pixel_mask(self) -> None:
         pixel_mask_filename, _ = QFileDialog.getOpenFileName(self, "Select Pixel Mask", "", "*.tif *.jpg *jpeg")
         if pixel_mask_filename:
             # Create a new raster layer
@@ -155,7 +163,7 @@ class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):
             # Set combo box to the newly added layer's name
             self.pixel_mask_combobox.setCurrentText(pixel_mask.name())
 
-    def select_metric(self):
+    def select_metric(self) -> None:
         if self.metric_combo_box.currentText() == "GMM":
             self.gmm_components_spin_box.setEnabled(True)
             self.gmm_components_label.setEnabled(True)
@@ -163,7 +171,7 @@ class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):
             self.gmm_components_spin_box.setEnabled(False)
             self.gmm_components_label.setEnabled(False)
 
-    def select_tile_processing(self):
+    def select_tile_processing(self) -> None:
         checked = self.tile_processing_checkbox.isChecked()
         self.tile_description.setEnabled(checked)
         self.tile_hight_label.setEnabled(checked)
@@ -173,12 +181,12 @@ class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):
         self.tile_overlap_label.setEnabled(checked)
         self.tile_overlap_spin_box.setEnabled(checked)
 
-    def choose_save_file(self):
+    def choose_save_file(self) -> None:
         output_file, _ = QFileDialog.getSaveFileName(self, "Select Output File", "", "*.tif")
         if output_file:
             self.output_line_edit.setText(output_file)
 
-    def on_accepted(self):
+    def on_accepted(self) -> None:
         self.accept()
         params = {}
         for layer in self.get_all_layers_filtered_by_type((QgsRasterLayer, QgsVectorLayer)):
@@ -226,14 +234,14 @@ class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):
         QgsApplication.instance().taskManager().addTask(task)
         print("HERE")
 
-    def on_rejected(self):
+    def on_rejected(self) -> None:
         self.reject()
 
-    def on_help(self):
+    def on_help(self) -> None:
         QDesktopServices.openUrl(QUrl("https://google.com"))
 
 
-class CDCToolbarTask(QgsTask):
+class CDCToolbarTask(QgsTask):  # type: ignore[misc]
     """
     Auxiliary class - wraps the algorithm in a QTask object which allows concurrent execution
     and does not block the main QGIS thread.
@@ -248,7 +256,13 @@ class CDCToolbarTask(QgsTask):
 
     """
 
-    def __init__(self, alg, params, context, feedback):
+    def __init__(
+        self,
+        alg: QgsProcessingAlgorithm,
+        params: dict[str, Any],
+        context: QgsProcessingContext,
+        feedback: QgsProcessingFeedback,
+    ) -> None:
         super().__init__("CDCToolbarTask", QgsTask.CanCancel)
         print("IN TASK")
         self.alg = alg
@@ -277,7 +291,7 @@ class CDCToolbarTask(QgsTask):
         self.alg.prepare(params, self.context, self.feedback)
         print("END PREPARE")
 
-    def run(self):
+    def run(self) -> bool:
         # Runs the algorithm - run in background thread
         print("RUN")
         print(self.params)
@@ -293,7 +307,7 @@ class CDCToolbarTask(QgsTask):
         QgsProject.instance().addMapLayer(output)
         return True
 
-    def finished(self, result):
+    def finished(self, result: bool) -> Any:
         self.alg.postProcess(self.context, self.feedback)
         self.progressDlg.close()
         return super().finished(result)

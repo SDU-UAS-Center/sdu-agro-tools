@@ -1,8 +1,11 @@
+from __future__ import annotations
+
 import concurrent.futures
 import inspect
 import os
 import threading
 from pathlib import Path
+from typing import Any
 
 import CDC
 import numpy as np
@@ -10,6 +13,8 @@ import rasterio
 from qgis import processing
 from qgis.core import (
     QgsProcessingAlgorithm,
+    QgsProcessingContext,
+    QgsProcessingFeedback,
     QgsProcessingParameterBand,
     QgsProcessingParameterBoolean,
     QgsProcessingParameterEnum,
@@ -25,7 +30,7 @@ from qgis.PyQt.QtGui import QIcon
 from rasterio.enums import Resampling
 
 
-class CDCAlgorithm(QgsProcessingAlgorithm):
+class CDCAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
     """
     This is an example algorithm that takes a vector layer and
     creates a new identical one.
@@ -67,7 +72,7 @@ class CDCAlgorithm(QgsProcessingAlgorithm):
     SAVE_TILES = "SAVE_TILES"  # Bool - save images
     SAVE_TILES_DISTANCE = "SAVE_TILES_DISTANCE"  # Bool - save distan image
 
-    def initAlgorithm(self, config):
+    def initAlgorithm(self, config: dict[str, Any]) -> None:
         """
         Here we define the inputs and output of the algorithm, along
         with some other properties.
@@ -199,7 +204,9 @@ class CDCAlgorithm(QgsProcessingAlgorithm):
             QgsProcessingParameterBoolean(self.CONVERT_UINT, self.tr("Convert result to uint8"), defaultValue=True)
         )
 
-    def prepareAlgorithm(self, parameters, context, feedback):
+    def prepareAlgorithm(
+        self, parameters: dict[str, Any], context: QgsProcessingContext, feedback: QgsProcessingFeedback
+    ) -> Any:
         # pre process some
         self.raster_input = self.parameterAsRasterLayer(parameters, self.INPUT, context)
         self.raster_bands = self.parameterAsInts(parameters, self.BANDS, context)
@@ -244,7 +251,9 @@ class CDCAlgorithm(QgsProcessingAlgorithm):
 
         return super().prepareAlgorithm(parameters, context, feedback)
 
-    def processAlgorithm(self, parameters, context, feedback):
+    def processAlgorithm(
+        self, parameters: dict[str, Any], context: QgsProcessingContext, feedback: QgsProcessingFeedback
+    ) -> dict[str, Any]:
         raster_output = self.parameterAsOutputLayer(parameters, self.OUTPUT, context)
 
         # NOTE: Changed index here - for me shape_file = 0 , reference image = 1
@@ -373,7 +382,7 @@ class CDCAlgorithm(QgsProcessingAlgorithm):
 
         return {self.OUTPUT: raster_output}
 
-    def name(self):
+    def name(self) -> str:
         """
         Returns the algorithm name, used for identifying the algorithm. This
         string should be fixed for the algorithm, and must not be localised.
@@ -383,21 +392,21 @@ class CDCAlgorithm(QgsProcessingAlgorithm):
         """
         return "color_distance_calculator"
 
-    def displayName(self):
+    def displayName(self) -> str:
         """
         Returns the translated algorithm name, which should be used for any
         user-visible display of the algorithm name.
         """
         return self.tr("Color Distance Calculator")
 
-    def group(self):
+    def group(self) -> str:
         """
         Returns the name of the group this algorithm belongs to. This string
         should be localised.
         """
         return self.tr(self.groupId())
 
-    def groupId(self):
+    def groupId(self) -> str:
         """
         Returns the unique ID of the group this algorithm belongs to. This
         string should be fixed for the algorithm, and must not be localised.
@@ -407,16 +416,16 @@ class CDCAlgorithm(QgsProcessingAlgorithm):
         """
         return "Raster layer tools"
 
-    def tr(self, string):
-        return QCoreApplication.translate("Processing", string)
+    def tr(self, string: str) -> str:
+        return QCoreApplication.translate("Processing", string)  # type: ignore[no-any-return]
 
-    def createInstance(self):
+    def createInstance(self) -> CDCAlgorithm:
         return CDCAlgorithm()
 
     # def createCustomParametersWidget(self, parents):
     #     return AgroTool_ColorSegmenterDialog(alg= self, parent=parents)
 
-    def icon(self):
-        cmd_folder = os.path.split(inspect.getfile(inspect.currentframe()))[0]
+    def icon(self) -> QIcon:
+        cmd_folder = os.path.split(inspect.getfile(inspect.currentframe()))[0]  # type: ignore[arg-type]
         icon = QIcon(os.path.join(os.path.join(cmd_folder, "icon.png")))
         return icon

@@ -82,6 +82,7 @@ docstring-code-format = true
 
 [tool.mypy]
 files = "*.py"
+exclude = "ui\\.py$"
 exclude_gitignore = true
 
 # Make mypy and mypy from pre-commit behave alike

@@ -4,15 +4,15 @@ from qgis.PyQt import QtWidgets
 from .task_progress_bar_ui import Ui_TaskProgressBarDialog
 
 
-class GUI_signals(QObject):
+class GUI_signals(QObject):  # type: ignore[misc]
     cancel_signal = pyqtSignal()
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
 
-class TaskProgressBarDialog(QtWidgets.QDialog, Ui_TaskProgressBarDialog):
-    def __init__(self, parent=None):
+class TaskProgressBarDialog(QtWidgets.QDialog, Ui_TaskProgressBarDialog):  # type: ignore[misc]
+    def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         """Constructor."""
         super().__init__(parent)
         self.setupUi(self)
@@ -21,7 +21,7 @@ class TaskProgressBarDialog(QtWidgets.QDialog, Ui_TaskProgressBarDialog):
         # Handle task cancellation
         self.CancelButton.clicked.connect(self.on_cancel)
 
-    def on_cancel(self):
+    def on_cancel(self) -> None:
         # Call the cancellation method of your task.
         self.signal.cancel_signal.emit()
         print("Button pressed")

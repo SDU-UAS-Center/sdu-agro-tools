@@ -1,11 +1,14 @@
 import inspect
 import os.path
 import sys
+from collections.abc import Callable
+from typing import Any
 
 from qgis.core import QgsApplication
+from qgis.gui import QgisInterface
 from qgis.PyQt.QtCore import QCoreApplication, QSettings, QTranslator
 from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import QAction
+from qgis.PyQt.QtWidgets import QAction, QWidget
 
 from .cdc_algorithm import CDCAlgorithm
 from .cdc_toolbar_dialog import CDCToolbarDialog
@@ -14,7 +17,7 @@ from .cdc_toolbar_dialog import CDCToolbarDialog
 # from .resources import *
 from .sdu_agro_tools_provider import SDUAgroToolsProvider
 
-cmd_folder = os.path.split(inspect.getfile(inspect.currentframe()))[0]
+cmd_folder = os.path.split(inspect.getfile(inspect.currentframe()))[0]  # type: ignore[arg-type]
 
 if cmd_folder not in sys.path:
     sys.path.insert(0, cmd_folder)
@@ -23,7 +26,7 @@ if cmd_folder not in sys.path:
 class SDUAgroTools:
     """QGIS Plugin Implementation."""
 
-    def __init__(self, iface):
+    def __init__(self, iface: QgisInterface) -> None:
         """Constructor.
 
         :param iface: An interface instance that will be passed to this class
@@ -45,17 +48,15 @@ class SDUAgroTools:
             QCoreApplication.installTranslator(self.translator)
 
         # Declare instance attributes
-        self.actions = []
-        self.menu = self.tr("&AgroTool Color Segmenter")
+        self.actions: list[Any] = []
+        self.menu: str = self.tr("&AgroTool Color Segmenter")
 
         # Check if plugin was started the first time in current QGIS session
         # Must be set in initGui() to survive plugin reloads
-        self.first_start = None
-
-        self.active_tasks = []
+        self.first_start: bool | None = None
 
     # noinspection PyMethodMayBeStatic
-    def tr(self, message):
+    def tr(self, message: str) -> str:
         """Get the translation for a string using Qt translation API.
 
         We implement this ourselves since we do not inherit QObject.
@@ -67,20 +68,20 @@ class SDUAgroTools:
         :rtype: QString
         """
         # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
-        return QCoreApplication.translate("AgroTool_ColorSegmenter", message)
+        return QCoreApplication.translate("AgroTool_ColorSegmenter", message)  # type: ignore[no-any-return]
 
     def add_action(
         self,
-        icon_path,
-        text,
-        callback,
-        enabled_flag=True,
-        add_to_menu=True,
-        add_to_toolbar=True,
-        status_tip=None,
-        whats_this=None,
-        parent=None,
-    ):
+        icon_path: str,
+        text: str,
+        callback: Callable[[], None],
+        enabled_flag: bool = True,
+        add_to_menu: bool = True,
+        add_to_toolbar: bool = True,
+        status_tip: str | None = None,
+        whats_this: str | None = None,
+        parent: QWidget | None = None,
+    ) -> Any:
         """Add a toolbar icon to the toolbar.
 
         :param icon_path: Path to the icon for this action. Can be a resource
@@ -141,7 +142,7 @@ class SDUAgroTools:
 
         return action
 
-    def initGui(self):
+    def initGui(self) -> None:
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
         icon_path = os.path.join(os.path.join(cmd_folder, "icon.png"))
         self.add_action(
@@ -158,7 +159,7 @@ class SDUAgroTools:
         self.provider = SDUAgroToolsProvider()
         QgsApplication.processingRegistry().addProvider(self.provider)
 
-    def unload(self):
+    def unload(self) -> None:
         """Removes the plugin menu item and icon from QGIS GUI."""
         for action in self.actions:
             self.iface.removePluginMenu(self.tr("&AgroTool Color Segmenter"), action)
@@ -168,7 +169,7 @@ class SDUAgroTools:
         QgsApplication.processingRegistry().removeProvider(self.provider)
         # gives error on closing qgis
 
-    def run_cdc(self):
+    def run_cdc(self) -> None:
         """Run method that performs all the real work"""
         alg = CDCAlgorithm()
         alg_dialog = CDCToolbarDialog(alg)
