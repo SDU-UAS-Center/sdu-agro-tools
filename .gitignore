@@ -59,3 +59,5 @@ uv.lock
 # QGIS
 resources.py
 resources_rc.py
+# Compiled UI files
+*_ui.py

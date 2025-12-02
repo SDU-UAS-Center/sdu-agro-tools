@@ -1,13 +1,13 @@
-import os
 import inspect
-from qgis.PyQt.QtGui import QIcon
+import os
+
 from qgis.core import QgsProcessingProvider
+from qgis.PyQt.QtGui import QIcon
 
-from .AgroTool_ColorSegmenter_algorithm import SDUAgricultureAlgorithm
+from .cdc_algorithm import CDCAlgorithm
 
 
-class SDUAgricultureProvider(QgsProcessingProvider):
-
+class SDUAgroToolsProvider(QgsProcessingProvider):
     def __init__(self):
         """
         Default constructor.
@@ -25,7 +25,7 @@ class SDUAgricultureProvider(QgsProcessingProvider):
         """
         Loads all algorithms belonging to this provider.
         """
-        self.addAlgorithm(SDUAgricultureAlgorithm())
+        self.addAlgorithm(CDCAlgorithm())
         # add additional algorithms here
         # self.addAlgorithm(MyOtherAlgorithm())
 
@@ -35,7 +35,7 @@ class SDUAgricultureProvider(QgsProcessingProvider):
         string should be a unique, short, character only string, eg "qgis" or
         "gdal". This string should not be localised.
         """
-        return 'SDU'
+        return "SDU"
 
     def name(self):
         """
@@ -44,7 +44,7 @@ class SDUAgricultureProvider(QgsProcessingProvider):
 
         This string should be short (e.g. "Lastools") and localised.
         """
-        return self.tr('SDU')
+        return self.tr("SDU")
 
     def icon(self):
         """
@@ -52,9 +52,9 @@ class SDUAgricultureProvider(QgsProcessingProvider):
         the Processing toolbox.
         """
         cmd_folder = os.path.split(inspect.getfile(inspect.currentframe()))[0]
-        icon = QIcon(os.path.join(os.path.join(cmd_folder, 'icon.png')))
+        icon = QIcon(os.path.join(os.path.join(cmd_folder, "icon.png")))
         return icon
-        #return QgsProcessingProvider.icon(self)
+        # return QgsProcessingProvider.icon(self)
 
     def longName(self):
         """

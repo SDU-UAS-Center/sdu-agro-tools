@@ -38,24 +38,36 @@ LOCALES =
 # translation
 SOURCES = \
 	__init__.py \
-	AgroTool_ColorSegmenter.py \
-	sdu_agro_tools/AgroTool_ColorSegmenter_dialog.py
+	sdu_agro_tools.py \
+	sdu_agro_tools_provider.py \
+	cdc_toolbar_dialog.py \
+	cdc_toolbar_dialog_ui.py \
+	cdc_algorithm.py \
+	task_progress_bar_ui.py \
+	task_progress_bar.py 
 
-PLUGINNAME = AgroTool_ColorSegmenter
+PLUGINNAME = SDU_Agro_Tools
 
 PY_FILES = \
 	__init__.py \
-	AgroTool_ColorSegmenter.py \
-	sdu_agro_tools/AgroTool_ColorSegmenter_dialog.py
+	sdu_agro_tools.py \
+	sdu_agro_tools_provider.py \
+	cdc_toolbar_dialog.py \
+	cdc_toolbar_dialog_ui.py \
+	cdc_algorithm.py \
+	task_progress_bar_ui.py \
+	task_progress_bar.py 
 
-UI_FILES = sdu_agro_tools/AgroTool_ColorSegmenter_dialog_base.ui
+UI_FILES = \
+	cdc_toolbar_dialog.ui \
+	task_progress_bar.ui
 
 EXTRAS = \
 	metadata.txt \
 	icon.png \
 	requirements.txt
 
-EXTRA_DIRS = sdu_agro_tools
+# EXTRA_DIRS = sdu_agro_tools
 
 COMPILED_RESOURCE_FILES = resources.py
 
@@ -93,6 +105,13 @@ default:
 
 compile: $(COMPILED_RESOURCE_FILES)
 
+compile-ui: $(UI_FILES)
+	@echo
+	@echo "----------------------------"
+	@echo "Compiling UI files to python"
+	@echo "----------------------------"
+	$(foreach UI_FILE,$(UI_FILES), pyuic5 -o $(UI_FILE:.ui=_ui.py) $(UI_FILE);)
+
 %.py : %.qrc $(RESOURCES_SRC)
 	pyrcc5 -o $*.py  $<
 
@@ -117,7 +136,7 @@ test: compile transcompile
 	@echo "e.g. source run-env-linux.sh <path to qgis install>; make test"
 	@echo "----------------------"
 
-deploy: compile doc transcompile
+deploy: compile compile-ui doc transcompile
 	@echo
 	@echo "------------------------------------------"
 	@echo "Deploying plugin to your .qgis2 directory."

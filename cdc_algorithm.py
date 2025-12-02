@@ -1,34 +1,31 @@
-import CDC
-
-import numpy as np
+import concurrent.futures
+import inspect
+import os
 import threading
+from pathlib import Path
+
+import CDC
+import numpy as np
 import rasterio
+from qgis import processing
+from qgis.core import (
+    QgsProcessingAlgorithm,
+    QgsProcessingParameterBand,
+    QgsProcessingParameterBoolean,
+    QgsProcessingParameterEnum,
+    QgsProcessingParameterFeatureSource,
+    QgsProcessingParameterFile,
+    QgsProcessingParameterNumber,
+    QgsProcessingParameterRasterDestination,
+    QgsProcessingParameterRasterLayer,
+    QgsProcessingParameterString,
+)
+from qgis.PyQt.QtCore import QCoreApplication
+from qgis.PyQt.QtGui import QIcon
 from rasterio.enums import Resampling
 
-import concurrent.futures
 
-from qgis import processing
-
-import os
-from pathlib import Path 
-import inspect
-from qgis.PyQt.QtGui import QIcon
-
-from qgis.PyQt.QtCore import QCoreApplication
-from qgis.core import (QgsProcessingAlgorithm,
-                       QgsProcessingParameterBoolean,
-                       QgsProcessingParameterFeatureSource,
-                       QgsProcessingParameterRasterLayer,
-                       QgsProcessingParameterRasterDestination,
-                       QgsProcessingParameterNumber,
-                       QgsProcessingParameterEnum,
-                       QgsProcessingParameterBand,
-                       QgsProcessingParameterString,
-                       QgsProcessingParameterFile)
-
-from .AgroTool_ColorSegmenter_dialog import AgroTool_ColorSegmenterDialog
-
-class SDUAgricultureAlgorithm(QgsProcessingAlgorithm):
+class CDCAlgorithm(QgsProcessingAlgorithm):
     """
     This is an example algorithm that takes a vector layer and
     creates a new identical one.
@@ -46,8 +43,8 @@ class SDUAgricultureAlgorithm(QgsProcessingAlgorithm):
     # used when calling the algorithm from another algorithm, or when
     # calling from the QGIS console.
 
-    OUTPUT = 'OUTPUT'
-    INPUT = 'INPUT'
+    OUTPUT = "OUTPUT"
+    INPUT = "INPUT"
     BANDS = "BANDS"
     REF_TYPE = "REF_TYPE"
     REFERENCE = "REFERENCE"
@@ -67,8 +64,8 @@ class SDUAgricultureAlgorithm(QgsProcessingAlgorithm):
     # NOTE: Added params
     CONVERT_UINT = "CONTERT_UINT"
     SAVE_TILES_PATH = "SAVE_TILES_PATH"
-    SAVE_TILES = "SAVE_TILES"   # Bool - save images
-    SAVE_TILES_DISTANCE = "SAVE_TILES_DISTANCE"     # Bool - save distan image
+    SAVE_TILES = "SAVE_TILES"  # Bool - save images
+    SAVE_TILES_DISTANCE = "SAVE_TILES_DISTANCE"  # Bool - save distan image
 
     def initAlgorithm(self, config):
         """
@@ -78,72 +75,62 @@ class SDUAgricultureAlgorithm(QgsProcessingAlgorithm):
         self.ref_type_choices = ["Shape File", "Reference Images"]
         self.color_model_choices = ["Mahalanobis", "Gaussian Mixture Model"]
         self.transform_choices = ["No transform", "Lambda expression", "Gamma"]
-        
-        
+
         self.addParameter(
-            QgsProcessingParameterRasterLayer(
-                self.INPUT,
-                self.tr('Input layer')
-            )
+            QgsProcessingParameterRasterLayer(self.INPUT, self.tr("Input layer"))
         )
         self.addParameter(
-             QgsProcessingParameterBand(
-                  self.BANDS,
-                  self.tr("Bands to use for Color"),
-                  allowMultiple=True,
-                  parentLayerParameterName=self.INPUT,
-                  optional=True
-             )
+            QgsProcessingParameterBand(
+                self.BANDS,
+                self.tr("Bands to use for Color"),
+                allowMultiple=True,
+                parentLayerParameterName=self.INPUT,
+                optional=True,
+            )
         )
 
         self.addParameter(
-             QgsProcessingParameterEnum(
-                  self.REF_TYPE,
-                  self.tr("Reference type"),
-                  self.ref_type_choices,
-                  allowMultiple=False,
-                  defaultValue=0
-             )
-        )
-        self.addParameter(
-            QgsProcessingParameterRasterLayer(
-                self.REFERENCE,
-                self.tr("Reference Image"),
-                optional=True
+            QgsProcessingParameterEnum(
+                self.REF_TYPE,
+                self.tr("Reference type"),
+                self.ref_type_choices,
+                allowMultiple=False,
+                defaultValue=0,
             )
         )
         self.addParameter(
             QgsProcessingParameterRasterLayer(
-                self.ANNOTATED,
-                self.tr("Reference Image Annotated"),
-                optional=True
+                self.REFERENCE, self.tr("Reference Image"), optional=True
             )
         )
         self.addParameter(
-             QgsProcessingParameterFeatureSource(
-                  self.SHAPE_FILE,
-                  self.tr("Shape file"),
-                  optional=True
-             )
+            QgsProcessingParameterRasterLayer(
+                self.ANNOTATED, self.tr("Reference Image Annotated"), optional=True
+            )
+        )
+        self.addParameter(
+            QgsProcessingParameterFeatureSource(
+                self.SHAPE_FILE, self.tr("Shape file"), optional=True
+            )
         )
 
         self.addParameter(
-             QgsProcessingParameterEnum(
-                  self.COLOR_MODEL,
-                  self.tr("Color Model"),
-                  self.color_model_choices,
-                  allowMultiple=False,
-                  defaultValue=0
-             )
+            QgsProcessingParameterEnum(
+                self.COLOR_MODEL,
+                self.tr("Color Model"),
+                self.color_model_choices,
+                allowMultiple=False,
+                defaultValue=0,
+            )
         )
         self.addParameter(
-             QgsProcessingParameterNumber(
-                  self.GMM_PARAM,
-                  self.tr("GMM parameters"),
-                  type=QgsProcessingParameterNumber.Integer,
-                  defaultValue=2,
-                  optional=True
-             )
+            QgsProcessingParameterNumber(
+                self.GMM_PARAM,
+                self.tr("GMM parameters"),
+                type=QgsProcessingParameterNumber.Integer,
+                defaultValue=2,
+                optional=True,
+            )
         )
 
         self.addParameter(
@@ -152,7 +139,7 @@ class SDUAgricultureAlgorithm(QgsProcessingAlgorithm):
                 self.tr("Scale"),
                 type=QgsProcessingParameterNumber.Double,
                 defaultValue=5,
-                minValue=0
+                minValue=0,
             )
         )
 
@@ -162,7 +149,7 @@ class SDUAgricultureAlgorithm(QgsProcessingAlgorithm):
                 self.tr("Tile Width"),
                 type=QgsProcessingParameterNumber.Integer,
                 defaultValue=2048,
-                minValue=64
+                minValue=64,
             )
         )
 
@@ -172,89 +159,88 @@ class SDUAgricultureAlgorithm(QgsProcessingAlgorithm):
                 self.tr("Tile Height"),
                 type=QgsProcessingParameterNumber.Integer,
                 defaultValue=2048,
-                minValue=64
+                minValue=64,
             )
         )
 
-
         self.addParameter(
-             QgsProcessingParameterEnum(
-                  self.TRANSFORM,
-                  self.tr("Transform to apply to input"),
-                  self.transform_choices,
-                  allowMultiple=False,
-                  defaultValue=0
-             )
+            QgsProcessingParameterEnum(
+                self.TRANSFORM,
+                self.tr("Transform to apply to input"),
+                self.transform_choices,
+                allowMultiple=False,
+                defaultValue=0,
+            )
         )
         self.addParameter(
-             QgsProcessingParameterString(
-                  self.LAMBDA,
-                  self.tr("Python Lambda Expression"),
-                  optional=True
-             )
+            QgsProcessingParameterString(
+                self.LAMBDA, self.tr("Python Lambda Expression"), optional=True
+            )
         )
         self.addParameter(
-             QgsProcessingParameterNumber(
-                  self.GAMMA,
-                  self.tr("Gamma value for the gamma transform"),
-                  type=QgsProcessingParameterNumber.Double,
-                  defaultValue=0.5,
-                  minValue=0,
-                  maxValue=5,
-                  optional=True
-             )
+            QgsProcessingParameterNumber(
+                self.GAMMA,
+                self.tr("Gamma value for the gamma transform"),
+                type=QgsProcessingParameterNumber.Double,
+                defaultValue=0.5,
+                minValue=0,
+                maxValue=5,
+                optional=True,
+            )
         )
 
         self.addParameter(
             QgsProcessingParameterRasterDestination(
-                self.OUTPUT,
-                self.tr('Output Color Distance Layer')
+                self.OUTPUT, self.tr("Output Color Distance Layer")
             )
         )
 
-        self.addParameter(QgsProcessingParameterFile(
-            self.SAVE_TILES_PATH,
-             self.tr('Path to save result tiles'),
-            optional=True
-        ))
+        self.addParameter(
+            QgsProcessingParameterFile(
+                self.SAVE_TILES_PATH,
+                self.tr("Path to save result tiles"),
+                optional=True,
+            )
+        )
 
-        self.addParameter(QgsProcessingParameterBoolean(
-            self.SAVE_TILES,
-             self.tr('Save tiles images'),
-            defaultValue=False
-        ))
+        self.addParameter(
+            QgsProcessingParameterBoolean(
+                self.SAVE_TILES, self.tr("Save tiles images"), defaultValue=False
+            )
+        )
 
-        self.addParameter(QgsProcessingParameterBoolean(
-            self.SAVE_TILES_DISTANCE,
-             self.tr('Save tiles distance images'),
-            defaultValue=False
-        ))
+        self.addParameter(
+            QgsProcessingParameterBoolean(
+                self.SAVE_TILES_DISTANCE,
+                self.tr("Save tiles distance images"),
+                defaultValue=False,
+            )
+        )
 
-        self.addParameter(QgsProcessingParameterBoolean(
-            self.CONVERT_UINT,
-             self.tr('Convert result to uint8'),
-            defaultValue=True
-        ))
+        self.addParameter(
+            QgsProcessingParameterBoolean(
+                self.CONVERT_UINT, self.tr("Convert result to uint8"), defaultValue=True
+            )
+        )
 
-    
     def prepareAlgorithm(self, parameters, context, feedback):
-        # pre process some 
+        # pre process some
         self.raster_input = self.parameterAsRasterLayer(parameters, self.INPUT, context)
         self.raster_bands = self.parameterAsInts(parameters, self.BANDS, context)
-        
+
         print("Input params: ", parameters)
         print("input layer: ", type(self.raster_input))
+        print("input layer: ", self.raster_input)
         if not self.raster_bands:
             self.raster_bands = None
         else:
             self.raster_bands = [x - 1 for x in self.raster_bands]
 
-       
         self.scale = self.parameterAsDouble(parameters, self.SCALE, context)
         tile_width = self.parameterAsInt(parameters, self.TILE_WIDTH, context)
         tile_height = self.parameterAsInt(parameters, self.TILE_HEIGHT, context)
         self.transform = self.parameterAsEnum(parameters, self.TRANSFORM, context)
-        
+
         if self.transform == 0:
             self.transform = None
         elif self.transform == 1:
@@ -265,7 +251,9 @@ class SDUAgricultureAlgorithm(QgsProcessingAlgorithm):
             self.transform = CDC.GammaTransform(gamma)
 
         self.ref_type = self.parameterAsEnum(parameters, self.REF_TYPE, context)
-        self.color_model_params = self.parameterAsEnum(parameters, self.COLOR_MODEL, context)
+        self.color_model_params = self.parameterAsEnum(
+            parameters, self.COLOR_MODEL, context
+        )
         self.gmm_params = self.parameterAsInt(parameters, self.GMM_PARAM, context)
 
         tiler_params = {
@@ -275,16 +263,20 @@ class SDUAgricultureAlgorithm(QgsProcessingAlgorithm):
         self.tiler = CDC.OrthomosaicTiles(**tiler_params)
 
         # NOTE: Added
-        self.save_tiles_path = self.parameterAsFile(parameters, self.SAVE_TILES_PATH, context)
+        self.save_tiles_path = self.parameterAsFile(
+            parameters, self.SAVE_TILES_PATH, context
+        )
         self.save_tiles = self.parameterAsBoolean(parameters, self.SAVE_TILES, context)
-        self.save_tiles_distance = self.parameterAsBoolean(parameters, self.SAVE_TILES_DISTANCE, context)
-        self.convert_uint8 = self.parameterAsBoolean(parameters, self.CONVERT_UINT, context)
+        self.save_tiles_distance = self.parameterAsBoolean(
+            parameters, self.SAVE_TILES_DISTANCE, context
+        )
+        self.convert_uint8 = self.parameterAsBoolean(
+            parameters, self.CONVERT_UINT, context
+        )
 
         return super().prepareAlgorithm(parameters, context, feedback)
 
-
     def processAlgorithm(self, parameters, context, feedback):
-
         raster_output = self.parameterAsOutputLayer(parameters, self.OUTPUT, context)
 
         # NOTE: Changed index here - for me shape_file = 0 , reference image = 1
@@ -296,56 +288,63 @@ class SDUAgricultureAlgorithm(QgsProcessingAlgorithm):
                 "reference": reference.source(),
                 "annotated": annotated.source(),
                 "bands_to_use": self.raster_bands,
-                "transform": self.transform
+                "transform": self.transform,
             }
             if self.color_model_params == 0:
-                color_model = CDC.MahalanobisDistance.from_image_annotation(**color_params)
+                color_model = CDC.MahalanobisDistance.from_image_annotation(
+                    **color_params
+                )
             elif self.color_model_params == 1:
                 color_params.update({"n_components": self.gmm_params})
-                color_model = CDC.GaussianMixtureModelDistance.from_image_annotation(**color_params)    
+                color_model = CDC.GaussianMixtureModelDistance.from_image_annotation(
+                    **color_params
+                )
         elif self.ref_type == 0:
             # convert shape file polygons to point centered af pixels
             pixel_centroids_params = {
-                'INPUT_RASTER': self.raster_input.source(),
-                'INPUT_VECTOR': parameters[self.SHAPE_FILE],
-                'OUTPUT':'TEMPORARY_OUTPUT'
+                "INPUT_RASTER": self.raster_input.source(),
+                "INPUT_VECTOR": parameters[self.SHAPE_FILE],
+                "OUTPUT": "TEMPORARY_OUTPUT",
             }
             pixel_centroids = processing.run(
-                "native:generatepointspixelcentroidsinsidepolygons", 
-                pixel_centroids_params, 
+                "native:generatepointspixelcentroidsinsidepolygons",
+                pixel_centroids_params,
                 context=context,
                 feedback=feedback,
-                is_child_algorithm=True
+                is_child_algorithm=True,
             )
             # Sample input rasters pixel values at each point
             pixel_values_params = {
-                'INPUT':pixel_centroids['OUTPUT'],
-                'RASTERCOPY':self.raster_input.source(),
-                'OUTPUT':'TEMPORARY_OUTPUT'
+                "INPUT": pixel_centroids["OUTPUT"],
+                "RASTERCOPY": self.raster_input.source(),
+                "OUTPUT": "TEMPORARY_OUTPUT",
             }
             pixel_values = processing.run(
                 "native:rastersampling",
                 pixel_values_params,
                 context=context,
                 feedback=feedback,
-                is_child_algorithm=True)
+                is_child_algorithm=True,
+            )
             # convert qgis feature to numpy array of pixel values
             pixel_values = self.parameterAsSource(pixel_values, "OUTPUT", context)
             pixel_values_list = []
             for x in pixel_values.getFeatures():
                 pixel_values_list.append(x.attributes())
             pixel_value = np.array(pixel_values_list).transpose()
-            pixel_value = pixel_value[3:,:]
+            pixel_value = pixel_value[3:, :]
             color_params = {
                 "pixel_values": pixel_value,
                 "bands_to_use": self.raster_bands,
-                "transform": self.transform
+                "transform": self.transform,
             }
             if self.color_model_params == 0:
                 color_model = CDC.MahalanobisDistance.from_pixel_values(**color_params)
             elif self.color_model_params == 1:
                 color_params.update({"n_components": self.gmm_params})
-                color_model = CDC.GaussianMixtureModelDistance.from_pixel_values(**color_params)
+                color_model = CDC.GaussianMixtureModelDistance.from_pixel_values(
+                    **color_params
+                )
 
         # Tile orthomosaic and run in threads
         self.tiler.divide_orthomosaic_into_tiles()
@@ -365,7 +364,7 @@ class SDUAgricultureAlgorithm(QgsProcessingAlgorithm):
 
             overview_factors = src.overviews(src.indexes[0])
             with rasterio.open(raster_output, "w", **profile) as dst:
-                
+
                 def process(tile: CDC.Tile) -> None:
                     with read_lock:
                         img = src.read(window=tile.window_with_overlap)
@@ -390,26 +389,30 @@ class SDUAgricultureAlgorithm(QgsProcessingAlgorithm):
 
                     # Save tiles images:
                     if self.save_tiles:
-                        save_path = Path(os.path.join(self.save_tiles_path,"images"))
-                        os.makedirs(save_path, exist_ok = True)
+                        save_path = Path(os.path.join(self.save_tiles_path, "images"))
+                        os.makedirs(save_path, exist_ok=True)
                         tile.save_tile(img, mask, save_path)
                     if self.save_tiles_distance:
-                        save_path = Path(os.path.join(self.save_tiles_path,"distance"))
-                        os.makedirs(save_path, exist_ok = True)
+                        save_path = Path(os.path.join(self.save_tiles_path, "distance"))
+                        os.makedirs(save_path, exist_ok=True)
                         tile.save_tile(distance, mask, save_path)
 
-                with concurrent.futures.ThreadPoolExecutor(max_workers=context.maximumThreads()) as executor:
-                    for current, _ in enumerate(executor.map(process, self.tiler.tiles)):
+                with concurrent.futures.ThreadPoolExecutor(
+                    max_workers=context.maximumThreads()
+                ) as executor:
+                    for current, _ in enumerate(
+                        executor.map(process, self.tiler.tiles)
+                    ):
                         if feedback.isCanceled():
                             return {}
                         feedback.setProgress(int(current * total))
         with rasterio.open(raster_output, "r+") as dst:
             dst.build_overviews(overview_factors, Resampling.average)
-        #feedback.setProgress(100)
+        # feedback.setProgress(100)
         # return the color distance raster.
         print("Algorithm DONE!")
         print("Result type is ", type(raster_output))
-       
+
         return {self.OUTPUT: raster_output}
 
     def name(self):
@@ -420,7 +423,7 @@ class SDUAgricultureAlgorithm(QgsProcessingAlgorithm):
         lowercase alphanumeric characters only and no spaces or other
         formatting characters.
         """
-        return 'color_distance_calculator'
+        return "color_distance_calculator"
 
     def displayName(self):
         """
@@ -444,19 +447,18 @@ class SDUAgricultureAlgorithm(QgsProcessingAlgorithm):
         contain lowercase alphanumeric characters only and no spaces or other
         formatting characters.
         """
-        return 'Raster layer tools'
+        return "Raster layer tools"
 
     def tr(self, string):
-        return QCoreApplication.translate('Processing', string)
+        return QCoreApplication.translate("Processing", string)
 
     def createInstance(self):
-        return SDUAgricultureAlgorithm()
-    
-    def createCustomParametersWidget(self, parents):
-        return AgroTool_ColorSegmenterDialog(alg= self, parent=parents) 
+        return CDCAlgorithm()
+
+    # def createCustomParametersWidget(self, parents):
+    #     return AgroTool_ColorSegmenterDialog(alg= self, parent=parents)
 
     def icon(self):
         cmd_folder = os.path.split(inspect.getfile(inspect.currentframe()))[0]
-        icon = QIcon(os.path.join(os.path.join(cmd_folder, 'icon.png')))
+        icon = QIcon(os.path.join(os.path.join(cmd_folder, "icon.png")))
         return icon
-

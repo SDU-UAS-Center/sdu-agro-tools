@@ -1,0 +1,347 @@
+import os
+
+from qgis.core import (
+    QgsApplication,
+    QgsProcessingContext,
+    QgsProcessingFeedback,
+    QgsProject,
+    QgsRasterLayer,
+    QgsTask,
+    QgsVectorLayer,
+)
+from qgis.PyQt import QtWidgets
+from qgis.PyQt.QtCore import QUrl
+from qgis.PyQt.QtGui import QDesktopServices
+from qgis.PyQt.QtWidgets import QFileDialog, QMessageBox
+
+from .cdc_toolbar_dialog_ui import Ui_CDCToolbarDialog
+from .task_progress_bar import TaskProgressBarDialog
+
+
+class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):
+    def __init__(self, alg, parent=None, context=None, feedback=None):
+        """Constructor."""
+        super().__init__(parent)
+        # Set up the user interface from Designer through FORM_CLASS.
+        # After self.setupUi() you can access any designer object by doing
+        # self.<objectname>, and you can use autoconnect slots - see
+        # http://qt-project.org/doc/qt-4.8/designer-using-a-ui-file.html
+        # #widgets-and-dialogs-with-auto-connect
+        self.setupUi(self)
+        self.alg = alg
+        self.context = context
+        self.feedback = feedback
+
+        self.set_initial_param()
+        self.connect_signals()
+
+    def get_all_layers_filtered_by_type(self, layer_type):
+        return [
+            layer
+            for layer in QgsProject.instance().mapLayers().values()
+            if isinstance(layer, layer_type)
+        ]
+
+    def set_initial_param(self):
+        self.input_file_combobox.addItems(
+            [
+                layer.name()
+                for layer in self.get_all_layers_filtered_by_type(QgsRasterLayer)
+            ]
+        )
+        self.set_bands_to_use()
+        self.shape_file_combobox.addItems(
+            [
+                layer.name()
+                for layer in self.get_all_layers_filtered_by_type(QgsVectorLayer)
+            ]
+        )
+        self.ref_image_combobox.addItems(
+            [
+                layer.name()
+                for layer in self.get_all_layers_filtered_by_type(QgsRasterLayer)
+            ]
+        )
+        self.pixel_mask_combobox.addItems(
+            [
+                layer.name()
+                for layer in self.get_all_layers_filtered_by_type(QgsRasterLayer)
+            ]
+        )
+        self.metric_combo_box.addItems(["Mahalanobis", "GMM"])
+
+    def connect_signals(self):
+        self.input_file_combobox.currentIndexChanged.connect(self.set_bands_to_use)
+        self.input_file_button.clicked.connect(self.load_input_raster)
+        self.shape_file_button.clicked.connect(self.load_shape_file)
+        self.ref_image_button.clicked.connect(self.load_ref_image)
+        self.pixel_mask_button.clicked.connect(self.load_pixel_mask)
+        self.metric_combo_box.currentIndexChanged.connect(self.select_metric)
+        self.tile_processing_checkbox.stateChanged.connect(self.select_tile_processing)
+        self.output_file_button.clicked.connect(self.choose_save_file)
+        self.dialog_button_box.accepted.connect(self.on_accepted)
+        self.dialog_button_box.rejected.connect(self.on_rejected)
+        self.dialog_button_box.helpRequested.connect(self.on_help)
+
+    def set_bands_to_use(self):
+        selected_raster_name = self.input_file_combobox.currentText()
+        for layer in self.get_all_layers_filtered_by_type(QgsRasterLayer):
+            if layer.name() == selected_raster_name:
+                band_list = []
+                for band in range(1, layer.bandCount() + 1):
+                    band_name = layer.bandName(band)
+                    band_list.append(f"{band}: {band_name}")
+                self.bands_to_use_combo_box.clear()
+                self.bands_to_use_combo_box.addItems(band_list)
+                self.bands_to_use_combo_box.setEnabled(True)
+                self.bands_to_use_combo_box.selectAllOptions()
+                self.bands_to_use_combo_box.toggleItemCheckState(len(band_list) - 1)
+                return
+
+    def load_input_raster(self):
+        raster_filename, _ = QFileDialog.getOpenFileName(
+            self, "Select Raster File", "", "*.tif"
+        )
+        # Check if the user selected a file
+        if raster_filename:
+            # Create a new raster layer
+            layer_name = os.path.splitext(os.path.basename(raster_filename))[0]
+            raster_layer = QgsRasterLayer(raster_filename, layer_name)
+            # Check if the layer is valid
+            if not raster_layer.isValid():
+                QMessageBox.warning(
+                    self, "Invalid Layer", "The selected layer is not valid."
+                )
+                return
+            # Add the raster layer to the QGIS project
+            QgsProject.instance().addMapLayer(raster_layer)
+            # Update combo box and set the last selected layer to the new raster layer
+            self.input_file_combobox.addItem(raster_layer.name())
+            # Set combo box to the newly added layer's name
+            self.input_file_combobox.setCurrentText(raster_layer.name())
+
+    def load_shape_file(self):
+        shape_filename, _ = QFileDialog.getOpenFileName(
+            self, "Select Shape File", "", "*.shp"
+        )
+        if shape_filename:
+            # Create a new vector layer
+            layer_name = os.path.splitext(os.path.basename(shape_filename))[0]
+            vector_layer = QgsVectorLayer(shape_filename, layer_name, "ogr")
+            # Check if the layer is valid
+            if not vector_layer.isValid():
+                QMessageBox.warning(
+                    self, "Invalid Layer", "The selected shapefile is not valid."
+                )
+                return
+            # Add the vector layer to the QGIS project
+            QgsProject.instance().addMapLayer(vector_layer)
+            # Update combo box and set the last selected layer to the new vector layer
+            self.shape_file_combobox.addItem(vector_layer.name())
+            # Set combo box to the newly added layer's name
+            self.shape_file_combobox.setCurrentText(vector_layer.name())
+
+    def load_ref_image(self):
+        ref_image_filename, _ = QFileDialog.getOpenFileName(
+            self, "Select Reference Image", "", "*.tif *.jpg *jpeg"
+        )
+        if ref_image_filename:
+            # Create a new raster layer
+            layer_name = os.path.splitext(os.path.basename(ref_image_filename))[0]
+            ref_image = QgsRasterLayer(ref_image_filename, layer_name)
+            # Check if the layer is valid
+            if not ref_image.isValid():
+                QMessageBox.warning(
+                    self, "Invalid Layer", "The selected layer is not valid."
+                )
+                return
+            # Add the raster layer to the QGIS project
+            QgsProject.instance().addMapLayer(ref_image)
+            # Update combo box and set the last selected layer to the new raster layer
+            self.ref_image_combobox.addItem(ref_image.name())
+            # Set combo box to the newly added layer's name
+            self.ref_image_combobox.setCurrentText(ref_image.name())
+
+    def load_pixel_mask(self):
+        pixel_mask_filename, _ = QFileDialog.getOpenFileName(
+            self, "Select Pixel Mask", "", "*.tif *.jpg *jpeg"
+        )
+        if pixel_mask_filename:
+            # Create a new raster layer
+            layer_name = os.path.splitext(os.path.basename(pixel_mask_filename))[0]
+            pixel_mask = QgsRasterLayer(pixel_mask_filename, layer_name)
+            # Check if the layer is valid
+            if not pixel_mask.isValid():
+                QMessageBox.warning(
+                    self, "Invalid Layer", "The selected layer is not valid."
+                )
+                return
+            # Add the raster layer to the QGIS project
+            QgsProject.instance().addMapLayer(pixel_mask)
+            # Update combo box and set the last selected layer to the new raster layer
+            self.pixel_mask_combobox.addItem(pixel_mask.name())
+            # Set combo box to the newly added layer's name
+            self.pixel_mask_combobox.setCurrentText(pixel_mask.name())
+
+    def select_metric(self):
+        if self.metric_combo_box.currentText() == "GMM":
+            self.gmm_components_spin_box.setEnabled(True)
+            self.gmm_components_label.setEnabled(True)
+        else:
+            self.gmm_components_spin_box.setEnabled(False)
+            self.gmm_components_label.setEnabled(False)
+
+    def select_tile_processing(self):
+        checked = self.tile_processing_checkbox.isChecked()
+        self.tile_description.setEnabled(checked)
+        self.tile_hight_label.setEnabled(checked)
+        self.tile_hight_spin_box.setEnabled(checked)
+        self.tile_width_label.setEnabled(checked)
+        self.tile_width_spin_box.setEnabled(checked)
+        self.tile_overlap_label.setEnabled(checked)
+        self.tile_overlap_spin_box.setEnabled(checked)
+
+    def choose_save_file(self):
+        output_file, _ = QFileDialog.getSaveFileName(
+            self, "Select Output File", "", "*.tif"
+        )
+        if output_file:
+            self.output_line_edit.setText(output_file)
+
+    def on_accepted(self):
+        self.accept()
+        params = {}
+        for layer in self.get_all_layers_filtered_by_type(
+            (QgsRasterLayer, QgsVectorLayer)
+        ):
+            if layer.name() == self.input_file_combobox.currentText():
+                params.update({"INPUT": layer})
+            if layer.name() == self.shape_file_combobox.currentText():
+                params.update({"SHAPE_FILE": layer})
+            if layer.name() == self.ref_image_combobox.currentText():
+                params.update({"REFERENCE": layer})
+            if layer.name() == self.pixel_mask_combobox.currentText():
+                params.update({"ANNOTATED": layer})
+        if "INPUT" not in params:
+            QMessageBox.warning(
+                self, "Missing input raster", "Please load a valid input raster layer."
+            )
+        bands_to_use = [
+            int(b.split(":")[0]) for b in self.bands_to_use_combo_box.checkedItems()
+        ]
+        if not bands_to_use:
+            QMessageBox.warning(
+                self, "No Bands selected", "Please select a which bands to use."
+            )
+        params.update({"BANDS": bands_to_use})
+        params.update({"REF_TYPE": self.color_ref_tab_widget.currentIndex()})
+        if params["REF_TYPE"] == 0:
+            if "SHAPE_FILE" not in params:
+                QMessageBox.warning(
+                    self, "Missing shape file", "Please select a valid shape file."
+                )
+        else:
+            if "REFERENCE" not in params:
+                QMessageBox.warning(
+                    self,
+                    "Missing reference image",
+                    "Please seletc a valid reference image.",
+                )
+            if "ANNOTATED" not in params:
+                QMessageBox.warning(
+                    self, "Missing pixel mask", "Please select a valid pixel mask."
+                )
+        if self.output_line_edit.text():
+            params.update({"OUTPUT": self.output_line_edit.text()})
+        else:
+            params.update({"OUTPUT": "TEMPORARY_OUTPUT"})
+        params.update({"COLOR_MODEL": self.metric_combo_box.currentText()})
+        params.update({"GMM_PARAM": self.gmm_components_spin_box.value()})
+        params.update({"TILE_PROCESSING": self.tile_processing_checkbox.isChecked()})
+        params.update({"TILE_WIDTH": self.tile_width_spin_box.value()})
+        params.update({"TILE_HEIGHT": self.tile_hight_spin_box.value()})
+        params.update({"TILE_OVERLAP": self.tile_overlap_spin_box.value()})
+        params.update({"CONVERT_UINT8": self.output_uint_checkbox.isChecked()})
+        params.update({"SCALE": self.output_scale_spinbox.value()})
+        task = CDCToolbarTask(
+            alg=self.alg, params=params, context=self.context, feedback=self.feedback
+        )
+        print(task)
+        QgsApplication.instance().taskManager().addTask(task)
+        print("HERE")
+
+    def on_rejected(self):
+        self.reject()
+
+    def on_help(self):
+        QDesktopServices.openUrl(QUrl("https://google.com"))
+
+
+class CDCToolbarTask(QgsTask):
+    """
+    Auxiliary class - wraps the algorithm in a QTask object which allows concurrent execution
+    and does not block the main QGIS thread.
+
+    Add OUTPUT to current QGIS project - need to do manually this with custom GUI
+
+    When you have a custom GUI, the execution of the algorithm must be done with this class:
+
+    task = MyProcessingTask(alg = self.alg, params = params)
+    self.active_task.append(task) -> Need to keep a reference to the task
+    QgsApplication.instance().taskManager().addTask(task)
+
+    """
+
+    def __init__(self, alg, params, context, feedback):
+        super().__init__("CDCToolbarTask", QgsTask.CanCancel)
+        print("IN TASK")
+        self.alg = alg
+        self.params = params
+        if context is None:
+            self.context = QgsProcessingContext()
+            self.context.setProject(QgsProject.instance())
+        else:
+            self.context = context
+        if feedback is None:
+            self.feedback = QgsProcessingFeedback()
+        else:
+            self.feedback = feedback
+
+        # Progress bar:
+        self.progressDlg = (
+            TaskProgressBarDialog()
+        )  # a custom QDialog subclass with a QProgressBar
+        self.progressDlg.setWindowTitle("SDU Agro Tools CDC Processing")
+        self.progressDlg.show()
+
+        # Progress bar feedback
+        self.feedback.progressChanged.connect(
+            lambda progress: self.progressDlg.progressBar.setValue(int(progress))
+        )
+        self.progressDlg.singnal.cancel_singal.connect(self.feedback.cancel)
+        self.progressDlg.singnal.cancel_singal.connect(self.cancel)
+        print("PREPARE")
+        self.alg.initAlgorithm(None)
+        self.alg.prepare(params, self.context, self.feedback)
+        print("END PREPARE")
+
+    def run(self):
+        # Runs the algorithm - run in background thread
+        print("RUN")
+        print(self.params)
+        results = self.alg.runPrepared(self.params, self.context, self.feedback)
+        print(results)
+        if self.feedback.isCanceled():
+            return False
+        if results["OUTPUT"].startswith("/tmp"):
+            name = "Output"
+        else:
+            name = os.path.splitext(os.path.basename(self._results["OUTPUT"]))[0]
+        output = QgsRasterLayer(results["OUTPUT"], name)
+        QgsProject.instance().addMapLayer(output)
+        return True
+
+    def finished(self, result):
+        self.alg.postProcess(self.context, self.feedback)
+        self.progressDlg.close()
+        return super().finished(result)

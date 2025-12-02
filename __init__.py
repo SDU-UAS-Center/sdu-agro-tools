@@ -5,5 +5,6 @@ def classFactory(iface):  # pylint: disable=invalid-name
     :type iface: QgsInterface
     """
     #
-    from .AgroTool_ColorSegmenter import AgroTool_ColorSegmenter
-    return AgroTool_ColorSegmenter(iface)
+    from .sdu_agro_tools import SDUAgroTools
+
+    return SDUAgroTools(iface)
