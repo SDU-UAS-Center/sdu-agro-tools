@@ -8,17 +8,16 @@
 
 """
 
-__author__ = 'aqu@mmmi.sdu.dk'
-__date__ = '2025-01-18'
-__copyright__ = 'Copyright 2025, Syddansk Universitet'
+__author__ = "aqu@mmmi.sdu.dk"
+__date__ = "2025-01-18"
+__copyright__ = "Copyright 2025, Syddansk Universitet"
 
 import unittest
 
-from qgis.PyQt.QtGui import QDialogButtonBox, QDialog
-
 from AgroTool_ColorSegmenter_dialog import AgroTool_ColorSegmenterDialog
-
+from qgis.PyQt.QtGui import QDialog, QDialogButtonBox
 from utilities import get_qgis_app
+
 QGIS_APP = get_qgis_app()
 
 
@@ -48,8 +47,8 @@ class AgroTool_ColorSegmenterDialogTest(unittest.TestCase):
         result = self.dialog.result()
         self.assertEqual(result, QDialog.Rejected)
 
+
 if __name__ == "__main__":
     suite = unittest.makeSuite(AgroTool_ColorSegmenterDialogTest)
     runner = unittest.TextTestRunner(verbosity=2)
     runner.run(suite)
-

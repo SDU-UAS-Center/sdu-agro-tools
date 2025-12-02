@@ -8,14 +8,13 @@
 
 """
 
-__author__ = 'aqu@mmmi.sdu.dk'
-__date__ = '2025-01-18'
-__copyright__ = 'Copyright 2025, Syddansk Universitet'
+__author__ = "aqu@mmmi.sdu.dk"
+__date__ = "2025-01-18"
+__copyright__ = "Copyright 2025, Syddansk Universitet"
 
 import unittest
 
 from qgis.PyQt.QtGui import QIcon
-
 
 
 class AgroTool_ColorSegmenterDialogTest(unittest.TestCase):
@@ -31,14 +30,12 @@ class AgroTool_ColorSegmenterDialogTest(unittest.TestCase):
 
     def test_icon_png(self):
         """Test we can click OK."""
-        path = ':/plugins/AgroTool_ColorSegmenter/icon.png'
+        path = ":/plugins/AgroTool_ColorSegmenter/icon.png"
         icon = QIcon(path)
         self.assertFalse(icon.isNull())
+
 
 if __name__ == "__main__":
     suite = unittest.makeSuite(AgroTool_ColorSegmenterResourcesTest)
     runner = unittest.TextTestRunner(verbosity=2)
     runner.run(suite)
-
-
-
