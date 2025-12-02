@@ -57,7 +57,7 @@ pip install sphinx
 
 - Check that the QGISDIR variable in the makefile references the correct folder for the QGIS installation. The default linux install directory is used but it may differ depending on the QGIS installation.
 
-- Run make deploy to compile GUI files and copy the needed files into the QGIS plugin directory. With the virtual environment sourced.  
+- Run make deploy to compile GUI files and copy the needed files into the QGIS plugin directory. With the virtual environment sourced.
 
 ```sh
 make deploy

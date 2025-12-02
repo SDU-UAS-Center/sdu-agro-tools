@@ -8,7 +8,7 @@ Color Distance Calculator
 
 The core library used by this plugin is **Color Distance Calculator (CDC)**.
 
-CDC is an open-source tool that enables the calculation of color-based distance to a reference color for each pixel in a georeferenced orthomosaic.  
+CDC is an open-source tool that enables the calculation of color-based distance to a reference color for each pixel in a georeferenced orthomosaic.
 We encourage users to explore its full capabilities in the official `CDC documentation <https://henrikmidtiby.github.io/CDC/>`_.
 
 Used Components
@@ -30,7 +30,7 @@ References
 
 Multi-Thread Task Execution
 ---------------------------------------------------
-The Python standard library module **concurrent.futures** is used to manage background task execution using threads or processes. 
+The Python standard library module **concurrent.futures** is used to manage background task execution using threads or processes.
 In the context of this plugin, it is primarily used to imporve performance by allowing **parallel calculation of multiple tiles color distance**.
 
 Although ``concurrent.futures`` is design to avoid block the main computing thread, in the QGIS framework it is required to utilize QgsTask in orther to avoid blocking the QGIS user interfaces.
@@ -54,8 +54,8 @@ References
 Background Execution with QgsTask
 --------------------------------------
 
-Heavy, long-running geoprocessing tasks can freeze the QGIS interface if executed directly in the main (GUI) thread. 
-To prevent this, QGIS provides the `QgsTask <https://qgis.org/pyqgis/3.40/core/QgsTask.html>`_ class—a lightweight wrapper for running tasks in a background thread. 
+Heavy, long-running geoprocessing tasks can freeze the QGIS interface if executed directly in the main (GUI) thread.
+To prevent this, QGIS provides the `QgsTask <https://qgis.org/pyqgis/3.40/core/QgsTask.html>`_ class—a lightweight wrapper for running tasks in a background thread.
 This enables asynchronous processing, keeping the QGIS interface responsive during execution.
 
 Tasks implemented with ``QgsTask`` can be integrated with Python’s ``concurrent.futures`` module to:
@@ -113,6 +113,3 @@ References
 * QgsTask  – PyQGIS API Reference: `<https://qgis.org/pyqgis/3.40/core/QgsTask.html>`_.
 * Tasks – PyQGIS Developer Cookbook: `<https://docs.qgis.org/latest/en/docs/pyqgis_developer_cookbook/tasks.html>`_.
 * QgsTaskManager - PyQGIS API Reference: `<https://qgis.org/pyqgis/3.40/core/QgsTaskManager.html>`_.
-
-
-

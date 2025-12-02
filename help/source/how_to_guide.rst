@@ -1,6 +1,6 @@
 .. _how-to:
 
-How-to Guide 
+How-to Guide
 ============================================
 
 
@@ -42,19 +42,19 @@ For each input, you can either:
 
 **Heads-up:**  If no files appear in the drop-down menu:
 
-1. **Check that layers are loaded in the current project**  
-   The drop-down menu only displays layers from the currently open project.  
+1. **Check that layers are loaded in the current project**
+   The drop-down menu only displays layers from the currently open project.
    If you're unsure how to add layers, check the official QGIS tutorial `Loading Data into the Map <https://docs.qgis.org/3.40/en/docs/training_manual/complete_analysis/analysis_exercise.html?utm_source=chatgpt.com#loading-data-into-the-map>`_.
 
-2. **Ensure the files are in the correct format**  
+2. **Ensure the files are in the correct format**
    The plugin automatically filters out unsupported files. Only files with the following formats will appear:
 
-   - Input raster layer ``.tif``.  
+   - Input raster layer ``.tif``.
    - Reference Image & Pixel mask ``.tif`` or ``.jpg`` / ``.jpeg``.
    - Shape File ``.shp``
 
-3. **Reopen the plugin menu**  
-   The drop-down menu scans for available files when the plugin is first opened.  
+3. **Reopen the plugin menu**
+   The drop-down menu scans for available files when the plugin is first opened.
    If you loaded new files after opening the plugin, close and reopen the plugin to refresh the list.
 
 
@@ -88,10 +88,10 @@ When :guilabel:`Save as uint8` is checked, the :guilabel:`Scale factor selector`
 
 Reference color pixel Calculation
 ---------------------------------------------------
-The plugin operates by calculating the distance from each pixel in the input raster layer (orthomosaic) to a :ref:`reference color distribution <color_distribution>`.  
+The plugin operates by calculating the distance from each pixel in the input raster layer (orthomosaic) to a :ref:`reference color distribution <color_distribution>`.
 There are two methods to define the color reference:
 
-- **Shape File** (recommended)  
+- **Shape File** (recommended)
 - **Reference Image**
 
 .. _calculate-color-distribution-shape:
@@ -102,15 +102,15 @@ You can define the :ref:`Color Distribution <color_distribution>` using a ShapeF
 
 .. figure:: _static/how_to/ShapeFileSelector.png
 
-This is the most straightforward method for generating a color reference.  
+This is the most straightforward method for generating a color reference.
 If you need to create a shapefile, refer to: :ref:`How to Create Shape File <shapefile>`.
 
-The **Shape File** should be a QGIS vector layer containing a polygon.  
+The **Shape File** should be a QGIS vector layer containing a polygon.
 All pixels from the input raster layer that fall within this polygon will be used to compute the color distribution.
 
 .. figure:: _static/how_to/ShapeFile.png
 
-If you're unsure how to load the shapefile, see: :ref:`Load Input Image <load_files>`.  
+If you're unsure how to load the shapefile, see: :ref:`Load Input Image <load_files>`.
 The :guilabel:`Shape File` dropdown menu |drop-down-icon| will display only files with the ``.shp`` extension.
 
 
@@ -129,7 +129,7 @@ This method requires two perfectly aligned images:
 - **Reference Image**: A cropped section of the orthomosaic.
 - **Pixel Mask**: A corresponding crop, where selected pixels are highlighted in **red**.
 
-If you need to create these files, refer to: :ref:`How to Create Reference Images <ref_image>`.  
+If you need to create these files, refer to: :ref:`How to Create Reference Images <ref_image>`.
 If you're unsure how to load the images, consult: :ref:`Load Input Image <load_files>`.
 
 The color distribution is calculated based on the **Reference Image**, using only the pixels marked in red in the **Pixel Mask**. Therefore, both images must be precisely aligned — sharing identical dimensions and pixel positions — as illustrated below:
@@ -151,7 +151,7 @@ The color distribution is calculated based on the **Reference Image**, using onl
         </div>
     </div>
 
-The :guilabel:`Image Format` dropdown allows you to choose between ``.tif`` and ``.jpg``/``.jpeg`` formats.  
+The :guilabel:`Image Format` dropdown allows you to choose between ``.tif`` and ``.jpg``/``.jpeg`` formats.
 The **Reference Image** and **Pixel Mask** selection menus |drop-down-icon| will display only files matching the chosen format.
 
 .. warning:: When using ``.tif`` files:
@@ -164,7 +164,7 @@ The **Reference Image** and **Pixel Mask** selection menus |drop-down-icon| will
 
 Color Distance Calculation
 ---------------------------------
-This plugin computes the distance from each pixel in the input raster layer (orthomosaic) to a predefined :ref:`Color Distribution <color_distribution>`.  
+This plugin computes the distance from each pixel in the input raster layer (orthomosaic) to a predefined :ref:`Color Distribution <color_distribution>`.
 Two distance metrics are available:
 
 - **Mahalanobis**
@@ -180,12 +180,12 @@ Color Distance Using Mahalanobis
 The **Mahalanobis distance** uses the statistics of the :ref:`Color Distribution <color_distribution>` to measure how far each pixel is from the distribution's mean, normalized by the distribution’s covariance matrix.
 If you want to explore underlying principles, see the :ref:`background section on Mahalanobis distance <mahalanobis_distance>`.
 
-Mahalanobis is the **default metric** used by the plugin as it is the most direct and computationally efficient way to compute color distance.   
+Mahalanobis is the **default metric** used by the plugin as it is the most direct and computationally efficient way to compute color distance.
 To apply it, ensure that :guilabel:`Mahalanobis` is selected in the :guilabel:`Metric` dropdown menu |drop-down-icon| within the :guilabel:`Color Distance Metric` section:
 
 .. figure:: _static/how_to/MahalanobisSelection.png
 
-It is possible to restrict the computation to specific color bands by modifying the checkboxes in the :guilabel:`Band to Use` setting.  
+It is possible to restrict the computation to specific color bands by modifying the checkboxes in the :guilabel:`Band to Use` setting.
 In this case, the Mahalanobis distance will be computed using only the selected channels. To learn how to adjust these settings, refer to :ref:`Select Color Bands <bands_to_use>`.
 
 
@@ -194,8 +194,8 @@ In this case, the Mahalanobis distance will be computed using only the selected 
 Color Distance Using Gaussian Mixture Model
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The :ref:`Reference Color Distribution <color_distribution>` can be approximated using a **Gaussian Mixture Model (GMM)** composed of ``K`` Gaussian components.  
-Each component has its own mean, covariance matrix, and weight.  
+The :ref:`Reference Color Distribution <color_distribution>` can be approximated using a **Gaussian Mixture Model (GMM)** composed of ``K`` Gaussian components.
+Each component has its own mean, covariance matrix, and weight.
 This method provides a more flexible representation of color distributions than a single Gaussian model.
 
 To understand how GMM works and how pixel distances are calculated, refer to the :ref:`background section on Gaussian Mixture Model distance <gmm_distance>`.
@@ -204,20 +204,20 @@ To use the GMM metric, select :guilabel:`Gaussian Mixture Model` from the :guila
 
 .. figure:: _static/how_to/GMMSelection.png
 
-Selecting this metric will enable the option :guilabel:`Number of Components`, which allows you to specify the number of Gaussian components to use (default is 2).  
+Selecting this metric will enable the option :guilabel:`Number of Components`, which allows you to specify the number of Gaussian components to use (default is 2).
 Increasing the number of components may improve the approximation of complex color distributions, but it will also increase computation time.
 
 .. warning::
 
-    Using the :guilabel:`Gaussian Mixture Model` metric significantly increases computation time.  
+    Using the :guilabel:`Gaussian Mixture Model` metric significantly increases computation time.
     The same applies when increasing the number of components.
 
-GMM is a more computationally demanding metric than :ref:`Mahalanobis distance <calculate-distance-mahalanobis>`.  
-It is best suited for complex or multi-modal color distributions.  
+GMM is a more computationally demanding metric than :ref:`Mahalanobis distance <calculate-distance-mahalanobis>`.
+It is best suited for complex or multi-modal color distributions.
 We recommend starting with the Mahalanobis method. If the results are not satisfactory, then try the GMM option.
 
-You can restrict the computation to specific color bands by modifying the checkboxes in the :guilabel:`Band to Use` setting.  
-In this case, the GMM distance will be calculated using only the selected bands.  
+You can restrict the computation to specific color bands by modifying the checkboxes in the :guilabel:`Band to Use` setting.
+In this case, the GMM distance will be calculated using only the selected bands.
 To learn how to adjust these settings, see: :ref:`Select Color Bands <bands_to_use>`.
 
 
@@ -226,15 +226,15 @@ To learn how to adjust these settings, see: :ref:`Select Color Bands <bands_to_u
 Select Color Bands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-It is possible to perform color distance calculations based **only on specific color bands**.  
+It is possible to perform color distance calculations based **only on specific color bands**.
 Bands that are not selected are excluded from the statistical distribution, meaning that their information does not influence the final result in any way.
 
-In the :guilabel:`Band to Use` section, the **checkboxes** for the red (R), green (G), and blue (B) bands are selected by default, as shown in the image below.  
+In the :guilabel:`Band to Use` section, the **checkboxes** for the red (R), green (G), and blue (B) bands are selected by default, as shown in the image below.
 Unchecking a band excludes it from the calculation.
 
 .. figure:: _static/how_to/BandSelector.png
 
-This feature allows you to tailor the color distance computation to your specific application. 
+This feature allows you to tailor the color distance computation to your specific application.
 For example, exclude the blue channel for better contrast in vegetation analysis or focus only on the red channel to highlight areas with high reflectance in thermal imaging.
 
 
@@ -243,20 +243,20 @@ For example, exclude the blue channel for better contrast in vegetation analysis
 Multi-Tiles Processing
 ---------------------------------------------------
 
-By default, the plugin improves performance by dividing the input raster layer into **multiple tiles**, which are processed in parallel using multithreading.   
-This means that the color distance calculation is distributed across several **threads**, with each thread handling a different tile of the image at the same time.  
-This parallel execution significantly reduces processing time, especially for large orthomosaics. 
+By default, the plugin improves performance by dividing the input raster layer into **multiple tiles**, which are processed in parallel using multithreading.
+This means that the color distance calculation is distributed across several **threads**, with each thread handling a different tile of the image at the same time.
+This parallel execution significantly reduces processing time, especially for large orthomosaics.
 
 For in-depth information on multithreaded execution, refer to the :ref:`Reference Manual on Background Task Execution <concurrent-future>`.
 
-This behavior is enabled when the :guilabel:`Tiles processing` checkbox is selected, as shown in the image below.  
-If disabled, the raster layer is processed as a **single tile**, which means the entire image is analyzed sequentially pixel by pixel.  
+This behavior is enabled when the :guilabel:`Tiles processing` checkbox is selected, as shown in the image below.
+If disabled, the raster layer is processed as a **single tile**, which means the entire image is analyzed sequentially pixel by pixel.
 This single-tile approach can be useful for small orthomosaic.
 
 .. figure:: _static/how_to/TilesProcessing.png
 
-When multi-tile processing is active, you can configure the **tile size** to control how the raster is split.  
-Additionally, you can choose to **save intermediate results** for each tile, such as the original cropped image and the corresponding color distance image.  
+When multi-tile processing is active, you can configure the **tile size** to control how the raster is split.
+Additionally, you can choose to **save intermediate results** for each tile, such as the original cropped image and the corresponding color distance image.
 These output options are only available when tile-based processing is enabled.
 
 .. |arrows-icon| raw:: html
@@ -267,10 +267,10 @@ These output options are only available when tile-based processing is enabled.
 Select the Tile Dimensions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You can customize the **width** and **height** of the tiles into which the input raster layer is divided.  
+You can customize the **width** and **height** of the tiles into which the input raster layer is divided.
 These dimensions determine how the raster is split and directly impact the **number of tiles** generated, which in turn can affect the **total computation time**.
 
-To adjust the tile size, use the |arrows-icon| in the :guilabel:`Tiles width` and :guilabel:`Tiles height` fields, or enter the desired values manually in the corresponding text boxes.  
+To adjust the tile size, use the |arrows-icon| in the :guilabel:`Tiles width` and :guilabel:`Tiles height` fields, or enter the desired values manually in the corresponding text boxes.
 The default tile size is **300 × 300 pixels**.
 
 .. figure:: _static/how_to/TileSize.png
@@ -282,10 +282,10 @@ Save Tile Images
 
 As an additional output, the plugin allows you to save the **cropped sections of the input raster layer** (tiles) along with their corresponding **color distance images**.
 
-Each crop is generated by dividing the input orthomosaic into tiles, based on the selected tile dimensions.  
+Each crop is generated by dividing the input orthomosaic into tiles, based on the selected tile dimensions.
 The **distance image** for each tile represents the result of the color distance calculation performed by the processing thread assigned to that tile.
 
-Since saving these images introduces a small increase in computation time, this feature is **disabled by default**.  
+Since saving these images introduces a small increase in computation time, this feature is **disabled by default**.
 To enable it, check the following options:
 
 - :guilabel:`Save tile images` — to save the cropped sections of the orthomosaic.
@@ -293,7 +293,7 @@ To enable it, check the following options:
 
 .. figure:: _static/how_to/SaveTiles.png
 
-Once one or both options are enabled, the plugin requires a directory path where the images will be saved.  
+Once one or both options are enabled, the plugin requires a directory path where the images will be saved.
 Specify this by clicking the |three-dot-icon| button next to :guilabel:`Save directory`.
 
 The tile image output should look like this:

@@ -15,7 +15,7 @@ This guide assumes we have an orthomosaic with the name ``ortho.tif``. We will w
 
 Shape File
 ----------------
-In this section, we explain how to create a **QGIS Shape File** created with polygon type. with polygon geometry. This is a vector file format that stores the geometries of closed areas (polygons). The pixel from ``ortho.tif`` within the shapefile are used to calculate the :ref:`Color Distribution <color_distribution>` used for the distance calculation. 
+In this section, we explain how to create a **QGIS Shape File** created with polygon type. with polygon geometry. This is a vector file format that stores the geometries of closed areas (polygons). The pixel from ``ortho.tif`` within the shapefile are used to calculate the :ref:`Color Distribution <color_distribution>` used for the distance calculation.
 
 
 1. **Open your QGIS project** with the input raster file ``ortho.tif``.
@@ -81,16 +81,16 @@ To extract a specific area from the orthomosaic, we will use the `GDAL <https://
 1. **Open your QGIS project** containing the input raster file ``ortho.tif``.
 
 
-2. **Create a shapefile that defines the cropping area.**  
-   If you're not familiar with this process, refer to the guide :ref:`Create a ShapeFile <shape_file>`.  
-   In this case, instead of creating multiple polygons to select specific colors, you should draw a single, large polygon to define the area to crop — as shown in the example below.  
+2. **Create a shapefile that defines the cropping area.**
+   If you're not familiar with this process, refer to the guide :ref:`Create a ShapeFile <shape_file>`.
+   In this case, instead of creating multiple polygons to select specific colors, you should draw a single, large polygon to define the area to crop — as shown in the example below.
    In this tutorial, we will name the shapefile ``crop_shapefile.shp``.
 
 .. figure:: _static/how_to/CropShapeFile.png
 
-3. Navigate to ``Raster ► Extraction ► Clip Raster by Mask Layer...``.  
-   This will open the :guilabel:`Raster Extraction` dialog.  
-   Select the input orthomosaic ``ortho.tif`` and the shapefile ``crop_shapefile.shp`` as the :guilabel:`Mask Layer`.  
+3. Navigate to ``Raster ► Extraction ► Clip Raster by Mask Layer...``.
+   This will open the :guilabel:`Raster Extraction` dialog.
+   Select the input orthomosaic ``ortho.tif`` and the shapefile ``crop_shapefile.shp`` as the :guilabel:`Mask Layer`.
    You should see a screen similar to the one below:
 
 .. figure:: _static/how_to/CropMenu.png
@@ -99,9 +99,9 @@ To extract a specific area from the orthomosaic, we will use the `GDAL <https://
 
     <img src="_static/icon/icon_threedots.png" style="height:1.2em; vertical-align:middle;" alt="Three dots icon">
 
-4. Scroll down to the :guilabel:`Clipped (mask)` section, click the |three-dot-icon| button, and select ``Save to File...``.  
-   Choose a location and filename for the reference image — in this tutorial, we’ll save it as ``ref_image.tif``.  
-   You may also save the reference image as a ``.jpg`` or ``.jpeg``; these are the only three formats supported by the plugin.  
+4. Scroll down to the :guilabel:`Clipped (mask)` section, click the |three-dot-icon| button, and select ``Save to File...``.
+   Choose a location and filename for the reference image — in this tutorial, we’ll save it as ``ref_image.tif``.
+   You may also save the reference image as a ``.jpg`` or ``.jpeg``; these are the only three formats supported by the plugin.
    Click :guilabel:`Run`. The reference image will be added to your current project. The result should look similar to this:
 
 .. figure:: _static/how_to/CropRefImage.png

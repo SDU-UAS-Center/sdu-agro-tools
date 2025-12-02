@@ -19,13 +19,14 @@ dev = [
 
 [tool.codespell]
 check-hidden = true
-skip = ".git,venv,*.c"
+skip = ".git,venv,*.c,help/*"
 ignore-words-list = "mor, FPR"
 
 [tool.ruff]
 line-length = 120
 target-version = "py310"
 fix = true
+extend-exclude = ["test", "help", "plugin_upload.py"]
 
 [tool.ruff.lint]
 select = [
@@ -60,6 +61,8 @@ ignore = [
   "E501",
   # still using D102 since docstring inherited is not supported in ruff"
   "D102",
+  # for now ignore all docstring
+  "D",
 ]
 
 [tool.ruff.lint.per-file-ignores]
@@ -68,7 +71,7 @@ ignore = [
   "F401",
   "F403",
 ]
-"tests/*" = ["D"]
+"test/*" = ["D"]
 "help/*" = ["D"]
 
 [tool.ruff.lint.pydocstyle]

@@ -1,5 +1,5 @@
 
-Installation 
+Installation
 ============================================
 
 
@@ -100,7 +100,7 @@ Or, on Windows using OSGeo4W Shell:
 .. code-block:: shell
 
    python-qgis -m pip install numpy rasterio CDC
-  
+
 
 Troubleshooting
 -------------------------------

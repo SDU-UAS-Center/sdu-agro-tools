@@ -44,7 +44,7 @@ SOURCES = \
 	cdc_toolbar_dialog_ui.py \
 	cdc_algorithm.py \
 	task_progress_bar_ui.py \
-	task_progress_bar.py 
+	task_progress_bar.py
 
 PLUGINNAME = SDU_Agro_Tools
 
@@ -56,7 +56,7 @@ PY_FILES = \
 	cdc_toolbar_dialog_ui.py \
 	cdc_algorithm.py \
 	task_progress_bar_ui.py \
-	task_progress_bar.py 
+	task_progress_bar.py
 
 UI_FILES = \
 	cdc_toolbar_dialog.ui \
@@ -102,7 +102,7 @@ default:
 	@echo A Python script, pb_tool provides platform independent management of
 	@echo your plugins and runs anywhere.
 	@echo You can install pb_tool using: pip install pb_tool
-	@echo See https://g-sherman.github.io/plugin_build_tool/ for info. 
+	@echo See https://g-sherman.github.io/plugin_build_tool/ for info.
 
 compile: $(COMPILED_RESOURCE_FILES)
 
