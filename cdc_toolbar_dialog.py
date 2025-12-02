@@ -322,8 +322,8 @@ class CDCToolbarTask(QgsTask):
         self.feedback.progressChanged.connect(
             lambda progress: self.progressDlg.progressBar.setValue(int(progress))
         )
-        self.progressDlg.singnal.cancel_singal.connect(self.feedback.cancel)
-        self.progressDlg.singnal.cancel_singal.connect(self.cancel)
+        self.progressDlg.signal.cancel_signal.connect(self.feedback.cancel)
+        self.progressDlg.signal.cancel_signal.connect(self.cancel)
         print("PREPARE")
         self.alg.initAlgorithm(None)
         self.alg.prepare(params, self.context, self.feedback)
