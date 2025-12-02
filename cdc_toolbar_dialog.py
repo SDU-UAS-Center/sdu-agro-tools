@@ -1,4 +1,5 @@
 import os
+import inspect
 
 from qgis.core import (
     QgsApplication,
@@ -11,7 +12,7 @@ from qgis.core import (
 )
 from qgis.PyQt import QtWidgets
 from qgis.PyQt.QtCore import QUrl
-from qgis.PyQt.QtGui import QDesktopServices
+from qgis.PyQt.QtGui import QDesktopServices, QPixmap
 from qgis.PyQt.QtWidgets import QFileDialog, QMessageBox
 
 from .cdc_toolbar_dialog_ui import Ui_CDCToolbarDialog
@@ -34,6 +35,9 @@ class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):
 
         self.set_initial_param()
         self.connect_signals()
+        cmd_folder = os.path.split(inspect.getfile(inspect.currentframe()))[0]
+        icon_path = os.path.join(os.path.join(cmd_folder, "sdu_logo_hs.jpg"))
+        self.logo.setPixmap(QPixmap(icon_path))
 
     def get_all_layers_filtered_by_type(self, layer_type):
         return [

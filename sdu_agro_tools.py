@@ -147,9 +147,7 @@ class SDUAgroTools:
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
-        # icon_path = ':/plugins/AgroTool_ColorSegmenter/icon.png'
         icon_path = os.path.join(os.path.join(cmd_folder, "icon.png"))
-        # icon_path = ':\plugins\\agrotool_colorsegmenter\icon.png'
         self.add_action(
             icon_path,
             text=self.tr("SDU Agro Tools CDC"),
@@ -180,7 +178,3 @@ class SDUAgroTools:
         alg_dialog = CDCToolbarDialog(alg)
         alg_dialog.exec()
 
-        # Launch dialog - GUI
-        # results = processing.execAlgorithmDialog(alg)
-        # if results is None:
-        #     return

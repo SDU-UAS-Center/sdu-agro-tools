@@ -65,6 +65,7 @@ UI_FILES = \
 EXTRAS = \
 	metadata.txt \
 	icon.png \
+	sdu_logo_hs.jpg \
 	requirements.txt
 
 # EXTRA_DIRS = sdu_agro_tools
