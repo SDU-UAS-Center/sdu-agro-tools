@@ -170,9 +170,6 @@ class CDCAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
     ) -> Any:
         self.raster_input = self.parameterAsRasterLayer(parameters, self.INPUT, context)
         self.raster_bands = self.parameterAsInts(parameters, self.BANDS, context)
-        print("Input params: ", parameters)
-        print("input layer: ", type(self.raster_input))
-        print("input layer: ", self.raster_input)
         if not self.raster_bands:
             self.raster_bands = None
         else:
