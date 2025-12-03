@@ -4,7 +4,6 @@ import concurrent.futures
 import inspect
 import os
 import threading
-from pathlib import Path
 from typing import Any
 
 import CDC
@@ -19,7 +18,6 @@ from qgis.core import (
     QgsProcessingParameterBoolean,
     QgsProcessingParameterEnum,
     QgsProcessingParameterFeatureSource,
-    QgsProcessingParameterFile,
     QgsProcessingParameterNumber,
     QgsProcessingParameterRasterDestination,
     QgsProcessingParameterRasterLayer,
@@ -44,10 +42,6 @@ class CDCAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
     class.
     """
 
-    # Constants used to refer to parameters and outputs. They will be
-    # used when calling the algorithm from another algorithm, or when
-    # calling from the QGIS console.
-
     OUTPUT = "OUTPUT"
     INPUT = "INPUT"
     BANDS = "BANDS"
@@ -61,16 +55,11 @@ class CDCAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
     COLOR_MODEL = "COLOR_MODEL"
     GMM_PARAM = "GMM_PARAM"
 
-    # NOTE: Missing params:
     TRANSFORM = "TRANSFORM"
     LAMBDA = "LAMBDA"
     GAMMA = "GAMMA"
 
-    # NOTE: Added params
     CONVERT_UINT = "CONTERT_UINT"
-    SAVE_TILES_PATH = "SAVE_TILES_PATH"
-    SAVE_TILES = "SAVE_TILES"  # Bool - save images
-    SAVE_TILES_DISTANCE = "SAVE_TILES_DISTANCE"  # Bool - save distan image
 
     def initAlgorithm(self, config: dict[str, Any]) -> None:
         """
@@ -91,7 +80,6 @@ class CDCAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
                 optional=True,
             )
         )
-
         self.addParameter(
             QgsProcessingParameterEnum(
                 self.REF_TYPE,
@@ -106,7 +94,6 @@ class CDCAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
             QgsProcessingParameterRasterLayer(self.ANNOTATED, self.tr("Reference Image Annotated"), optional=True)
         )
         self.addParameter(QgsProcessingParameterFeatureSource(self.SHAPE_FILE, self.tr("Shape file"), optional=True))
-
         self.addParameter(
             QgsProcessingParameterEnum(
                 self.COLOR_MODEL,
@@ -125,7 +112,6 @@ class CDCAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
                 optional=True,
             )
         )
-
         self.addParameter(
             QgsProcessingParameterNumber(
                 self.SCALE,
@@ -135,7 +121,6 @@ class CDCAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
                 minValue=0,
             )
         )
-
         self.addParameter(
             QgsProcessingParameterNumber(
                 self.TILE_WIDTH,
@@ -145,7 +130,6 @@ class CDCAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
                 minValue=64,
             )
         )
-
         self.addParameter(
             QgsProcessingParameterNumber(
                 self.TILE_HEIGHT,
@@ -155,7 +139,6 @@ class CDCAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
                 minValue=64,
             )
         )
-
         self.addParameter(
             QgsProcessingParameterEnum(
                 self.TRANSFORM,
@@ -177,29 +160,7 @@ class CDCAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
                 optional=True,
             )
         )
-
         self.addParameter(QgsProcessingParameterRasterDestination(self.OUTPUT, self.tr("Output Color Distance Layer")))
-
-        self.addParameter(
-            QgsProcessingParameterFile(
-                self.SAVE_TILES_PATH,
-                self.tr("Path to save result tiles"),
-                optional=True,
-            )
-        )
-
-        self.addParameter(
-            QgsProcessingParameterBoolean(self.SAVE_TILES, self.tr("Save tiles images"), defaultValue=False)
-        )
-
-        self.addParameter(
-            QgsProcessingParameterBoolean(
-                self.SAVE_TILES_DISTANCE,
-                self.tr("Save tiles distance images"),
-                defaultValue=False,
-            )
-        )
-
         self.addParameter(
             QgsProcessingParameterBoolean(self.CONVERT_UINT, self.tr("Convert result to uint8"), defaultValue=True)
         )
@@ -207,10 +168,8 @@ class CDCAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
     def prepareAlgorithm(
         self, parameters: dict[str, Any], context: QgsProcessingContext, feedback: QgsProcessingFeedback
     ) -> Any:
-        # pre process some
         self.raster_input = self.parameterAsRasterLayer(parameters, self.INPUT, context)
         self.raster_bands = self.parameterAsInts(parameters, self.BANDS, context)
-
         print("Input params: ", parameters)
         print("input layer: ", type(self.raster_input))
         print("input layer: ", self.raster_input)
@@ -218,12 +177,10 @@ class CDCAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
             self.raster_bands = None
         else:
             self.raster_bands = [x - 1 for x in self.raster_bands]
-
         self.scale = self.parameterAsDouble(parameters, self.SCALE, context)
         tile_width = self.parameterAsInt(parameters, self.TILE_WIDTH, context)
         tile_height = self.parameterAsInt(parameters, self.TILE_HEIGHT, context)
         self.transform = self.parameterAsEnum(parameters, self.TRANSFORM, context)
-
         if self.transform == 0:
             self.transform = None
         elif self.transform == 1:
@@ -232,33 +189,22 @@ class CDCAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
         elif self.transform == 2:
             gamma = self.parameterAsDouble(parameters, self.GAMMA, context)
             self.transform = CDC.GammaTransform(gamma)
-
         self.ref_type = self.parameterAsEnum(parameters, self.REF_TYPE, context)
         self.color_model_params = self.parameterAsEnum(parameters, self.COLOR_MODEL, context)
         self.gmm_params = self.parameterAsInt(parameters, self.GMM_PARAM, context)
-
         tiler_params = {
             "orthomosaic": self.raster_input.source(),
             "tile_size": (tile_width, tile_height),
         }
         self.tiler = CDC.OrthomosaicTiles(**tiler_params)
-
-        # NOTE: Added
-        self.save_tiles_path = self.parameterAsFile(parameters, self.SAVE_TILES_PATH, context)
-        self.save_tiles = self.parameterAsBoolean(parameters, self.SAVE_TILES, context)
-        self.save_tiles_distance = self.parameterAsBoolean(parameters, self.SAVE_TILES_DISTANCE, context)
         self.convert_uint8 = self.parameterAsBoolean(parameters, self.CONVERT_UINT, context)
-
         return super().prepareAlgorithm(parameters, context, feedback)
 
     def processAlgorithm(
         self, parameters: dict[str, Any], context: QgsProcessingContext, feedback: QgsProcessingFeedback
     ) -> dict[str, Any]:
         raster_output = self.parameterAsOutputLayer(parameters, self.OUTPUT, context)
-
-        # NOTE: Changed index here - for me shape_file = 0 , reference image = 1
         if self.ref_type == 1:
-            # load reference and annotated image for color_model
             reference = self.parameterAsRasterLayer(parameters, self.REFERENCE, context)
             annotated = self.parameterAsRasterLayer(parameters, self.ANNOTATED, context)
             color_params = {
@@ -273,7 +219,6 @@ class CDCAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
                 color_params.update({"n_components": self.gmm_params})
                 color_model = CDC.GaussianMixtureModelDistance.from_image_annotation(**color_params)
         elif self.ref_type == 0:
-            # convert shape file polygons to point centered af pixels
             pixel_centroids_params = {
                 "INPUT_RASTER": self.raster_input.source(),
                 "INPUT_VECTOR": parameters[self.SHAPE_FILE],
@@ -286,7 +231,6 @@ class CDCAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
                 feedback=feedback,
                 is_child_algorithm=True,
             )
-            # Sample input rasters pixel values at each point
             pixel_values_params = {
                 "INPUT": pixel_centroids["OUTPUT"],
                 "RASTERCOPY": self.raster_input.source(),
@@ -299,7 +243,6 @@ class CDCAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
                 feedback=feedback,
                 is_child_algorithm=True,
             )
-            # convert qgis feature to numpy array of pixel values
             pixel_values = self.parameterAsSource(pixel_values, "OUTPUT", context)
             pixel_values_list = []
             for x in pixel_values.getFeatures():
@@ -316,8 +259,6 @@ class CDCAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
             elif self.color_model_params == 1:
                 color_params.update({"n_components": self.gmm_params})
                 color_model = CDC.GaussianMixtureModelDistance.from_pixel_values(**color_params)
-
-        # Tile orthomosaic and run in threads
         self.tiler.divide_orthomosaic_into_tiles()
         if feedback.isCanceled():
             return {}
@@ -328,11 +269,8 @@ class CDCAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
         with rasterio.open(self.raster_input.source()) as src:
             profile = src.profile
             profile["count"] = 1
-
-            # Save result as float64:
             if not self.convert_uint8:
                 profile.update(dtype="float64")
-
             overview_factors = src.overviews(src.indexes[0])
             with rasterio.open(raster_output, "w", **profile) as dst:
 
@@ -345,28 +283,16 @@ class CDCAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
                         mask = mask & mask_temp[band]
                     with process_lock:
                         distance_image = color_model.calculate_distance(img)
-                    # scale image and convert to uint8
                     if self.convert_uint8:
                         distance = np.minimum(np.abs(self.scale * distance_image), 255)
                         distance = distance.astype(np.uint8)
                     else:
                         distance = distance_image
-
                     output = tile.get_window_pixels(distance)
                     mask = tile.get_window_pixels(np.expand_dims(mask, 0)).squeeze()
                     with write_lock:
                         dst.write(output, window=tile.window)
                         dst.write_mask(mask, window=tile.window)
-
-                    # Save tiles images:
-                    if self.save_tiles:
-                        save_path = Path(os.path.join(self.save_tiles_path, "images"))
-                        os.makedirs(save_path, exist_ok=True)
-                        tile.save_tile(img, mask, save_path)
-                    if self.save_tiles_distance:
-                        save_path = Path(os.path.join(self.save_tiles_path, "distance"))
-                        os.makedirs(save_path, exist_ok=True)
-                        tile.save_tile(distance, mask, save_path)
 
                 with concurrent.futures.ThreadPoolExecutor(max_workers=context.maximumThreads()) as executor:
                     for current, _ in enumerate(executor.map(process, self.tiler.tiles)):
@@ -375,11 +301,6 @@ class CDCAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
                         feedback.setProgress(int(current * total))
         with rasterio.open(raster_output, "r+") as dst:
             dst.build_overviews(overview_factors, Resampling.average)
-        # feedback.setProgress(100)
-        # return the color distance raster.
-        print("Algorithm DONE!")
-        print("Result type is ", type(raster_output))
-
         return {self.OUTPUT: raster_output}
 
     def name(self) -> str:
@@ -421,9 +342,6 @@ class CDCAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
 
     def createInstance(self) -> CDCAlgorithm:
         return CDCAlgorithm()
-
-    # def createCustomParametersWidget(self, parents):
-    #     return AgroTool_ColorSegmenterDialog(alg= self, parent=parents)
 
     def icon(self) -> QIcon:
         cmd_folder = os.path.split(inspect.getfile(inspect.currentframe()))[0]  # type: ignore[arg-type]
