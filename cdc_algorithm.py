@@ -52,6 +52,7 @@ class CDCAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
     SCALE = "SCALE"
     TILE_WIDTH = "TILE_WIDTH"
     TILE_HEIGHT = "TILE_HEIGHT"
+    TILE_OVERLAP = "TILE_OVERLAP"
     COLOR_MODEL = "COLOR_MODEL"
     GMM_PARAM = "GMM_PARAM"
 
@@ -140,6 +141,16 @@ class CDCAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
             )
         )
         self.addParameter(
+            QgsProcessingParameterNumber(
+                self.TILE_OVERLAP,
+                self.tr("Tile Overlap as a percentage"),
+                type=QgsProcessingParameterNumber.Integer,
+                defaultValue=0,
+                minValue=0,
+                maxValue=50,
+            )
+        )
+        self.addParameter(
             QgsProcessingParameterEnum(
                 self.TRANSFORM,
                 self.tr("Transform to apply to input"),
@@ -177,6 +188,7 @@ class CDCAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
         self.scale = self.parameterAsDouble(parameters, self.SCALE, context)
         tile_width = self.parameterAsInt(parameters, self.TILE_WIDTH, context)
         tile_height = self.parameterAsInt(parameters, self.TILE_HEIGHT, context)
+        tile_overlap = self.parameterAsInt(parameters, self.TILE_OVERLAP, context) / 100
         self.transform = self.parameterAsEnum(parameters, self.TRANSFORM, context)
         if self.transform == 0:
             self.transform = None
@@ -192,6 +204,7 @@ class CDCAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
         tiler_params = {
             "orthomosaic": self.raster_input.source(),
             "tile_size": (tile_width, tile_height),
+            "overlap": tile_overlap,
         }
         self.tiler = CDC.OrthomosaicTiles(**tiler_params)
         self.convert_uint8 = self.parameterAsBoolean(parameters, self.CONVERT_UINT, context)

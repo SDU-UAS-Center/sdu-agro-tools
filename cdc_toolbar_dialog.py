@@ -203,7 +203,7 @@ class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):  # type: ignore[
         params.update({"TILE_PROCESSING": self.tile_processing_checkbox.isChecked()})
         params.update({"TILE_WIDTH": self.tile_width_spin_box.value()})
         params.update({"TILE_HEIGHT": self.tile_hight_spin_box.value()})
-        params.update({"TILE_OVERLAP": self.tile_overlap_spin_box.value()})
+        params.update({"TILE_OVERLAP": self.tile_overlap_spin_box.value() / 100})
         params.update({"CONVERT_UINT8": self.output_uint_checkbox.isChecked()})
         params.update({"SCALE": self.output_scale_spinbox.value()})
         task = CDCToolbarTask(alg=self.alg, params=params, context=self.context, feedback=self.feedback)
