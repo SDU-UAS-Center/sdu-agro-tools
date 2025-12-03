@@ -213,7 +213,7 @@ class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):  # type: ignore[
         self.reject()
 
     def on_help(self) -> None:
-        QDesktopServices.openUrl(QUrl("https://google.com"))
+        QDesktopServices.openUrl(QUrl("https://google.com"))  # todo change to documentation
 
 
 class CDCToolbarTask(QgsTask):  # type: ignore[misc]
