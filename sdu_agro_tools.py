@@ -12,9 +12,6 @@ from qgis.PyQt.QtWidgets import QAction, QWidget
 
 from .cdc_algorithm import CDCAlgorithm
 from .cdc_toolbar_dialog import CDCToolbarDialog
-
-# Initialize Qt resources from file resources.py
-# from .resources import *
 from .sdu_agro_tools_provider import SDUAgroToolsProvider
 
 cmd_folder = os.path.split(inspect.getfile(inspect.currentframe()))[0]  # type: ignore[arg-type]
@@ -34,23 +31,16 @@ class SDUAgroTools:
             application at run time.
         :type iface: QgsInterface
         """
-        # Save reference to the QGIS interface
         self.iface = iface
-        # initialize plugin directory
         self.plugin_dir = os.path.dirname(__file__)
-        # initialize locale
         locale = QSettings().value("locale/userLocale")[0:2]
         locale_path = os.path.join(self.plugin_dir, "i18n", f"AgroTool_ColorSegmenter_{locale}.qm")
-
         if os.path.exists(locale_path):
             self.translator = QTranslator()
             self.translator.load(locale_path)
             QCoreApplication.installTranslator(self.translator)
-
-        # Declare instance attributes
         self.actions: list[Any] = []
         self.menu: str = self.tr("&AgroTool Color Segmenter")
-
         # Check if plugin was started the first time in current QGIS session
         # Must be set in initGui() to survive plugin reloads
         self.first_start: bool | None = None
@@ -67,7 +57,6 @@ class SDUAgroTools:
         :returns: Translated version of message.
         :rtype: QString
         """
-        # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
         return QCoreApplication.translate("AgroTool_ColorSegmenter", message)  # type: ignore[no-any-return]
 
     def add_action(
@@ -124,22 +113,15 @@ class SDUAgroTools:
         action = QAction(icon, text, parent)
         action.triggered.connect(callback)
         action.setEnabled(enabled_flag)
-
         if status_tip is not None:
             action.setStatusTip(status_tip)
-
         if whats_this is not None:
             action.setWhatsThis(whats_this)
-
         if add_to_toolbar:
-            # Adds plugin icon to Plugins toolbar
             self.iface.addToolBarIcon(action)
-
         if add_to_menu:
             self.iface.addPluginToMenu(self.menu, action)
-
         self.actions.append(action)
-
         return action
 
     def initGui(self) -> None:
@@ -151,11 +133,7 @@ class SDUAgroTools:
             callback=self.run_cdc,
             parent=self.iface.mainWindow(),
         )
-
-        # will be set False in run()
         self.first_start = True
-
-        # Init provider:
         self.provider = SDUAgroToolsProvider()
         QgsApplication.processingRegistry().addProvider(self.provider)
 
@@ -164,10 +142,7 @@ class SDUAgroTools:
         for action in self.actions:
             self.iface.removePluginMenu(self.tr("&AgroTool Color Segmenter"), action)
             self.iface.removeToolBarIcon(action)
-
-        # Remove provider:
         QgsApplication.processingRegistry().removeProvider(self.provider)
-        # gives error on closing qgis
 
     def run_cdc(self) -> None:
         """Run method that performs all the real work"""

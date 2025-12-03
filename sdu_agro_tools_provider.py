@@ -54,7 +54,6 @@ class SDUAgroToolsProvider(QgsProcessingProvider):  # type: ignore[misc]
         cmd_folder = os.path.split(inspect.getfile(inspect.currentframe()))[0]  # type: ignore[arg-type]
         icon = QIcon(os.path.join(os.path.join(cmd_folder, "icon.png")))
         return icon
-        # return QgsProcessingProvider.icon(self)
 
     def longName(self) -> str:
         """

@@ -18,11 +18,8 @@ class TaskProgressBarDialog(QtWidgets.QDialog, Ui_TaskProgressBarDialog):  # typ
         self.setupUi(self)
         self.progressBar.setValue(0)
         self.signal = GUI_signals()
-        # Handle task cancellation
         self.CancelButton.clicked.connect(self.on_cancel)
 
     def on_cancel(self) -> None:
-        # Call the cancellation method of your task.
         self.signal.cancel_signal.emit()
-        print("Button pressed")
-        self.close()  # Close the progress dialog
+        self.close()
