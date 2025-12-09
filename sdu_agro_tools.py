@@ -10,6 +10,7 @@ from qgis.PyQt.QtWidgets import QAction, QMenu, QToolButton
 from .cdc_algorithm import CDCAlgorithm
 from .cdc_toolbar_dialog import CDCToolbarDialog
 from .crop_row_algorithm import CropRowAlgorithm
+from .crop_row_toolbar_dialog import CropRowToolbarDialog
 from .sdu_agro_tools_provider import SDUAgroToolsProvider
 
 
@@ -79,5 +80,5 @@ class SDUAgroTools:
     def run_crop_row(self) -> None:
         """Run method that performs all the real work"""
         alg = CropRowAlgorithm()
-        alg_dialog = CDCToolbarDialog(alg)
+        alg_dialog = CropRowToolbarDialog(alg)
         alg_dialog.exec()

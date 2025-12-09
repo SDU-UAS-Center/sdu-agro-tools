@@ -43,6 +43,7 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
     """
 
     OUTPUT_ORTHO = "OUTPUT_ORTHO"
+    OUTPUT_SHAPE = "OUTPUT_SHAPE"
     OUTPUT_FOLDER = "OUTPUT_FOLDER"
     INPUT = "INPUT"
     ORTHO = "ORTHO"
@@ -179,6 +180,9 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
             QgsProcessingParameterRasterDestination(
                 self.OUTPUT_ORTHO, self.tr("Output orthomosaic with crop rows drawn on")
             )
+        )
+        self.addParameter(
+            QgsProcessingParameterRasterDestination(self.OUTPUT_SHAPE, self.tr("Output shape file with crop rows"))
         )
         self.addParameter(QgsProcessingParameterFolderDestination(self.OUTPUT_FOLDER, self.tr("Output folder")))
 

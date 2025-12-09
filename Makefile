@@ -42,6 +42,8 @@ SOURCES = \
 	sdu_agro_tools_provider.py \
 	cdc_toolbar_dialog.py \
 	cdc_toolbar_dialog_ui.py \
+	crop_row_toolbar_dialog.py \
+	crop_row_toolbar_dialog_ui.py \
 	cdc_algorithm.py \
 	crop_row_algorithm.py \
 	task_progress_bar_ui.py \
@@ -55,6 +57,8 @@ PY_FILES = \
 	sdu_agro_tools_provider.py \
 	cdc_toolbar_dialog.py \
 	cdc_toolbar_dialog_ui.py \
+	crop_row_toolbar_dialog.py \
+	crop_row_toolbar_dialog_ui.py \
 	cdc_algorithm.py \
 	crop_row_algorithm.py \
 	task_progress_bar_ui.py \
@@ -62,6 +66,7 @@ PY_FILES = \
 
 UI_FILES = \
 	cdc_toolbar_dialog.ui \
+	crop_row_toolbar_dialog.ui \
 	task_progress_bar.ui
 
 EXTRAS = \
