@@ -43,6 +43,7 @@ SOURCES = \
 	cdc_toolbar_dialog.py \
 	cdc_toolbar_dialog_ui.py \
 	cdc_algorithm.py \
+	crop_row_algorithm.py \
 	task_progress_bar_ui.py \
 	task_progress_bar.py
 
@@ -55,6 +56,7 @@ PY_FILES = \
 	cdc_toolbar_dialog.py \
 	cdc_toolbar_dialog_ui.py \
 	cdc_algorithm.py \
+	crop_row_algorithm.py \
 	task_progress_bar_ui.py \
 	task_progress_bar.py
 
