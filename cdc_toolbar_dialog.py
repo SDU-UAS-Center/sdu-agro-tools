@@ -36,7 +36,7 @@ class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):  # type: ignore[
         self.feedback = feedback
         self.set_initial_param()
         self.connect_signals()
-        icon_path = str(Path(__file__).parent / "sdu_logo_hs.png")
+        icon_path = str(Path(__file__).parent / "sdu_logo_hs.jpg")
         self.logo.setPixmap(QPixmap(icon_path))
 
     def get_all_layers_filtered_by_type(self, layer_type: Any) -> list[Any]:
@@ -65,7 +65,6 @@ class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):  # type: ignore[
         self.ref_image_button.clicked.connect(self.load_ref_image)
         self.pixel_mask_button.clicked.connect(self.load_pixel_mask)
         self.metric_combo_box.currentIndexChanged.connect(self.select_metric)
-        self.tile_processing_checkbox.stateChanged.connect(self.select_tile_processing)
         self.output_file_button.clicked.connect(self.choose_save_file)
         self.dialog_button_box.accepted.connect(self.on_accepted)
         self.dialog_button_box.rejected.connect(self.on_rejected)
@@ -87,7 +86,7 @@ class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):  # type: ignore[
                 return
 
     def load_input_raster(self) -> None:
-        raster_filename, _ = QFileDialog.getOpenFileName(self, "Select Raster File", "", "*.tif")
+        raster_filename, _ = QFileDialog.getOpenFileName(self, "Select Raster File", "", "*.tif *.tiff")
         if raster_filename:
             layer_name = os.path.splitext(os.path.basename(raster_filename))[0]
             raster_layer = QgsRasterLayer(raster_filename, layer_name)
@@ -111,7 +110,9 @@ class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):  # type: ignore[
             self.shape_file_combobox.setCurrentText(vector_layer.name())
 
     def load_ref_image(self) -> None:
-        ref_image_filename, _ = QFileDialog.getOpenFileName(self, "Select Reference Image", "", "*.tif *.jpg *jpeg")
+        ref_image_filename, _ = QFileDialog.getOpenFileName(
+            self, "Select Reference Image", "", "*.tif *.tiff *.jpg *jpeg"
+        )
         if ref_image_filename:
             layer_name = os.path.splitext(os.path.basename(ref_image_filename))[0]
             ref_image = QgsRasterLayer(ref_image_filename, layer_name)
@@ -123,7 +124,7 @@ class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):  # type: ignore[
             self.ref_image_combobox.setCurrentText(ref_image.name())
 
     def load_pixel_mask(self) -> None:
-        pixel_mask_filename, _ = QFileDialog.getOpenFileName(self, "Select Pixel Mask", "", "*.tif *.jpg *jpeg")
+        pixel_mask_filename, _ = QFileDialog.getOpenFileName(self, "Select Pixel Mask", "", "*.tif *.tiff *.jpg *jpeg")
         if pixel_mask_filename:
             layer_name = os.path.splitext(os.path.basename(pixel_mask_filename))[0]
             pixel_mask = QgsRasterLayer(pixel_mask_filename, layer_name)
@@ -142,23 +143,12 @@ class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):  # type: ignore[
             self.gmm_components_spin_box.setEnabled(False)
             self.gmm_components_label.setEnabled(False)
 
-    def select_tile_processing(self) -> None:
-        checked = self.tile_processing_checkbox.isChecked()
-        self.tile_description.setEnabled(checked)
-        self.tile_hight_label.setEnabled(checked)
-        self.tile_hight_spin_box.setEnabled(checked)
-        self.tile_width_label.setEnabled(checked)
-        self.tile_width_spin_box.setEnabled(checked)
-        self.tile_overlap_label.setEnabled(checked)
-        self.tile_overlap_spin_box.setEnabled(checked)
-
     def choose_save_file(self) -> None:
         output_file, _ = QFileDialog.getSaveFileName(self, "Select Output File", "", "*.tif")
         if output_file:
             self.output_line_edit.setText(output_file)
 
     def on_accepted(self) -> None:
-        self.accept()
         params = {}
         for layer in self.get_all_layers_filtered_by_type((QgsRasterLayer, QgsVectorLayer)):
             if layer.name() == self.input_file_combobox.currentText():
@@ -171,14 +161,17 @@ class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):  # type: ignore[
                 params.update({"ANNOTATED": layer})
         if "INPUT" not in params:
             QMessageBox.warning(self, "Missing input raster", "Please load a valid input raster layer.")
+            return
         bands_to_use = [int(b.split(":")[0]) for b in self.bands_to_use_combo_box.checkedItems()]
         if not bands_to_use:
             QMessageBox.warning(self, "No Bands selected", "Please select a which bands to use.")
+            return
         params.update({"BANDS": bands_to_use})
         params.update({"REF_TYPE": self.color_ref_tab_widget.currentIndex()})
         if params["REF_TYPE"] == 0:
             if "SHAPE_FILE" not in params:
                 QMessageBox.warning(self, "Missing shape file", "Please select a valid shape file.")
+                return
         else:
             if "REFERENCE" not in params:
                 QMessageBox.warning(
@@ -186,8 +179,10 @@ class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):  # type: ignore[
                     "Missing reference image",
                     "Please seletc a valid reference image.",
                 )
+                return
             if "ANNOTATED" not in params:
                 QMessageBox.warning(self, "Missing pixel mask", "Please select a valid pixel mask.")
+                return
         if self.output_line_edit.text():
             params.update({"OUTPUT": self.output_line_edit.text()})
         else:
@@ -200,6 +195,7 @@ class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):  # type: ignore[
         params.update({"TILE_OVERLAP": self.tile_overlap_spin_box.value() / 100})
         params.update({"CONVERT_UINT8": self.output_uint_checkbox.isChecked()})
         params.update({"SCALE": self.output_scale_spinbox.value()})
+        self.accept()
         task = CDCToolbarTask(alg=self.alg, params=params, context=self.context, feedback=self.feedback)
         QgsApplication.instance().taskManager().addTask(task)
 
