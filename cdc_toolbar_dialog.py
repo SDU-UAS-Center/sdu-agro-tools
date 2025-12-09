@@ -111,7 +111,7 @@ class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):  # type: ignore[
 
     def load_ref_image(self) -> None:
         ref_image_filename, _ = QFileDialog.getOpenFileName(
-            self, "Select Reference Image", "", "*.tif *.tiff *.jpg *jpeg"
+            self, "Select Reference Image", "", "*.tif *.tiff *.jpg *.jpeg *.png"
         )
         if ref_image_filename:
             layer_name = os.path.splitext(os.path.basename(ref_image_filename))[0]
@@ -124,7 +124,9 @@ class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):  # type: ignore[
             self.ref_image_combobox.setCurrentText(ref_image.name())
 
     def load_pixel_mask(self) -> None:
-        pixel_mask_filename, _ = QFileDialog.getOpenFileName(self, "Select Pixel Mask", "", "*.tif *.tiff *.jpg *jpeg")
+        pixel_mask_filename, _ = QFileDialog.getOpenFileName(
+            self, "Select Pixel Mask", "", "*.tif *.tiff *.jpg *.jpeg *.png"
+        )
         if pixel_mask_filename:
             layer_name = os.path.splitext(os.path.basename(pixel_mask_filename))[0]
             pixel_mask = QgsRasterLayer(pixel_mask_filename, layer_name)
@@ -189,7 +191,6 @@ class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):  # type: ignore[
             params.update({"OUTPUT": "TEMPORARY_OUTPUT"})
         params.update({"COLOR_MODEL": self.metric_combo_box.currentText()})
         params.update({"GMM_PARAM": self.gmm_components_spin_box.value()})
-        params.update({"TILE_PROCESSING": self.tile_processing_checkbox.isChecked()})
         params.update({"TILE_WIDTH": self.tile_width_spin_box.value()})
         params.update({"TILE_HEIGHT": self.tile_hight_spin_box.value()})
         params.update({"TILE_OVERLAP": self.tile_overlap_spin_box.value() / 100})
