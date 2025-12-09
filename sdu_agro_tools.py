@@ -1,11 +1,10 @@
 import os.path
 from pathlib import Path
-from typing import Any
 
 from qgis.core import QgsApplication
 from qgis.gui import QgisInterface
-from qgis.PyQt.QtCore import QCoreApplication, QSettings, Qt, QTranslator
-from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtCore import QCoreApplication, QSettings, Qt, QTranslator, QUrl
+from qgis.PyQt.QtGui import QDesktopServices, QIcon
 from qgis.PyQt.QtWidgets import QAction, QMenu, QToolButton
 
 from .cdc_algorithm import CDCAlgorithm
@@ -24,7 +23,6 @@ class SDUAgroTools:
             self.translator = QTranslator()
             self.translator.load(locale_path)
             QCoreApplication.installTranslator(self.translator)
-        self.actions: list[Any] = []
         self.menu: QMenu | None = None
 
     def tr(self, message: str) -> str:
@@ -41,7 +39,6 @@ class SDUAgroTools:
         toolButtonMenu = self.toolButton.menu()
         cdc_action = QAction(icon, self.tr("Calculate Color Distance"), self.iface.mainWindow())
         cdc_action.triggered.connect(self.run_cdc)
-        self.actions.append(cdc_action)
         toolButtonMenu.addAction(cdc_action)
         self.toolButton.setDefaultAction(cdc_action)
         self.toolButton.setText(cdc_action.text())
@@ -50,6 +47,14 @@ class SDUAgroTools:
         crop_row_action.triggered.connect(self.run_crop_row)
         toolButtonMenu.addAction(crop_row_action)
         self.menu.addAction(crop_row_action)
+        toolButtonMenu.addSeparator()
+        self.menu.addSeparator()
+        help_action = QAction(
+            QIcon(":images/themes/default/mActionHelpContents.svg"), self.tr("Documentation"), self.iface.mainWindow()
+        )
+        help_action.triggered.connect(self.open_help)
+        toolButtonMenu.addAction(help_action)
+        self.menu.addAction(help_action)
         self.iface.addToolBarWidget(self.toolButton)
         self.provider = SDUAgroToolsProvider()
         QgsApplication.processingRegistry().addProvider(self.provider)
@@ -61,6 +66,9 @@ class SDUAgroTools:
         self.iface.pluginMenu().removeAction(self.menu.menuAction())
         self.toolButton.deleteLater()
         QgsApplication.processingRegistry().removeProvider(self.provider)
+
+    def open_help(self) -> None:
+        QDesktopServices.openUrl(QUrl("https://google.com"))  # todo add link to docs
 
     def run_cdc(self) -> None:
         """Run method that performs all the real work"""
