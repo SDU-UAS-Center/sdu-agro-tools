@@ -34,13 +34,11 @@ class SDUAgroTools:
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
         icon = QIcon(str(Path(__file__).parent / "icon.png"))
         self.menu = self.iface.pluginMenu().addMenu(icon, self.tr("&SDU Agro Tools"))
-
         self.toolButton = QToolButton()
         self.toolButton.setMenu(QMenu())
         self.toolButton.setPopupMode(QToolButton.ToolButtonPopupMode.MenuButtonPopup)
         self.toolButton.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
         toolButtonMenu = self.toolButton.menu()
-
         cdc_action = QAction(icon, self.tr("Calculate Color Distance"), self.iface.mainWindow())
         cdc_action.triggered.connect(self.run_cdc)
         self.actions.append(cdc_action)
@@ -53,7 +51,6 @@ class SDUAgroTools:
         toolButtonMenu.addAction(crop_row_action)
         self.menu.addAction(crop_row_action)
         self.iface.addToolBarWidget(self.toolButton)
-
         self.provider = SDUAgroToolsProvider()
         QgsApplication.processingRegistry().addProvider(self.provider)
 

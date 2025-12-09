@@ -1,5 +1,5 @@
-import inspect
 import os
+from pathlib import Path
 from typing import Any
 
 from qgis.core import (
@@ -30,19 +30,13 @@ class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):  # type: ignore[
         feedback: QgsProcessingFeedback | None = None,
     ) -> None:
         super().__init__(parent)
-        # Set up the user interface from Designer through FORM_CLASS.
-        # After self.setupUi() you can access any designer object by doing
-        # self.<objectname>, and you can use autoconnect slots - see
-        # http://qt-project.org/doc/qt-4.8/designer-using-a-ui-file.html
-        # #widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
         self.alg = alg
         self.context = context
         self.feedback = feedback
         self.set_initial_param()
         self.connect_signals()
-        cmd_folder = os.path.split(inspect.getfile(inspect.currentframe()))[0]  # type: ignore[arg-type]
-        icon_path = os.path.join(os.path.join(cmd_folder, "sdu_logo_hs.jpg"))
+        icon_path = str(Path(__file__).parent / "sdu_logo_hs.png")
         self.logo.setPixmap(QPixmap(icon_path))
 
     def get_all_layers_filtered_by_type(self, layer_type: Any) -> list[Any]:
@@ -217,20 +211,6 @@ class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):  # type: ignore[
 
 
 class CDCToolbarTask(QgsTask):  # type: ignore[misc]
-    """
-    Auxiliary class - wraps the algorithm in a QTask object which allows concurrent execution
-    and does not block the main QGIS thread.
-
-    Add OUTPUT to current QGIS project - need to do manually this with custom GUI
-
-    When you have a custom GUI, the execution of the algorithm must be done with this class:
-
-    task = MyProcessingTask(alg = self.alg, params = params)
-    self.active_task.append(task) -> Need to keep a reference to the task
-    QgsApplication.instance().taskManager().addTask(task)
-
-    """
-
     def __init__(
         self,
         alg: QgsProcessingAlgorithm,
