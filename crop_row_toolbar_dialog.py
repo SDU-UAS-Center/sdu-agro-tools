@@ -180,10 +180,16 @@ class CropRowToolbarTask(QgsTask):  # type: ignore[misc]
         if self.feedback.isCanceled():
             return False
         if results["OUTPUT_ORTHO"].startswith("/tmp"):
-            name = "Output"
+            name = "Output orthomosaic with crop rows"
         else:
             name = os.path.splitext(os.path.basename(self._results["OUTPUT_ORTHO"]))[0]
         output = QgsRasterLayer(results["OUTPUT_ORTHO"], name)
+        QgsProject.instance().addMapLayer(output)
+        if results["OUTPUT_SHAPE"].startswith("/tmp"):
+            name = "Output crop rows"
+        else:
+            name = os.path.splitext(os.path.basename(self._results["OUTPUT_SHAPE"]))[0]
+        output = QgsVectorLayer(results["OUTPUT_SHAPE"], name)
         QgsProject.instance().addMapLayer(output)
         return True
 

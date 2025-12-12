@@ -2,3 +2,5 @@ CDC
 crop-row-detector
 rasterio
 numpy<2.0.0
+pandas
+shapely

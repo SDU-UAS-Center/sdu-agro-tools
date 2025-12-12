@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
+import pandas as pd
 import rasterio
 from crop_row_detector import CropRowDetector, OrthomosaicTiles, Tile
 from qgis.core import (
@@ -22,10 +23,16 @@ from qgis.core import (
     QgsProcessingParameterNumber,
     QgsProcessingParameterRasterDestination,
     QgsProcessingParameterRasterLayer,
+    QgsProcessingParameterVectorDestination,
+    QgsProject,
+    QgsVectorFileWriter,
+    QgsVectorLayer,
 )
 from qgis.PyQt.QtCore import QCoreApplication
 from qgis.PyQt.QtGui import QIcon
 from rasterio.enums import Resampling
+from shapely import linestrings
+from shapely.geometry.linestring import LineString
 
 
 class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
@@ -177,13 +184,9 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
             QgsProcessingParameterBoolean(self.USE_PROCESS_POOL, self.tr("Use Processing Pool instead of Threads"))
         )
         self.addParameter(
-            QgsProcessingParameterRasterDestination(
-                self.OUTPUT_ORTHO, self.tr("Output orthomosaic with crop rows drawn on")
-            )
+            QgsProcessingParameterRasterDestination(self.OUTPUT_ORTHO, self.tr("Output orthomosaic with crop rows"))
         )
-        self.addParameter(
-            QgsProcessingParameterRasterDestination(self.OUTPUT_SHAPE, self.tr("Output shape file with crop rows"))
-        )
+        self.addParameter(QgsProcessingParameterVectorDestination(self.OUTPUT_SHAPE, self.tr("Output crop rows")))
         self.addParameter(QgsProcessingParameterFolderDestination(self.OUTPUT_FOLDER, self.tr("Output folder")))
 
     def prepareAlgorithm(
@@ -215,6 +218,7 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
         self, parameters: dict[str, Any], context: QgsProcessingContext, feedback: QgsProcessingFeedback
     ) -> dict[str, Any]:
         raster_output = self.parameterAsOutputLayer(parameters, self.OUTPUT_ORTHO, context)
+        vector_output = self.parameterAsOutputLayer(parameters, self.OUTPUT_SHAPE, context)
         output_folder = Path(self.parameterAsFileOutput(parameters, self.OUTPUT_FOLDER, context))
         if not os.path.isdir(output_folder):
             os.makedirs(output_folder)
@@ -233,12 +237,17 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
         if feedback.isCanceled():
             return {}
         if use_process_pool:
-            return self.run_using_processing_pools(crd, raster_output, context, feedback)
+            return self.run_using_processing_pools(crd, raster_output, vector_output, context, feedback)
         else:
-            return self.run_using_threads(crd, raster_output, context, feedback)
+            return self.run_using_threads(crd, raster_output, vector_output, context, feedback)
 
     def run_using_processing_pools(
-        self, crd: CropRowDetector, raster_output: str, context: QgsProcessingContext, feedback: QgsProcessingFeedback
+        self,
+        crd: CropRowDetector,
+        raster_output: str,
+        vector_output: str,
+        context: QgsProcessingContext,
+        feedback: QgsProcessingFeedback,
     ) -> dict[str, Any]:
         segmented_tiles = self.segmented_tiler.tiles
         plot_tiles = self.plot_tiler.tiles
@@ -272,7 +281,12 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
         return {self.OUTPUT_ORTHO: raster_output}
 
     def run_using_threads(
-        self, crd: CropRowDetector, raster_output: str, context: QgsProcessingContext, feedback: QgsProcessingFeedback
+        self,
+        crd: CropRowDetector,
+        raster_output: str,
+        vector_output: str,
+        context: QgsProcessingContext,
+        feedback: QgsProcessingFeedback,
     ) -> dict[str, Any]:
         segmented_tiles = self.segmented_tiler.tiles
         plot_tiles = self.plot_tiler.tiles
@@ -290,6 +304,7 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
             rasterio.open(self.segmented_tiler.orthomosaic) as segmented_src,
         ):
             profile = plot_src.profile
+            crs = segmented_src.crs.to_string()
             overview_factors = plot_src.overviews(plot_src.indexes[0])
             with rasterio.open(raster_output, "w", **profile) as dst:
 
@@ -330,7 +345,24 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
                         feedback.setProgress(int(current * total))
         with rasterio.open(raster_output, "r+") as dst:
             dst.build_overviews(overview_factors, Resampling.average)
-        return {self.OUTPUT_ORTHO: raster_output}
+        self.make_wkt_field_csv(crd.output_location.joinpath("row_information_global.csv"))
+        line_uri = f"file://{crd.output_location.joinpath('row_information_global.csv')}?type=csv&wktField=linestrings&crs={crs}"
+        line_layer = QgsVectorLayer(line_uri, "Crop Rows", "delimitedtext")
+        options = QgsVectorFileWriter.SaveVectorOptions()
+        options.layerName = "Crop Rows"
+        QgsVectorFileWriter.writeAsVectorFormatV3(
+            line_layer, vector_output, QgsProject.instance().transformContext(), options=options
+        )
+        return {self.OUTPUT_ORTHO: raster_output, self.OUTPUT_SHAPE: vector_output}
+
+    def make_wkt_field_csv(self, csv_file: Path) -> None:
+        def make_lines(row: Any) -> LineString:
+            line = linestrings([[row["x_start"], row["y_start"]], [row["x_end"], row["y_end"]]])
+            return line
+
+        data = pd.read_csv(csv_file)
+        data["linestrings"] = data.apply(make_lines, axis="columns")
+        data.to_csv(csv_file)
 
     def name(self) -> str:
         """

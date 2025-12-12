@@ -10,6 +10,8 @@ dependencies = [
     "qgis-stubs>=0.2.0.post1",
     "rasterio>=1.4.3",
     "sphinx>=8.2.3",
+    "pandas",
+    "shapely"
 ]
 
 [project.optional-dependencies]
