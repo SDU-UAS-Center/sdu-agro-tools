@@ -97,7 +97,7 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
                 self.TILE_WIDTH,
                 self.tr("Tile Width"),
                 type=QgsProcessingParameterNumber.Integer,
-                defaultValue=2048,
+                defaultValue=512,
                 minValue=64,
             )
         )
@@ -106,7 +106,7 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
                 self.TILE_HEIGHT,
                 self.tr("Tile Height"),
                 type=QgsProcessingParameterNumber.Integer,
-                defaultValue=2048,
+                defaultValue=512,
                 minValue=64,
             )
         )
@@ -196,7 +196,7 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
         self.ortho_input = self.parameterAsRasterLayer(parameters, self.ORTHO, context)
         tile_width = self.parameterAsInt(parameters, self.TILE_WIDTH, context)
         tile_height = self.parameterAsInt(parameters, self.TILE_HEIGHT, context)
-        tile_overlap = self.parameterAsInt(parameters, self.TILE_OVERLAP, context)
+        tile_overlap = self.parameterAsInt(parameters, self.TILE_OVERLAP, context) / 100
         tiler_params = {
             "orthomosaic": self.raster_input.source(),
             "tile_size": (tile_width, tile_height),
