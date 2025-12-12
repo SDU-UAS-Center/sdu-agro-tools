@@ -130,10 +130,10 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
         self.addParameter(
             QgsProcessingParameterNumber(
                 self.CROP_ROW_DISTANCE,
-                self.tr("Initial gauss of distance between crop rows in pixels"),
+                self.tr("Initial gauss of distance between crop rows in cm"),
                 type=QgsProcessingParameterNumber.Double,
-                defaultValue=20,
-                minValue=5,
+                defaultValue=25,
+                minValue=1,
             )
         )
         self.addParameter(
@@ -227,7 +227,7 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
         crd = CropRowDetector()
         crd.output_location = output_folder
         crd.tile_boundary = self.parameterAsBool(parameters, self.TILE_BOUNDARY, context)
-        crd.expected_crop_row_distance = self.parameterAsDouble(parameters, self.CROP_ROW_DISTANCE, context)
+        crd.expected_crop_row_distance_cm = self.parameterAsDouble(parameters, self.CROP_ROW_DISTANCE, context)
         crd.min_crop_row_angle = self.parameterAsInt(parameters, self.MIN_ANGLE, context)
         crd.max_crop_row_angle = self.parameterAsInt(parameters, self.MAX_ANGLE, context)
         crd.crop_row_angle_resolution = self.parameterAsInt(parameters, self.ANGLE_RESOLUTION, context)

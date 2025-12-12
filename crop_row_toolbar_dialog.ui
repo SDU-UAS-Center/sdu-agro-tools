@@ -722,11 +722,14 @@
    <property name="suffix">
     <string>cm</string>
    </property>
+   <property name="decimals">
+    <number>1</number>
+   </property>
    <property name="maximum">
     <double>500.000000000000000</double>
    </property>
    <property name="value">
-    <double>20.000000000000000</double>
+    <double>25.000000000000000</double>
    </property>
    <property name="showClearButton">
     <bool>false</bool>
