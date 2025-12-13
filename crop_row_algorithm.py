@@ -367,7 +367,7 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
     def name(self) -> str:
         """
         Returns the algorithm name, used for identifying the algorithm. This
-        string should be fixed for the algorithm, and must not be localised.
+        string should be fixed for the algorithm, and must not be localized.
         The name should be unique within each provider. Names should contain
         lowercase alphanumeric characters only and no spaces or other
         formatting characters.
@@ -384,14 +384,14 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
     def group(self) -> str:
         """
         Returns the name of the group this algorithm belongs to. This string
-        should be localised.
+        should be localized.
         """
         return self.tr(self.groupId())
 
     def groupId(self) -> str:
         """
         Returns the unique ID of the group this algorithm belongs to. This
-        string should be fixed for the algorithm, and must not be localised.
+        string should be fixed for the algorithm, and must not be localized.
         The group id should be unique within each provider. Group id should
         contain lowercase alphanumeric characters only and no spaces or other
         formatting characters.

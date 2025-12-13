@@ -35,7 +35,7 @@ class SDUAgroToolsProvider(QgsProcessingProvider):  # type: ignore[misc]
         """
         Returns the unique provider id, used for identifying the provider. This
         string should be a unique, short, character only string, eg "qgis" or
-        "gdal". This string should not be localised.
+        "gdal". This string should not be localized.
         """
         return "SDU"
 
@@ -44,7 +44,7 @@ class SDUAgroToolsProvider(QgsProcessingProvider):  # type: ignore[misc]
         Returns the provider name, which is used to describe the provider
         within the GUI.
 
-        This string should be short (e.g. "Lastools") and localised.
+        This string should be short (e.g. "Lastools") and localized.
         """
         return self.tr("SDU")  # type: ignore[no-any-return]
 
@@ -61,7 +61,7 @@ class SDUAgroToolsProvider(QgsProcessingProvider):  # type: ignore[misc]
         """
         Returns the a longer version of the provider name, which can include
         extra details such as version numbers. E.g. "Lastools LIDAR tools
-        (version 2.2.1)". This string should be localised. The default
+        (version 2.2.1)". This string should be localized. The default
         implementation returns the same string as name().
         """
         return self.name()
