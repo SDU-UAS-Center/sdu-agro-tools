@@ -37,7 +37,7 @@
      <x>10</x>
      <y>60</y>
      <width>185</width>
-     <height>27</height>
+     <height>24</height>
     </rect>
    </property>
    <property name="text">
@@ -64,21 +64,21 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>90</y>
-     <width>80</width>
+     <y>300</y>
+     <width>241</width>
      <height>27</height>
     </rect>
    </property>
    <property name="text">
-    <string>Bands to use:</string>
+    <string>Select raster bands to use for color model:</string>
    </property>
   </widget>
   <widget class="QgsCheckableComboBox" name="bands_to_use_combo_box">
    <property name="geometry">
     <rect>
-     <x>100</x>
-     <y>90</y>
-     <width>370</width>
+     <x>259</x>
+     <y>300</y>
+     <width>211</width>
      <height>27</height>
     </rect>
    </property>
@@ -87,7 +87,7 @@
    <property name="geometry">
     <rect>
      <x>0</x>
-     <y>120</y>
+     <y>90</y>
      <width>480</width>
      <height>6</height>
     </rect>
@@ -100,7 +100,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>130</y>
+     <y>100</y>
      <width>460</width>
      <height>17</height>
     </rect>
@@ -119,7 +119,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>150</y>
+     <y>120</y>
      <width>460</width>
      <height>17</height>
     </rect>
@@ -138,7 +138,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>170</y>
+     <y>140</y>
      <width>460</width>
      <height>150</height>
     </rect>
@@ -181,7 +181,7 @@
        <x>10</x>
        <y>60</y>
        <width>60</width>
-       <height>27</height>
+       <height>24</height>
       </rect>
      </property>
      <property name="font">
@@ -192,16 +192,6 @@
      </property>
      <property name="text">
       <string>Shape file:</string>
-     </property>
-    </widget>
-    <widget class="QComboBox" name="shape_file_combobox">
-     <property name="geometry">
-      <rect>
-       <x>80</x>
-       <y>60</y>
-       <width>340</width>
-       <height>25</height>
-      </rect>
      </property>
     </widget>
     <widget class="QToolButton" name="shape_file_button">
@@ -215,6 +205,16 @@
      </property>
      <property name="text">
       <string>...</string>
+     </property>
+    </widget>
+    <widget class="QgsMapLayerComboBox" name="shape_file_map_layer_combo_box">
+     <property name="geometry">
+      <rect>
+       <x>80</x>
+       <y>60</y>
+       <width>341</width>
+       <height>24</height>
+      </rect>
      </property>
     </widget>
    </widget>
@@ -250,7 +250,7 @@
        <x>10</x>
        <y>50</y>
        <width>100</width>
-       <height>27</height>
+       <height>24</height>
       </rect>
      </property>
      <property name="font">
@@ -269,7 +269,7 @@
        <x>10</x>
        <y>80</y>
        <width>100</width>
-       <height>27</height>
+       <height>24</height>
       </rect>
      </property>
      <property name="font">
@@ -280,26 +280,6 @@
      </property>
      <property name="text">
       <string>Pixels mask:</string>
-     </property>
-    </widget>
-    <widget class="QComboBox" name="ref_image_combobox">
-     <property name="geometry">
-      <rect>
-       <x>120</x>
-       <y>50</y>
-       <width>300</width>
-       <height>25</height>
-      </rect>
-     </property>
-    </widget>
-    <widget class="QComboBox" name="pixel_mask_combobox">
-     <property name="geometry">
-      <rect>
-       <x>120</x>
-       <y>80</y>
-       <width>300</width>
-       <height>25</height>
-      </rect>
      </property>
     </widget>
     <widget class="QToolButton" name="ref_image_button">
@@ -328,13 +308,33 @@
       <string>...</string>
      </property>
     </widget>
+    <widget class="QgsMapLayerComboBox" name="ref_image_map_layer_combo_box">
+     <property name="geometry">
+      <rect>
+       <x>120</x>
+       <y>50</y>
+       <width>301</width>
+       <height>24</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QgsMapLayerComboBox" name="pixel_mask_map_layer_combo_box">
+     <property name="geometry">
+      <rect>
+       <x>120</x>
+       <y>80</y>
+       <width>301</width>
+       <height>24</height>
+      </rect>
+     </property>
+    </widget>
    </widget>
   </widget>
   <widget class="Line" name="color_line">
    <property name="geometry">
     <rect>
      <x>0</x>
-     <y>320</y>
+     <y>330</y>
      <width>480</width>
      <height>6</height>
     </rect>
@@ -347,7 +347,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>330</y>
+     <y>340</y>
      <width>460</width>
      <height>17</height>
     </rect>
@@ -366,7 +366,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>350</y>
+     <y>360</y>
      <width>460</width>
      <height>33</height>
     </rect>
@@ -388,7 +388,7 @@
    <property name="geometry">
     <rect>
      <x>60</x>
-     <y>390</y>
+     <y>400</y>
      <width>170</width>
      <height>25</height>
     </rect>
@@ -404,7 +404,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>390</y>
+     <y>400</y>
      <width>40</width>
      <height>25</height>
     </rect>
@@ -426,7 +426,7 @@
    <property name="geometry">
     <rect>
      <x>240</x>
-     <y>390</y>
+     <y>400</y>
      <width>170</width>
      <height>25</height>
     </rect>
@@ -448,7 +448,7 @@
    <property name="geometry">
     <rect>
      <x>420</x>
-     <y>390</y>
+     <y>400</y>
      <width>50</width>
      <height>26</height>
     </rect>
@@ -464,7 +464,7 @@
    <property name="geometry">
     <rect>
      <x>0</x>
-     <y>420</y>
+     <y>430</y>
      <width>480</width>
      <height>6</height>
     </rect>
@@ -477,7 +477,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>430</y>
+     <y>440</y>
      <width>100</width>
      <height>23</height>
     </rect>
@@ -496,7 +496,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>450</y>
+     <y>460</y>
      <width>460</width>
      <height>17</height>
     </rect>
@@ -518,7 +518,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>470</y>
+     <y>480</y>
      <width>60</width>
      <height>26</height>
     </rect>
@@ -540,7 +540,7 @@
    <property name="geometry">
     <rect>
      <x>80</x>
-     <y>470</y>
+     <y>480</y>
      <width>80</width>
      <height>26</height>
     </rect>
@@ -568,7 +568,7 @@
    <property name="geometry">
     <rect>
      <x>170</x>
-     <y>470</y>
+     <y>480</y>
      <width>60</width>
      <height>26</height>
     </rect>
@@ -590,7 +590,7 @@
    <property name="geometry">
     <rect>
      <x>230</x>
-     <y>470</y>
+     <y>480</y>
      <width>80</width>
      <height>26</height>
     </rect>
@@ -618,7 +618,7 @@
    <property name="geometry">
     <rect>
      <x>330</x>
-     <y>470</y>
+     <y>480</y>
      <width>70</width>
      <height>26</height>
     </rect>
@@ -640,7 +640,7 @@
    <property name="geometry">
     <rect>
      <x>410</x>
-     <y>470</y>
+     <y>480</y>
      <width>60</width>
      <height>26</height>
     </rect>
@@ -671,7 +671,7 @@
    <property name="geometry">
     <rect>
      <x>0</x>
-     <y>500</y>
+     <y>510</y>
      <width>480</width>
      <height>6</height>
     </rect>
@@ -684,7 +684,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>510</y>
+     <y>520</y>
      <width>480</width>
      <height>23</height>
     </rect>
@@ -703,9 +703,9 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>560</y>
+     <y>570</y>
      <width>150</width>
-     <height>25</height>
+     <height>24</height>
     </rect>
    </property>
    <property name="text">
@@ -732,7 +732,7 @@
    <property name="geometry">
     <rect>
      <x>230</x>
-     <y>530</y>
+     <y>540</y>
      <width>87</width>
      <height>27</height>
     </rect>
@@ -763,7 +763,7 @@
    <property name="geometry">
     <rect>
      <x>6</x>
-     <y>530</y>
+     <y>540</y>
      <width>101</width>
      <height>23</height>
     </rect>
@@ -782,7 +782,7 @@
    <property name="geometry">
     <rect>
      <x>130</x>
-     <y>530</y>
+     <y>540</y>
      <width>95</width>
      <height>26</height>
     </rect>
@@ -795,16 +795,6 @@
    </property>
    <property name="text">
     <string>Scale output by:</string>
-   </property>
-  </widget>
-  <widget class="QComboBox" name="input_file_combobox">
-   <property name="geometry">
-    <rect>
-     <x>200</x>
-     <y>60</y>
-     <width>240</width>
-     <height>25</height>
-    </rect>
    </property>
   </widget>
   <widget class="QToolButton" name="input_file_button">
@@ -824,9 +814,9 @@
    <property name="geometry">
     <rect>
      <x>160</x>
-     <y>560</y>
+     <y>570</y>
      <width>281</width>
-     <height>25</height>
+     <height>24</height>
     </rect>
    </property>
    <property name="placeholderText">
@@ -840,7 +830,7 @@
    <property name="geometry">
     <rect>
      <x>446</x>
-     <y>560</y>
+     <y>570</y>
      <width>24</width>
      <height>24</height>
     </rect>
@@ -869,6 +859,16 @@
     <string>Color Distance Calculator</string>
    </property>
   </widget>
+  <widget class="QgsMapLayerComboBox" name="input_map_layer_combo_box">
+   <property name="geometry">
+    <rect>
+     <x>200</x>
+     <y>60</y>
+     <width>241</width>
+     <height>24</height>
+    </rect>
+   </property>
+  </widget>
  </widget>
  <customwidgets>
   <customwidget>
@@ -880,6 +880,11 @@
    <class>QgsDoubleSpinBox</class>
    <extends>QDoubleSpinBox</extends>
    <header>qgsdoublespinbox.h</header>
+  </customwidget>
+  <customwidget>
+   <class>QgsMapLayerComboBox</class>
+   <extends>QComboBox</extends>
+   <header>qgsmaplayercombobox.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

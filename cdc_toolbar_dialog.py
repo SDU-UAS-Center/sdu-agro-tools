@@ -4,6 +4,7 @@ from typing import Any
 
 from qgis.core import (
     QgsApplication,
+    QgsMapLayerProxyModel,
     QgsProcessingAlgorithm,
     QgsProcessingContext,
     QgsProcessingFeedback,
@@ -39,27 +40,17 @@ class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):  # type: ignore[
         icon_path = str(Path(__file__).parent / "sdu_logo_hs.jpg")
         self.logo.setPixmap(QPixmap(icon_path))
 
-    def get_all_layers_filtered_by_type(self, layer_type: Any) -> list[Any]:
-        return [layer for layer in QgsProject.instance().mapLayers().values() if isinstance(layer, layer_type)]
-
     def set_initial_param(self) -> None:
-        self.input_file_combobox.addItems(
-            [layer.name() for layer in self.get_all_layers_filtered_by_type(QgsRasterLayer)]
-        )
+        self.input_map_layer_combo_box.setFilters(QgsMapLayerProxyModel.RasterLayer)
+        self.shape_file_map_layer_combo_box.setFilters(QgsMapLayerProxyModel.PolygonLayer)
+        self.ref_image_map_layer_combo_box.setFilters(QgsMapLayerProxyModel.RasterLayer)
+        self.pixel_mask_map_layer_combo_box.setFilters(QgsMapLayerProxyModel.RasterLayer)
         self.set_bands_to_use()
-        self.shape_file_combobox.addItems(
-            [layer.name() for layer in self.get_all_layers_filtered_by_type(QgsVectorLayer)]
-        )
-        self.ref_image_combobox.addItems(
-            [layer.name() for layer in self.get_all_layers_filtered_by_type(QgsRasterLayer)]
-        )
-        self.pixel_mask_combobox.addItems(
-            [layer.name() for layer in self.get_all_layers_filtered_by_type(QgsRasterLayer)]
-        )
         self.metric_combo_box.addItems(["Mahalanobis", "GMM"])
 
     def connect_signals(self) -> None:
-        self.input_file_combobox.currentIndexChanged.connect(self.set_bands_to_use)
+        self.input_map_layer_combo_box.layerChanged.connect(self.set_bands_to_use)
+        self.ref_image_map_layer_combo_box.layerChanged.connect(self.set_bands_to_use)
         self.input_file_button.clicked.connect(self.load_input_raster)
         self.shape_file_button.clicked.connect(self.load_shape_file)
         self.ref_image_button.clicked.connect(self.load_ref_image)
@@ -71,19 +62,22 @@ class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):  # type: ignore[
         self.dialog_button_box.helpRequested.connect(self.on_help)
 
     def set_bands_to_use(self) -> None:
-        selected_raster_name = self.input_file_combobox.currentText()
-        for layer in self.get_all_layers_filtered_by_type(QgsRasterLayer):
-            if layer.name() == selected_raster_name:
-                band_list = []
-                for band in range(1, layer.bandCount() + 1):
-                    band_name = layer.bandName(band)
-                    band_list.append(f"{band}: {band_name}")
-                self.bands_to_use_combo_box.clear()
-                self.bands_to_use_combo_box.addItems(band_list)
-                self.bands_to_use_combo_box.setEnabled(True)
-                self.bands_to_use_combo_box.selectAllOptions()
-                self.bands_to_use_combo_box.toggleItemCheckState(len(band_list) - 1)
-                return
+        band_list = []
+        selected_raster_input = self.input_map_layer_combo_box.currentLayer()
+        if selected_raster_input:
+            for band in range(1, selected_raster_input.bandCount() + 1):
+                band_name = selected_raster_input.bandName(band)
+                band_list.append(f"{band}: {band_name}")
+        selected_raster_ref = self.ref_image_map_layer_combo_box.currentLayer()
+        if selected_raster_ref and selected_raster_ref.bandCount() <= len(band_list):
+            band_list = band_list[: selected_raster_ref.bandCount()]
+
+        self.bands_to_use_combo_box.clear()
+        self.bands_to_use_combo_box.addItems(band_list)
+        self.bands_to_use_combo_box.setEnabled(True)
+        self.bands_to_use_combo_box.selectAllOptions()
+        if len(band_list) not in {1, 3}:
+            self.bands_to_use_combo_box.toggleItemCheckState(len(band_list) - 1)
 
     def load_input_raster(self) -> None:
         raster_filename, _ = QFileDialog.getOpenFileName(self, "Select Raster File", "", "*.tif *.tiff")
@@ -94,8 +88,7 @@ class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):  # type: ignore[
                 QMessageBox.warning(self, "Invalid Layer", "The selected layer is not valid.")
                 return
             QgsProject.instance().addMapLayer(raster_layer)
-            self.input_file_combobox.addItem(raster_layer.name())
-            self.input_file_combobox.setCurrentText(raster_layer.name())
+            self.input_map_layer_combo_box.setLayer(raster_layer)
 
     def load_shape_file(self) -> None:
         shape_filename, _ = QFileDialog.getOpenFileName(self, "Select Shape File", "", "*.shp")
@@ -106,8 +99,7 @@ class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):  # type: ignore[
                 QMessageBox.warning(self, "Invalid Layer", "The selected shapefile is not valid.")
                 return
             QgsProject.instance().addMapLayer(vector_layer)
-            self.shape_file_combobox.addItem(vector_layer.name())
-            self.shape_file_combobox.setCurrentText(vector_layer.name())
+            self.shape_file_map_layer_combo_box.setLayer(vector_layer)
 
     def load_ref_image(self) -> None:
         ref_image_filename, _ = QFileDialog.getOpenFileName(
@@ -120,8 +112,7 @@ class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):  # type: ignore[
                 QMessageBox.warning(self, "Invalid Layer", "The selected layer is not valid.")
                 return
             QgsProject.instance().addMapLayer(ref_image)
-            self.ref_image_combobox.addItem(ref_image.name())
-            self.ref_image_combobox.setCurrentText(ref_image.name())
+            self.ref_image_map_layer_combo_box.setLayer(ref_image)
 
     def load_pixel_mask(self) -> None:
         pixel_mask_filename, _ = QFileDialog.getOpenFileName(
@@ -134,8 +125,7 @@ class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):  # type: ignore[
                 QMessageBox.warning(self, "Invalid Layer", "The selected layer is not valid.")
                 return
             QgsProject.instance().addMapLayer(pixel_mask)
-            self.pixel_mask_combobox.addItem(pixel_mask.name())
-            self.pixel_mask_combobox.setCurrentText(pixel_mask.name())
+            self.pixel_mask_map_layer_combo_box.setLayer(pixel_mask)
 
     def select_metric(self) -> None:
         if self.metric_combo_box.currentText() == "GMM":
@@ -152,23 +142,18 @@ class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):  # type: ignore[
 
     def on_accepted(self) -> None:
         params = {}
-        for layer in self.get_all_layers_filtered_by_type((QgsRasterLayer, QgsVectorLayer)):
-            if layer.name() == self.input_file_combobox.currentText():
-                params.update({"INPUT": layer})
-            if layer.name() == self.shape_file_combobox.currentText():
-                params.update({"SHAPE_FILE": layer})
-            if layer.name() == self.ref_image_combobox.currentText():
-                params.update({"REFERENCE": layer})
-            if layer.name() == self.pixel_mask_combobox.currentText():
-                params.update({"ANNOTATED": layer})
+        params.update({"INPUT": self.input_map_layer_combo_box.currentLayer()})
         if "INPUT" not in params:
             QMessageBox.warning(self, "Missing input raster", "Please load a valid input raster layer.")
             return
         bands_to_use = [int(b.split(":")[0]) for b in self.bands_to_use_combo_box.checkedItems()]
         if not bands_to_use:
-            QMessageBox.warning(self, "No Bands selected", "Please select a which bands to use.")
+            QMessageBox.warning(self, "No Bands selected", "Please select which bands to use.")
             return
         params.update({"BANDS": bands_to_use})
+        params.update({"SHAPE_FILE": self.shape_file_map_layer_combo_box.currentLayer()})
+        params.update({"REFERENCE": self.ref_image_map_layer_combo_box.currentLayer()})
+        params.update({"ANNOTATED": self.pixel_mask_map_layer_combo_box.currentLayer()})
         params.update({"REF_TYPE": self.color_ref_tab_widget.currentIndex()})
         if params["REF_TYPE"] == 0:
             if "SHAPE_FILE" not in params:
@@ -179,7 +164,7 @@ class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):  # type: ignore[
                 QMessageBox.warning(
                     self,
                     "Missing reference image",
-                    "Please seletc a valid reference image.",
+                    "Please select a valid reference image.",
                 )
                 return
             if "ANNOTATED" not in params:
