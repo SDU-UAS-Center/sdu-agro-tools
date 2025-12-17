@@ -39,7 +39,7 @@ Save the dataset in a easy to reach location, for example ``/home/Documents/Agro
 You can notice that ``crop_from_orthomosaic.tif`` and ``crop_from_orthomosaic_annotated.tif`` are identical images, execept for the annotations (red blobs) on some of the pumpkins.
 In future uses of the plugin, make sure that this two images are identical — :ref:`here you can find out why <calculate-color-distribution-image>`.
 
-Below we will provide step-by-step instructions on how to use AgroTool Color Segmenter:
+Below we will provide step-by-step instructions on how to use SDU Agro Tools:
 
 1. Open a blank project QGIS and save it under the name ``example_tutorial.qgz``, save it in a easy to reach location, for example ``/home/Documents/AgroTool_tutorial``.
 

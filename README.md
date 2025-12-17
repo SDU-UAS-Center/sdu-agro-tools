@@ -1,4 +1,4 @@
-# AgroTool Color Segmenter Plugin
+# SDU Agro Tools Plugin
 
 ## Description
 
@@ -69,16 +69,16 @@ If updating user interface in Qt Designer running `make compile-ui` will update 
 
 - Open a new instance of QGIS.
 - In QGIS, go to **Plugins > Manage and Install Plugins...**.
-- Look for the plugin named **"AgroTool Color Segmenter"** in the list of available plugins.
+- Look for the plugin named **"SDU Agro Tools"** in the list of available plugins.
 - Click **Install Plugin** or **Enable Plugin**.
 - If this gives an error, it is most likely because of missing python dependencies. This can be solved by installing the QPIP plugin.
   - Install QPIP plugin
-  - If a popup does not appear try to disable and enable the **"AgroTool Color Segmenter"** plugin.
+  - If a popup does not appear try to disable and enable the **"SDU Agro Tools"** plugin.
   - In the popup allow it to install the needed python dependencies.
 
 ## Use the Plugin
 
-- After activation, look for the **AgroTool Color Segmenter** icon in the toolbar. The icon will display the SDU logo.
+- After activation, look for the **SDU Agro Tools** icon in the toolbar. The icon will display the SDU logo.
 - Click on the icon to open the plugin's GUI.
 
 For questions or support, please contact aqu@mmmi.sdu.dk.

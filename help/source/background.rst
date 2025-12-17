@@ -17,7 +17,7 @@ Therefore, the RGB color space can be represented as a 3D domain: :math:`[0, 255
 
 .. figure:: _static/background/ColorDistribution.png
 
-The **AgroTool Color Segmenter** plugin begins by defining a color distribution based on a set of pixel values selected from the input raster layer.
+The **SDU Agro Tools** plugin begins by defining a color distribution based on a set of pixel values selected from the input raster layer.
 This selection can be made using either a :ref:`shape file <calculate-color-distribution-shape>` or a :ref:`reference image <calculate-color-distribution-image>`.
 
 The RGB values of the selected pixels form a color distribution that can be statistically characterized using the **mean** and **standard deviation** for each channel.
