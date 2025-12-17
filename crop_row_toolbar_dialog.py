@@ -4,6 +4,7 @@ from typing import Any
 
 from qgis.core import (
     QgsApplication,
+    QgsMapLayerProxyModel,
     QgsProcessingAlgorithm,
     QgsProcessingContext,
     QgsProcessingFeedback,
@@ -39,16 +40,10 @@ class CropRowToolbarDialog(QtWidgets.QDialog, Ui_CropRowToolbarDialog):  # type:
         icon_path = str(Path(__file__).parent / "sdu_logo_hs.jpg")
         self.logo.setPixmap(QPixmap(icon_path))
 
-    def get_all_layers_filtered_by_type(self, layer_type: Any) -> list[Any]:
-        return [layer for layer in QgsProject.instance().mapLayers().values() if isinstance(layer, layer_type)]
-
     def set_initial_param(self) -> None:
-        self.input_file_cdc_combobox.addItems(
-            [layer.name() for layer in self.get_all_layers_filtered_by_type(QgsRasterLayer)]
-        )
-        self.input_file_ortho_combobox.addItems(
-            [layer.name() for layer in self.get_all_layers_filtered_by_type(QgsRasterLayer)]
-        )
+        self.input_file_cdc_map_layer_combo_box.setFilters(QgsMapLayerProxyModel.RasterLayer)
+        self.input_file_ortho_map_layer_combo_box.setFilters(QgsMapLayerProxyModel.RasterLayer)
+        self.input_file_ortho_map_layer_combo_box.setAllowEmptyLayer(True, text="Use Color Distance Image")
 
     def connect_signals(self) -> None:
         self.input_file_cdc_button.clicked.connect(self.load_input_color_distance_image)
@@ -69,8 +64,7 @@ class CropRowToolbarDialog(QtWidgets.QDialog, Ui_CropRowToolbarDialog):  # type:
                 QMessageBox.warning(self, "Invalid Layer", "The selected layer is not valid.")
                 return
             QgsProject.instance().addMapLayer(raster_layer)
-            self.input_file_cdc_combobox.addItem(raster_layer.name())
-            self.input_file_cdc_combobox.setCurrentText(raster_layer.name())
+            self.input_file_cdc_map_layer_combo_box.setLayer(raster_layer)
 
     def load_input_ortho(self) -> None:
         raster_filename, _ = QFileDialog.getOpenFileName(self, "Select Raster File", "", "*.tif *.tiff")
@@ -81,8 +75,7 @@ class CropRowToolbarDialog(QtWidgets.QDialog, Ui_CropRowToolbarDialog):  # type:
                 QMessageBox.warning(self, "Invalid Layer", "The selected layer is not valid.")
                 return
             QgsProject.instance().addMapLayer(raster_layer)
-            self.input_file_ortho_combobox.addItem(raster_layer.name())
-            self.input_file_ortho_combobox.setCurrentText(raster_layer.name())
+            self.input_file_ortho_map_layer_combo_box.setLayer(raster_layer)
 
     def choose_save_ortho(self) -> None:
         output_file, _ = QFileDialog.getSaveFileName(self, "Select Output File", "", "*.tif")
@@ -101,14 +94,13 @@ class CropRowToolbarDialog(QtWidgets.QDialog, Ui_CropRowToolbarDialog):  # type:
 
     def on_accepted(self) -> None:
         params = {}
-        for layer in self.get_all_layers_filtered_by_type((QgsRasterLayer, QgsVectorLayer)):
-            if layer.name() == self.input_file_cdc_combobox.currentText():
-                params.update({"INPUT": layer})
-            if layer.name() == self.input_file_ortho_combobox.currentText():
-                params.update({"ORTHO": layer})
+        params.update({"INPUT": self.input_file_cdc_map_layer_combo_box.currentLayer()})
         if "INPUT" not in params:
             QMessageBox.warning(self, "Missing input raster", "Please load a valid input raster layer.")
             return
+        if self.input_file_ortho_map_layer_combo_box.currentLayer() is not None:
+            params.update({"ORTHO": self.input_file_ortho_map_layer_combo_box.currentLayer()})
+        print(self.input_file_ortho_map_layer_combo_box.currentLayer())
         if self.output_ortho_line_edit.text():
             params.update({"OUTPUT_ORTHO": self.output_ortho_line_edit.text()})
         else:

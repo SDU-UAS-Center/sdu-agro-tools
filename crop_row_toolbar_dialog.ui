@@ -37,7 +37,7 @@
      <x>10</x>
      <y>60</y>
      <width>185</width>
-     <height>27</height>
+     <height>24</height>
     </rect>
    </property>
    <property name="text">
@@ -89,16 +89,6 @@
     <bool>false</bool>
    </property>
   </widget>
-  <widget class="QComboBox" name="input_file_cdc_combobox">
-   <property name="geometry">
-    <rect>
-     <x>200</x>
-     <y>60</y>
-     <width>240</width>
-     <height>25</height>
-    </rect>
-   </property>
-  </widget>
   <widget class="QToolButton" name="input_file_cdc_button">
    <property name="geometry">
     <rect>
@@ -118,21 +108,11 @@
      <x>10</x>
      <y>120</y>
      <width>185</width>
-     <height>27</height>
+     <height>24</height>
     </rect>
    </property>
    <property name="text">
     <string>Input Orthomosaic: (optional)</string>
-   </property>
-  </widget>
-  <widget class="QComboBox" name="input_file_ortho_combobox">
-   <property name="geometry">
-    <rect>
-     <x>200</x>
-     <y>120</y>
-     <width>240</width>
-     <height>25</height>
-    </rect>
    </property>
   </widget>
   <widget class="QToolButton" name="input_file_ortho_button">
@@ -710,11 +690,17 @@
      <height>26</height>
     </size>
    </property>
+   <property name="frame">
+    <bool>true</bool>
+   </property>
    <property name="buttonSymbols">
     <enum>QAbstractSpinBox::UpDownArrows</enum>
    </property>
    <property name="specialValueText">
     <string/>
+   </property>
+   <property name="showGroupSeparator" stdset="0">
+    <bool>false</bool>
    </property>
    <property name="prefix">
     <string/>
@@ -874,12 +860,37 @@
     <string>Crop Row Detector</string>
    </property>
   </widget>
+  <widget class="QgsMapLayerComboBox" name="input_file_cdc_map_layer_combo_box">
+   <property name="geometry">
+    <rect>
+     <x>180</x>
+     <y>60</y>
+     <width>261</width>
+     <height>24</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QgsMapLayerComboBox" name="input_file_ortho_map_layer_combo_box">
+   <property name="geometry">
+    <rect>
+     <x>180</x>
+     <y>120</y>
+     <width>261</width>
+     <height>24</height>
+    </rect>
+   </property>
+  </widget>
  </widget>
  <customwidgets>
   <customwidget>
    <class>QgsDoubleSpinBox</class>
    <extends>QDoubleSpinBox</extends>
    <header>qgsdoublespinbox.h</header>
+  </customwidget>
+  <customwidget>
+   <class>QgsMapLayerComboBox</class>
+   <extends>QComboBox</extends>
+   <header>qgsmaplayercombobox.h</header>
   </customwidget>
  </customwidgets>
  <resources/>
