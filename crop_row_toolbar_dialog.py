@@ -100,7 +100,6 @@ class CropRowToolbarDialog(QtWidgets.QDialog, Ui_CropRowToolbarDialog):  # type:
             return
         if self.input_file_ortho_map_layer_combo_box.currentLayer() is not None:
             params.update({"ORTHO": self.input_file_ortho_map_layer_combo_box.currentLayer()})
-        print(self.input_file_ortho_map_layer_combo_box.currentLayer())
         if self.output_ortho_line_edit.text():
             params.update({"OUTPUT_ORTHO": self.output_ortho_line_edit.text()})
         else:

@@ -228,6 +228,10 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
         crd.output_location = output_folder
         crd.tile_boundary = self.parameterAsBool(parameters, self.TILE_BOUNDARY, context)
         crd.expected_crop_row_distance_cm = self.parameterAsDouble(parameters, self.CROP_ROW_DISTANCE, context)
+        if crd.expected_crop_row_distance is None:
+            crd.convert_crop_row_distance_to_pixels(
+                self.segmented_tiler.get_orthomosaic_res(), self.segmented_tiler.get_orthomosaic_crs()
+            )
         crd.min_crop_row_angle = self.parameterAsInt(parameters, self.MIN_ANGLE, context)
         crd.max_crop_row_angle = self.parameterAsInt(parameters, self.MAX_ANGLE, context)
         crd.crop_row_angle_resolution = self.parameterAsInt(parameters, self.ANGLE_RESOLUTION, context)
@@ -251,9 +255,11 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
     ) -> dict[str, Any]:
         segmented_tiles = self.segmented_tiler.tiles
         plot_tiles = self.plot_tiler.tiles
+        crd.prepare_csv_files()
         total = 100.0 / len(segmented_tiles)
         with rasterio.open(self.plot_tiler.orthomosaic) as src:
             profile = src.profile
+            crs = src.crs.to_string()
             overview_factors = src.overviews(src.indexes[0])
         tiles = []
         with concurrent.futures.ProcessPoolExecutor(max_workers=context.maximumThreads()) as executor:
@@ -278,7 +284,15 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
                     dst.write_mask(tile.mask, window=tile.window)
         with rasterio.open(raster_output, "r+") as dst:
             dst.build_overviews(overview_factors, Resampling.average)
-        return {self.OUTPUT_ORTHO: raster_output}
+        self.make_wkt_field_csv(crd.output_location.joinpath("row_information_global.csv"))
+        line_uri = f"file://{crd.output_location.joinpath('row_information_global.csv')}?type=csv&wktField=linestrings&crs={crs}"
+        line_layer = QgsVectorLayer(line_uri, "Crop Rows", "delimitedtext")
+        options = QgsVectorFileWriter.SaveVectorOptions()
+        options.layerName = "Crop Rows"
+        QgsVectorFileWriter.writeAsVectorFormatV3(
+            line_layer, vector_output, QgsProject.instance().transformContext(), options=options
+        )
+        return {self.OUTPUT_ORTHO: raster_output, self.OUTPUT_SHAPE: vector_output}
 
     def run_using_threads(
         self,
