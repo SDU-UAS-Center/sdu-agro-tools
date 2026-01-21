@@ -26,7 +26,7 @@
    <string>SDU - Agro tools</string>
   </property>
   <property name="sizeGripEnabled">
-   <bool>false</bool>
+   <bool>true</bool>
   </property>
   <property name="modal">
    <bool>false</bool>
@@ -36,9 +36,12 @@
     <rect>
      <x>10</x>
      <y>60</y>
-     <width>185</width>
+     <width>161</width>
      <height>24</height>
     </rect>
+   </property>
+   <property name="toolTip">
+    <string>Input vegetation image in grayscale.</string>
    </property>
    <property name="text">
     <string>Input Color Distance Image:</string>
@@ -64,7 +67,7 @@
    <property name="geometry">
     <rect>
      <x>0</x>
-     <y>150</y>
+     <y>180</y>
      <width>480</width>
      <height>6</height>
     </rect>
@@ -106,10 +109,13 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>120</y>
-     <width>185</width>
+     <y>150</y>
+     <width>171</width>
      <height>24</height>
     </rect>
+   </property>
+   <property name="toolTip">
+    <string>Orthomosaic on which to draw found crop-rows.</string>
    </property>
    <property name="text">
     <string>Input Orthomosaic: (optional)</string>
@@ -119,7 +125,7 @@
    <property name="geometry">
     <rect>
      <x>446</x>
-     <y>120</y>
+     <y>150</y>
      <width>24</width>
      <height>24</height>
     </rect>
@@ -335,19 +341,6 @@
     <enum>Qt::Horizontal</enum>
    </property>
   </widget>
-  <widget class="QLabel" name="output_ortho_label">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>480</y>
-     <width>150</width>
-     <height>25</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Save output orthomosaic:</string>
-   </property>
-  </widget>
   <widget class="QLabel" name="output_heading">
    <property name="geometry">
     <rect>
@@ -383,9 +376,9 @@
   <widget class="QLineEdit" name="output_ortho_line_edit">
    <property name="geometry">
     <rect>
-     <x>160</x>
+     <x>179</x>
      <y>480</y>
-     <width>280</width>
+     <width>261</width>
      <height>25</height>
     </rect>
    </property>
@@ -401,40 +394,24 @@
     <rect>
      <x>8</x>
      <y>450</y>
-     <width>191</width>
+     <width>265</width>
      <height>23</height>
     </rect>
+   </property>
+   <property name="toolTip">
+    <string>Enable to draw tile boundary on the output.</string>
    </property>
    <property name="layoutDirection">
     <enum>Qt::RightToLeft</enum>
    </property>
    <property name="text">
-    <string>Draw tile boundary on output:</string>
+    <string>Draw tile boundary on output orthomosaic:</string>
    </property>
    <property name="checked">
     <bool>false</bool>
    </property>
   </widget>
   <widget class="QLabel" name="min_angle_label">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>200</y>
-     <width>151</width>
-     <height>26</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <weight>50</weight>
-     <bold>false</bold>
-    </font>
-   </property>
-   <property name="text">
-    <string>Min Angle of Crop Rows:</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="max_angle_label">
    <property name="geometry">
     <rect>
      <x>10</x>
@@ -449,6 +426,31 @@
      <bold>false</bold>
     </font>
    </property>
+   <property name="toolTip">
+    <string>Minimum angle in which crop rows are expected. 0 is North, 90 is East, 180 is South and 270 is West.</string>
+   </property>
+   <property name="text">
+    <string>Min Angle of Crop Rows:</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="max_angle_label">
+   <property name="geometry">
+    <rect>
+     <x>240</x>
+     <y>230</y>
+     <width>151</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <weight>50</weight>
+     <bold>false</bold>
+    </font>
+   </property>
+   <property name="toolTip">
+    <string>Maximum angle in which crop rows are expected. 0 is North, 90 is East, 180 is South and 270 is West.</string>
+   </property>
    <property name="text">
     <string>Max Angle of Crop Rows:</string>
    </property>
@@ -457,7 +459,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>180</y>
+     <y>210</y>
      <width>460</width>
      <height>17</height>
     </rect>
@@ -481,8 +483,8 @@
    </property>
    <property name="geometry">
     <rect>
-     <x>190</x>
-     <y>200</y>
+     <x>150</x>
+     <y>230</y>
      <width>80</width>
      <height>26</height>
     </rect>
@@ -510,7 +512,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>160</y>
+     <y>190</y>
      <width>100</width>
      <height>23</height>
     </rect>
@@ -540,8 +542,11 @@
      <bold>false</bold>
     </font>
    </property>
+   <property name="toolTip">
+    <string>How many sections to devide each degree into.</string>
+   </property>
    <property name="text">
-    <string>Angle resolution:</string>
+    <string>Angular division:</string>
    </property>
   </widget>
   <widget class="QSpinBox" name="max_angle_spin_box">
@@ -550,7 +555,7 @@
    </property>
    <property name="geometry">
     <rect>
-     <x>190</x>
+     <x>390</x>
      <y>230</y>
      <width>80</width>
      <height>26</height>
@@ -590,6 +595,9 @@
      <bold>false</bold>
     </font>
    </property>
+   <property name="toolTip">
+    <string>Distance between crop rows in centimeters.</string>
+   </property>
    <property name="text">
     <string>Distance between Crop Rows: </string>
    </property>
@@ -622,7 +630,7 @@
     <number>1</number>
    </property>
    <property name="value">
-    <number>12</number>
+    <number>30</number>
    </property>
   </widget>
   <widget class="QLabel" name="threshold_label">
@@ -640,6 +648,9 @@
      <bold>false</bold>
     </font>
    </property>
+   <property name="toolTip">
+    <string>Threshold to apply to vegetation image.  </string>
+   </property>
    <property name="text">
     <string>Threshold to apply to Color Distance Image:</string>
    </property>
@@ -650,7 +661,7 @@
    </property>
    <property name="geometry">
     <rect>
-     <x>190</x>
+     <x>150</x>
      <y>260</y>
      <width>80</width>
      <height>26</height>
@@ -678,9 +689,9 @@
   <widget class="QgsDoubleSpinBox" name="crop_row_distance_spinbox">
    <property name="geometry">
     <rect>
-     <x>190</x>
+     <x>180</x>
      <y>290</y>
-     <width>80</width>
+     <width>87</width>
      <height>27</height>
     </rect>
    </property>
@@ -741,7 +752,7 @@
    <property name="geometry">
     <rect>
      <x>446</x>
-     <y>510</y>
+     <y>540</y>
      <width>24</width>
      <height>24</height>
     </rect>
@@ -750,25 +761,12 @@
     <string>...</string>
    </property>
   </widget>
-  <widget class="QLabel" name="output_crop_row_label">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>510</y>
-     <width>150</width>
-     <height>25</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Save output crop rows:</string>
-   </property>
-  </widget>
   <widget class="QLineEdit" name="output_crop_row_line_edit">
    <property name="geometry">
     <rect>
-     <x>160</x>
-     <y>510</y>
-     <width>280</width>
+     <x>179</x>
+     <y>540</y>
+     <width>261</width>
      <height>25</height>
     </rect>
    </property>
@@ -801,9 +799,9 @@
   <widget class="QLineEdit" name="output_crop_folder_line_edit">
    <property name="geometry">
     <rect>
-     <x>160</x>
-     <y>540</y>
-     <width>280</width>
+     <x>180</x>
+     <y>570</y>
+     <width>261</width>
      <height>25</height>
     </rect>
    </property>
@@ -818,10 +816,13 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>540</y>
+     <y>570</y>
      <width>150</width>
      <height>25</height>
     </rect>
+   </property>
+   <property name="toolTip">
+    <string>Output folder where all crop row information is saved as csv files.</string>
    </property>
    <property name="text">
     <string>Save crop information:</string>
@@ -831,7 +832,7 @@
    <property name="geometry">
     <rect>
      <x>446</x>
-     <y>540</y>
+     <y>570</y>
      <width>24</width>
      <height>24</height>
     </rect>
@@ -874,10 +875,158 @@
    <property name="geometry">
     <rect>
      <x>180</x>
-     <y>120</y>
+     <y>150</y>
      <width>261</width>
      <height>24</height>
     </rect>
+   </property>
+  </widget>
+  <widget class="QSpinBox" name="veg_threshold_spin_box">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>260</x>
+     <y>120</y>
+     <width>80</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <property name="suffix">
+    <string/>
+   </property>
+   <property name="prefix">
+    <string/>
+   </property>
+   <property name="minimum">
+    <number>1</number>
+   </property>
+   <property name="maximum">
+    <number>255</number>
+   </property>
+   <property name="singleStep">
+    <number>1</number>
+   </property>
+   <property name="value">
+    <number>30</number>
+   </property>
+  </widget>
+  <widget class="QLabel" name="veg_threshold_label">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>120</y>
+     <width>251</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <weight>50</weight>
+     <bold>false</bold>
+    </font>
+   </property>
+   <property name="toolTip">
+    <string>Threshold to apply to vegetation in crop rows. Determines how much vegetation around a given point on the row for a plant not to be missing.</string>
+   </property>
+   <property name="text">
+    <string>Threshold to apply to crop row vegetation:</string>
+   </property>
+  </widget>
+  <widget class="QToolButton" name="output_crop_points_button">
+   <property name="geometry">
+    <rect>
+     <x>446</x>
+     <y>510</y>
+     <width>24</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>...</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="output_crop_points_line_edit">
+   <property name="geometry">
+    <rect>
+     <x>179</x>
+     <y>510</y>
+     <width>261</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <property name="placeholderText">
+    <string>[Save to temporary file]</string>
+   </property>
+   <property name="clearButtonEnabled">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="output_ortho_checkbox">
+   <property name="geometry">
+    <rect>
+     <x>8</x>
+     <y>480</y>
+     <width>166</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>Save output orthomosaic with crop rows drawn on.</string>
+   </property>
+   <property name="layoutDirection">
+    <enum>Qt::RightToLeft</enum>
+   </property>
+   <property name="text">
+    <string>Save output orthomosaic:</string>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="output_crop_points_checkbox">
+   <property name="geometry">
+    <rect>
+     <x>8</x>
+     <y>510</y>
+     <width>166</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>Save crops as points in pgkg format.</string>
+   </property>
+   <property name="layoutDirection">
+    <enum>Qt::RightToLeft</enum>
+   </property>
+   <property name="text">
+    <string>Save output crop points:  </string>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="output_crop_rows_checkbox">
+   <property name="geometry">
+    <rect>
+     <x>8</x>
+     <y>540</y>
+     <width>166</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>Save crops rows as lines in pgkg format.</string>
+   </property>
+   <property name="layoutDirection">
+    <enum>Qt::RightToLeft</enum>
+   </property>
+   <property name="text">
+    <string>Save output crop rows:     </string>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
    </property>
   </widget>
  </widget>

@@ -26,7 +26,7 @@
    <string>SDU - Agro tools</string>
   </property>
   <property name="sizeGripEnabled">
-   <bool>false</bool>
+   <bool>true</bool>
   </property>
   <property name="modal">
    <bool>false</bool>
@@ -39,6 +39,9 @@
      <width>185</width>
      <height>24</height>
     </rect>
+   </property>
+   <property name="toolTip">
+    <string>Input orthomosaic on which to calculate the color distance.</string>
    </property>
    <property name="text">
     <string>Input raster layer (orthomosaic):</string>
@@ -68,6 +71,9 @@
      <width>241</width>
      <height>27</height>
     </rect>
+   </property>
+   <property name="toolTip">
+    <string/>
    </property>
    <property name="text">
     <string>Select raster bands to use for color model:</string>
@@ -768,6 +774,9 @@
      <height>23</height>
     </rect>
    </property>
+   <property name="toolTip">
+    <string>Save output as uint8. Otherwise output will be saved as float.</string>
+   </property>
    <property name="layoutDirection">
     <enum>Qt::RightToLeft</enum>
    </property>
@@ -792,6 +801,9 @@
      <weight>50</weight>
      <bold>false</bold>
     </font>
+   </property>
+   <property name="toolTip">
+    <string>Scale output by a factor. Specificly usefull if saved as uint8.</string>
    </property>
    <property name="text">
     <string>Scale output by:</string>
