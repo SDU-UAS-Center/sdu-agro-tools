@@ -138,6 +138,8 @@ class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):  # type: ignore[
     def choose_save_file(self) -> None:
         output_file, _ = QFileDialog.getSaveFileName(self, "Select Output File", "", "*.tif")
         if output_file:
+            if not output_file.endswith(".tif"):
+                output_file += ".tif"
             self.output_line_edit.setText(output_file)
 
     def on_accepted(self) -> None:
@@ -197,8 +199,8 @@ class CDCToolbarTask(QgsTask):  # type: ignore[misc]
         self,
         alg: QgsProcessingAlgorithm,
         params: dict[str, Any],
-        context: QgsProcessingContext,
-        feedback: QgsProcessingFeedback,
+        context: QgsProcessingContext | None,
+        feedback: QgsProcessingFeedback | None,
     ) -> None:
         super().__init__("CDCToolbarTask", QgsTask.CanCancel)
         self.alg = alg
@@ -229,7 +231,7 @@ class CDCToolbarTask(QgsTask):  # type: ignore[misc]
         if results["OUTPUT"].startswith("/tmp"):
             name = "Output"
         else:
-            name = os.path.splitext(os.path.basename(self._results["OUTPUT"]))[0]
+            name = os.path.splitext(os.path.basename(results["OUTPUT"]))[0]
         output = QgsRasterLayer(results["OUTPUT"], name)
         QgsProject.instance().addMapLayer(output)
         return True

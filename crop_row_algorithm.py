@@ -31,8 +31,7 @@ from qgis.core import (
 from qgis.PyQt.QtCore import QCoreApplication
 from qgis.PyQt.QtGui import QIcon
 from rasterio.enums import Resampling
-from shapely import linestrings
-from shapely.geometry.linestring import LineString
+from shapely import linestrings, points
 
 
 class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
@@ -49,12 +48,17 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
     class.
     """
 
+    SAVE_ORTHO = "SAVE_ORTHO"
     OUTPUT_ORTHO = "OUTPUT_ORTHO"
-    OUTPUT_SHAPE = "OUTPUT_SHAPE"
+    SAVE_CROP_POINTS = "SAVE_CROP_POINTS"
+    OUTPUT_POINTS = "OUTPUT_POINTS"
+    SAVE_CROP_ROWS = "SAVE_CROP_ROWS"
+    OUTPUT_ROWS = "OUTPUT_ROWS"
     OUTPUT_FOLDER = "OUTPUT_FOLDER"
     INPUT = "INPUT"
     ORTHO = "ORTHO"
     THRESHOLD = "THRESHOLD"
+    VEG_THRESHOLD = "VEG_THRESHOLD"
     TILE_WIDTH = "TILE_WIDTH"
     TILE_HEIGHT = "TILE_HEIGHT"
     TILE_OVERLAP = "TILE_OVERLAP"
@@ -87,8 +91,18 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
                 self.THRESHOLD,
                 self.tr("Threshold to apply to distance orthomosaic"),
                 type=QgsProcessingParameterNumber.Double,
-                defaultValue=12,
-                minValue=1,
+                defaultValue=30,
+                minValue=0,
+                maxValue=255,
+            )
+        )
+        self.addParameter(
+            QgsProcessingParameterNumber(
+                self.VEG_THRESHOLD,
+                self.tr("Threshold to apply to crop row point vegetation"),
+                type=QgsProcessingParameterNumber.Double,
+                defaultValue=30,
+                minValue=0,
                 maxValue=255,
             )
         )
@@ -184,9 +198,31 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
             QgsProcessingParameterBoolean(self.USE_PROCESS_POOL, self.tr("Use Processing Pool instead of Threads"))
         )
         self.addParameter(
+            QgsProcessingParameterBoolean(
+                self.SAVE_ORTHO,
+                self.tr("Save output orthomosaic."),
+                defaultValue=False,
+            )
+        )
+        self.addParameter(
             QgsProcessingParameterRasterDestination(self.OUTPUT_ORTHO, self.tr("Output orthomosaic with crop rows"))
         )
-        self.addParameter(QgsProcessingParameterVectorDestination(self.OUTPUT_SHAPE, self.tr("Output crop rows")))
+        self.addParameter(
+            QgsProcessingParameterBoolean(
+                self.SAVE_CROP_POINTS,
+                self.tr("Save output crop row points."),
+                defaultValue=False,
+            )
+        )
+        self.addParameter(QgsProcessingParameterVectorDestination(self.OUTPUT_POINTS, self.tr("Output crop points")))
+        self.addParameter(
+            QgsProcessingParameterBoolean(
+                self.SAVE_CROP_ROWS,
+                self.tr("Save output crop rows."),
+                defaultValue=False,
+            )
+        )
+        self.addParameter(QgsProcessingParameterVectorDestination(self.OUTPUT_ROWS, self.tr("Output crop rows")))
         self.addParameter(QgsProcessingParameterFolderDestination(self.OUTPUT_FOLDER, self.tr("Output folder")))
 
     def prepareAlgorithm(
@@ -217,8 +253,22 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
     def processAlgorithm(
         self, parameters: dict[str, Any], context: QgsProcessingContext, feedback: QgsProcessingFeedback
     ) -> dict[str, Any]:
-        raster_output = self.parameterAsOutputLayer(parameters, self.OUTPUT_ORTHO, context)
-        vector_output = self.parameterAsOutputLayer(parameters, self.OUTPUT_SHAPE, context)
+        use_process_pool = self.parameterAsBoolean(parameters, self.USE_PROCESS_POOL, context)
+        save_raster = self.parameterAsBoolean(parameters, self.SAVE_ORTHO, context)
+        if save_raster or not use_process_pool:
+            raster_output = self.parameterAsOutputLayer(parameters, self.OUTPUT_ORTHO, context)
+        else:
+            raster_output = None
+        save_points = self.parameterAsBoolean(parameters, self.SAVE_CROP_POINTS, context)
+        if save_points:
+            points_output = self.parameterAsOutputLayer(parameters, self.OUTPUT_POINTS, context)
+        else:
+            points_output = None
+        save_rows = self.parameterAsBoolean(parameters, self.SAVE_CROP_ROWS, context)
+        if save_rows:
+            rows_output = self.parameterAsOutputLayer(parameters, self.OUTPUT_ROWS, context)
+        else:
+            rows_output = None
         output_folder = Path(self.parameterAsFileOutput(parameters, self.OUTPUT_FOLDER, context))
         if not os.path.isdir(output_folder):
             os.makedirs(output_folder)
@@ -234,28 +284,30 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
             )
         crd.min_crop_row_angle = self.parameterAsInt(parameters, self.MIN_ANGLE, context)
         crd.max_crop_row_angle = self.parameterAsInt(parameters, self.MAX_ANGLE, context)
-        crd.crop_row_angle_resolution = self.parameterAsInt(parameters, self.ANGLE_RESOLUTION, context)
+        crd.crop_row_angle_division = self.parameterAsInt(parameters, self.ANGLE_RESOLUTION, context)
         crd.threshold_level = self.parameterAsDouble(parameters, self.THRESHOLD, context)
         crd.max_workers = context.maximumThreads()
-        use_process_pool = self.parameterAsBoolean(parameters, self.USE_PROCESS_POOL, context)
         if feedback.isCanceled():
             return {}
         if use_process_pool:
-            return self.run_using_processing_pools(crd, raster_output, vector_output, context, feedback)
+            return self.run_using_processing_pools(crd, raster_output, points_output, rows_output, context, feedback)
         else:
-            return self.run_using_threads(crd, raster_output, vector_output, context, feedback)
+            return self.run_using_threads(
+                crd, save_raster, raster_output, points_output, rows_output, context, feedback
+            )
 
     def run_using_processing_pools(
         self,
         crd: CropRowDetector,
-        raster_output: str,
-        vector_output: str,
+        raster_output: str | None,
+        points_output: str | None,
+        rows_output: str | None,
         context: QgsProcessingContext,
         feedback: QgsProcessingFeedback,
     ) -> dict[str, Any]:
         segmented_tiles = self.segmented_tiler.tiles
         plot_tiles = self.plot_tiler.tiles
-        crd.prepare_csv_files()
+        crd.prepare_csv_files(overwrite=True)
         total = 100.0 / len(segmented_tiles)
         with rasterio.open(self.plot_tiler.orthomosaic) as src:
             profile = src.profile
@@ -277,34 +329,55 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
                 crd.append_to_csv_of_row_information(tile, direction, vegetation_lines)
                 crd.append_to_csv_of_row_information_global(tile, direction, vegetation_lines)
                 crd.append_to_csv_vegetation_row(vegetation_df)
-        with rasterio.open(raster_output, "w", **profile) as dst:
-            for tile in tiles:
-                dst.write(tile.output, window=tile.window)
-                if tile.output.shape[0] <= 3:
-                    dst.write_mask(tile.mask, window=tile.window)
-        with rasterio.open(raster_output, "r+") as dst:
-            dst.build_overviews(overview_factors, Resampling.average)
-        self.make_wkt_field_csv(crd.output_location.joinpath("row_information_global.csv"))
-        line_uri = f"file://{crd.output_location.joinpath('row_information_global.csv')}?type=csv&wktField=linestrings&crs={crs}"
-        line_layer = QgsVectorLayer(line_uri, "Crop Rows", "delimitedtext")
-        options = QgsVectorFileWriter.SaveVectorOptions()
-        options.layerName = "Crop Rows"
-        QgsVectorFileWriter.writeAsVectorFormatV3(
-            line_layer, vector_output, QgsProject.instance().transformContext(), options=options
-        )
-        return {self.OUTPUT_ORTHO: raster_output, self.OUTPUT_SHAPE: vector_output}
+        if raster_output is not None:
+            with rasterio.open(raster_output, "w", **profile) as dst:
+                for tile in tiles:
+                    dst.write(tile.output, window=tile.window)
+                    if tile.output.shape[0] <= 3:
+                        dst.write_mask(tile.mask, window=tile.window)
+            with rasterio.open(raster_output, "r+") as dst:
+                dst.build_overviews(overview_factors, Resampling.average)
+        if points_output is not None:
+            self.make_wkt_point_field_csv(
+                crd.output_location.joinpath("points_in_rows.csv"),
+                crd.output_location.joinpath("points_in_rows_wkt.csv"),
+            )
+            file = crd.output_location.joinpath("points_in_rows_wkt.csv")
+            points_uri = f"file://{file}?type=csv&wktField=points&crs={crs}"
+            points_layer = QgsVectorLayer(points_uri, "Crop Points", "delimitedtext")
+            # points_layer.setSubsetString("vegetation > 50")
+            options = QgsVectorFileWriter.SaveVectorOptions()
+            options.layerName = "Crop Points"
+            QgsVectorFileWriter.writeAsVectorFormatV3(
+                points_layer, points_output, QgsProject.instance().transformContext(), options=options
+            )
+        if rows_output is not None:
+            self.make_wkt_line_field_csv(
+                crd.output_location.joinpath("row_information_global.csv"),
+                crd.output_location.joinpath("row_information_global_wkt.csv"),
+            )
+            line_uri = f"file://{crd.output_location.joinpath('row_information_global_wkt.csv')}?type=csv&wktField=linestrings&crs={crs}"
+            line_layer = QgsVectorLayer(line_uri, "Crop Rows", "delimitedtext")
+            options = QgsVectorFileWriter.SaveVectorOptions()
+            options.layerName = "Crop Rows"
+            QgsVectorFileWriter.writeAsVectorFormatV3(
+                line_layer, rows_output, QgsProject.instance().transformContext(), options=options
+            )
+        return {self.OUTPUT_ORTHO: raster_output, self.OUTPUT_POINTS: points_output, self.OUTPUT_ROWS: rows_output}
 
     def run_using_threads(
         self,
         crd: CropRowDetector,
-        raster_output: str,
-        vector_output: str,
+        save_raster: bool,
+        raster_output: str | None,
+        points_output: str | None,
+        rows_output: str | None,
         context: QgsProcessingContext,
         feedback: QgsProcessingFeedback,
     ) -> dict[str, Any]:
         segmented_tiles = self.segmented_tiler.tiles
         plot_tiles = self.plot_tiler.tiles
-        crd.prepare_csv_files()
+        crd.prepare_csv_files(overwrite=True)
         read_segmented_lock = threading.Lock()
         read_plot_lock = threading.Lock()
         write_lock = threading.Lock()
@@ -359,24 +432,52 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
                         feedback.setProgress(int(current * total))
         with rasterio.open(raster_output, "r+") as dst:
             dst.build_overviews(overview_factors, Resampling.average)
-        self.make_wkt_field_csv(crd.output_location.joinpath("row_information_global.csv"))
-        line_uri = f"file://{crd.output_location.joinpath('row_information_global.csv')}?type=csv&wktField=linestrings&crs={crs}"
-        line_layer = QgsVectorLayer(line_uri, "Crop Rows", "delimitedtext")
-        options = QgsVectorFileWriter.SaveVectorOptions()
-        options.layerName = "Crop Rows"
-        QgsVectorFileWriter.writeAsVectorFormatV3(
-            line_layer, vector_output, QgsProject.instance().transformContext(), options=options
-        )
-        return {self.OUTPUT_ORTHO: raster_output, self.OUTPUT_SHAPE: vector_output}
+        if points_output is not None:
+            self.make_wkt_point_field_csv(
+                crd.output_location.joinpath("points_in_rows.csv"),
+                crd.output_location.joinpath("points_in_rows_wkt.csv"),
+            )
+            file = crd.output_location.joinpath("points_in_rows_wkt.csv")
+            points_uri = f"file://{file}?type=csv&wktField=points&crs={crs}"
+            points_layer = QgsVectorLayer(points_uri, "Crop Points", "delimitedtext")
+            options = QgsVectorFileWriter.SaveVectorOptions()
+            options.layerName = "Crop Points"
+            QgsVectorFileWriter.writeAsVectorFormatV3(
+                points_layer, points_output, QgsProject.instance().transformContext(), options=options
+            )
+        if rows_output is not None:
+            self.make_wkt_line_field_csv(
+                crd.output_location.joinpath("row_information_global.csv"),
+                crd.output_location.joinpath("row_information_global_wkt.csv"),
+            )
+            line_uri = f"file://{crd.output_location.joinpath('row_information_global_wkt.csv')}?type=csv&wktField=linestrings&crs={crs}"
+            line_layer = QgsVectorLayer(line_uri, "Crop Rows", "delimitedtext")
+            options = QgsVectorFileWriter.SaveVectorOptions()
+            options.layerName = "Crop Rows"
+            QgsVectorFileWriter.writeAsVectorFormatV3(
+                line_layer, rows_output, QgsProject.instance().transformContext(), options=options
+            )
+        if not save_raster:
+            raster_output = None
+        return {self.OUTPUT_ORTHO: raster_output, self.OUTPUT_POINTS: points_output, self.OUTPUT_ROWS: rows_output}
 
-    def make_wkt_field_csv(self, csv_file: Path) -> None:
-        def make_lines(row: Any) -> LineString:
+    def make_wkt_line_field_csv(self, csv_file_in: Path, csv_file_out: Path) -> None:
+        def make_lines(row: Any):  # type: ignore[no-untyped-def]
             line = linestrings([[row["x_start"], row["y_start"]], [row["x_end"], row["y_end"]]])
             return line
 
-        data = pd.read_csv(csv_file)
+        data = pd.read_csv(csv_file_in)
         data["linestrings"] = data.apply(make_lines, axis="columns")
-        data.to_csv(csv_file)
+        data.to_csv(csv_file_out)
+
+    def make_wkt_point_field_csv(self, csv_file_in: Path, csv_file_out: Path) -> None:
+        def make_points(row: Any):  # type: ignore[no-untyped-def]
+            point = points([row["x"], row["y"]])
+            return point
+
+        data = pd.read_csv(csv_file_in)
+        data["points"] = data.apply(make_points, axis="columns")
+        data.to_csv(csv_file_out)
 
     def name(self) -> str:
         """

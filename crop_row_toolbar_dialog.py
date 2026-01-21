@@ -49,6 +49,7 @@ class CropRowToolbarDialog(QtWidgets.QDialog, Ui_CropRowToolbarDialog):  # type:
         self.input_file_cdc_button.clicked.connect(self.load_input_color_distance_image)
         self.input_file_ortho_button.clicked.connect(self.load_input_ortho)
         self.output_ortho_button.clicked.connect(self.choose_save_ortho)
+        self.output_crop_points_button.clicked.connect(self.choose_save_crop_points)
         self.output_crop_row_button.clicked.connect(self.choose_save_crop_row)
         self.output_crop_folder_button.clicked.connect(self.choose_save_folder)
         self.dialog_button_box.accepted.connect(self.on_accepted)
@@ -80,17 +81,41 @@ class CropRowToolbarDialog(QtWidgets.QDialog, Ui_CropRowToolbarDialog):  # type:
     def choose_save_ortho(self) -> None:
         output_file, _ = QFileDialog.getSaveFileName(self, "Select Output File", "", "*.tif")
         if output_file:
+            if not output_file.endswith(".tif"):
+                output_file += ".tif"
             self.output_ortho_line_edit.setText(output_file)
 
-    def choose_save_crop_row(self) -> None:
-        output_file, _ = QFileDialog.getSaveFileName(self, "Select Output File", "", "*.shp")
+    def choose_save_crop_points(self) -> None:
+        output_file, _ = QFileDialog.getSaveFileName(self, "Select Output File", "", "*.gpkg")
         if output_file:
+            if not output_file.endswith(".gpkg"):
+                output_file += ".gpkg"
+            self.output_crop_points_line_edit.setText(output_file)
+
+    def choose_save_crop_row(self) -> None:
+        output_file, _ = QFileDialog.getSaveFileName(self, "Select Output File", "", "*.gpkg")
+        if output_file:
+            if not output_file.endswith(".gpkg"):
+                output_file += ".gpkg"
             self.output_crop_row_line_edit.setText(output_file)
 
     def choose_save_folder(self) -> None:
         output_folder = QFileDialog.getExistingDirectory(self, "Select Output Folder", "")
+        if self.output_exists(output_folder):
+            QMessageBox.warning(
+                self,
+                "Output folder already contains crop information.",
+                "Output folder already contains crop information. \nCrop information will be overwritten.",
+            )
         if output_folder:
             self.output_crop_folder_line_edit.setText(output_folder)
+
+    def output_exists(self, output_folder: str) -> bool:
+        output_path = Path(output_folder)
+        points_path = output_path.joinpath("points_in_rows.csv")
+        row_path = output_path.joinpath("row_information.csv")
+        global_row_path = output_path.joinpath("row_information_global.csv")
+        return bool(points_path.exists() or row_path.exists() or global_row_path.exists())
 
     def on_accepted(self) -> None:
         params = {}
@@ -104,10 +129,14 @@ class CropRowToolbarDialog(QtWidgets.QDialog, Ui_CropRowToolbarDialog):  # type:
             params.update({"OUTPUT_ORTHO": self.output_ortho_line_edit.text()})
         else:
             params.update({"OUTPUT_ORTHO": "TEMPORARY_OUTPUT"})
-        if self.output_crop_row_line_edit.text():
-            params.update({"OUTPUT_SHAPE": self.output_crop_row_line_edit.text()})
+        if self.output_crop_points_line_edit.text():
+            params.update({"OUTPUT_POINTS": self.output_crop_points_line_edit.text()})
         else:
-            params.update({"OUTPUT_SHAPE": "TEMPORARY_OUTPUT"})
+            params.update({"OUTPUT_POINTS": "TEMPORARY_OUTPUT"})
+        if self.output_crop_row_line_edit.text():
+            params.update({"OUTPUT_ROWS": self.output_crop_row_line_edit.text()})
+        else:
+            params.update({"OUTPUT_ROWS": "TEMPORARY_OUTPUT"})
         if self.output_crop_folder_line_edit.text():
             params.update({"OUTPUT_FOLDER": self.output_crop_folder_line_edit.text()})
         else:
@@ -115,7 +144,11 @@ class CropRowToolbarDialog(QtWidgets.QDialog, Ui_CropRowToolbarDialog):  # type:
                 self, "Missing output folder", "Please select a folder to save crop row information to."
             )
             return
+        params.update({"SAVE_ORTHO": self.output_ortho_checkbox.isChecked()})
+        params.update({"SAVE_CROP_POINTS": self.output_crop_points_checkbox.isChecked()})
+        params.update({"SAVE_CROP_ROWS": self.output_crop_rows_checkbox.isChecked()})
         params.update({"THRESHOLD": self.threshold_spin_box.value()})
+        params.update({"VEG_THRESHOLD": self.veg_threshold_spin_box.value()})
         params.update({"CROP_ROW_DISTANCE": self.crop_row_distance_spinbox.value()})
         params.update({"MIN_ANGLE": self.min_angle_spin_box.value()})
         params.update({"MAX_ANGLE": self.max_angle_spin_box.value()})
@@ -170,18 +203,27 @@ class CropRowToolbarTask(QgsTask):  # type: ignore[misc]
         results = self.alg.runPrepared(self.params, self.context, self.feedback)
         if self.feedback.isCanceled():
             return False
-        if results["OUTPUT_ORTHO"].startswith("/tmp"):
-            name = "Output orthomosaic with crop rows"
-        else:
-            name = os.path.splitext(os.path.basename(self._results["OUTPUT_ORTHO"]))[0]
-        output = QgsRasterLayer(results["OUTPUT_ORTHO"], name)
-        QgsProject.instance().addMapLayer(output)
-        if results["OUTPUT_SHAPE"].startswith("/tmp"):
-            name = "Output crop rows"
-        else:
-            name = os.path.splitext(os.path.basename(self._results["OUTPUT_SHAPE"]))[0]
-        output = QgsVectorLayer(results["OUTPUT_SHAPE"], name)
-        QgsProject.instance().addMapLayer(output)
+        if results["OUTPUT_ORTHO"] is not None:
+            if results["OUTPUT_ORTHO"].startswith("/tmp"):
+                name = "Output orthomosaic with crop rows"
+            else:
+                name = os.path.splitext(os.path.basename(results["OUTPUT_ORTHO"]))[0]
+            output = QgsRasterLayer(results["OUTPUT_ORTHO"], name)
+            QgsProject.instance().addMapLayer(output)
+        if results["OUTPUT_POINTS"] is not None:
+            if results["OUTPUT_POINTS"].startswith("/tmp"):
+                name = "Output crop points"
+            else:
+                name = os.path.splitext(os.path.basename(results["OUTPUT_POINTS"]))[0]
+            output = QgsVectorLayer(results["OUTPUT_POINTS"], name)
+            QgsProject.instance().addMapLayer(output)
+        if results["OUTPUT_ROWS"] is not None:
+            if results["OUTPUT_ROWS"].startswith("/tmp"):
+                name = "Output crop rows"
+            else:
+                name = os.path.splitext(os.path.basename(results["OUTPUT_ROWS"]))[0]
+            output = QgsVectorLayer(results["OUTPUT_ROWS"], name)
+            QgsProject.instance().addMapLayer(output)
         return True
 
     def finished(self, result: bool) -> Any:
