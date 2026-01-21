@@ -4,7 +4,7 @@ version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
     "cdc>=1.1.2",
-    "crop-row-detector>=0.1.3",
+    "crop-row-detector>=0.2.0",
     "numpy<2.0.0",
     "pyqt5>=5.15.11",
     "qgis-stubs>=0.2.0.post1",
