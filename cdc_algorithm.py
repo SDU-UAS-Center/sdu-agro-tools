@@ -11,6 +11,8 @@ import numpy as np
 import rasterio
 from qgis import processing
 from qgis.core import (
+    Qgis,
+    QgsMessageLog,
     QgsProcessingAlgorithm,
     QgsProcessingContext,
     QgsProcessingFeedback,
@@ -184,6 +186,13 @@ class CDCAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
         if not self.raster_bands:
             self.raster_bands = None
         else:
+            if len(self.raster_bands) < 2:
+                QgsMessageLog.logMessage(
+                    f"At least 2 bands must be used. CDC called with {len(self.raster_bands)} bands.",
+                    tag="SDU Agro Tools",
+                    level=Qgis.MessageLevel.Warning,
+                )
+                raise ValueError(f"At least 2 bands must be used. CDC called with {len(self.raster_bands)} bands.")
             self.raster_bands = [x - 1 for x in self.raster_bands]
         self.scale = self.parameterAsDouble(parameters, self.SCALE, context)
         tile_width = self.parameterAsInt(parameters, self.TILE_WIDTH, context)
