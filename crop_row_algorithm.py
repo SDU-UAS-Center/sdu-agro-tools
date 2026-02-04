@@ -14,6 +14,8 @@ import pandas as pd
 import rasterio
 from crop_row_detector import CropRowDetector, OrthomosaicTiles, Tile
 from qgis.core import (
+    Qgis,
+    QgsMessageLog,
     QgsProcessingAlgorithm,
     QgsProcessingContext,
     QgsProcessingFeedback,
@@ -228,6 +230,11 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
     def prepareAlgorithm(
         self, parameters: dict[str, Any], context: QgsProcessingContext, feedback: QgsProcessingFeedback
     ) -> Any:
+        QgsMessageLog.logMessage(
+            f"Crop-row-detector called with parameters: {parameters}",
+            tag="SDU Agro Tools",
+            level=Qgis.MessageLevel.Info,
+        )
         self.raster_input = self.parameterAsRasterLayer(parameters, self.INPUT, context)
         self.ortho_input = self.parameterAsRasterLayer(parameters, self.ORTHO, context)
         tile_width = self.parameterAsInt(parameters, self.TILE_WIDTH, context)

@@ -3,8 +3,10 @@ from pathlib import Path
 from typing import Any
 
 from qgis.core import (
+    Qgis,
     QgsApplication,
     QgsMapLayerProxyModel,
+    QgsMessageLog,
     QgsProcessingAlgorithm,
     QgsProcessingContext,
     QgsProcessingFeedback,
@@ -184,6 +186,9 @@ class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):  # type: ignore[
         params.update({"CONVERT_UINT8": self.output_uint_checkbox.isChecked()})
         params.update({"SCALE": self.output_scale_spinbox.value()})
         self.accept()
+        QgsMessageLog.logMessage(
+            f"Calling CDC task with parameters: {params}", tag="SDU Agro Tools", level=Qgis.MessageLevel.Info
+        )
         task = CDCToolbarTask(alg=self.alg, params=params, context=self.context, feedback=self.feedback)
         QgsApplication.instance().taskManager().addTask(task)
 

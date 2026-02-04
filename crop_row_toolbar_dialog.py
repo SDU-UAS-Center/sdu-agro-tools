@@ -3,8 +3,10 @@ from pathlib import Path
 from typing import Any
 
 from qgis.core import (
+    Qgis,
     QgsApplication,
     QgsMapLayerProxyModel,
+    QgsMessageLog,
     QgsProcessingAlgorithm,
     QgsProcessingContext,
     QgsProcessingFeedback,
@@ -159,6 +161,11 @@ class CropRowToolbarDialog(QtWidgets.QDialog, Ui_CropRowToolbarDialog):  # type:
         params.update({"TILE_BOUNDARY": self.tile_boundary_checkbox.isChecked()})
         params.update({"USE_PROCESS_POOL": self.use_processing_pools_checkbox.isChecked()})
         self.accept()
+        QgsMessageLog.logMessage(
+            f"Calling crop-row-detector task with parameters: {params}",
+            tag="SDU Agro Tools",
+            level=Qgis.MessageLevel.Info,
+        )
         task = CropRowToolbarTask(alg=self.alg, params=params, context=self.context, feedback=self.feedback)
         QgsApplication.instance().taskManager().addTask(task)
 

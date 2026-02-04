@@ -181,6 +181,9 @@ class CDCAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
     def prepareAlgorithm(
         self, parameters: dict[str, Any], context: QgsProcessingContext, feedback: QgsProcessingFeedback
     ) -> Any:
+        QgsMessageLog.logMessage(
+            f"CDC called with parameters: {parameters}", tag="SDU Agro Tools", level=Qgis.MessageLevel.Info
+        )
         self.raster_input = self.parameterAsRasterLayer(parameters, self.INPUT, context)
         self.raster_bands = self.parameterAsInts(parameters, self.BANDS, context)
         if not self.raster_bands:
