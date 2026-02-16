@@ -62,3 +62,5 @@ resources.py
 resources_rc.py
 # Compiled UI files
 *_ui.py
+# zip packages
+*.zip
