@@ -1,6 +1,13 @@
 [project]
 name = "sdu-agro-tools"
 version = "0.1.0"
+authors = [
+  { name="Henrik Skov Midtiby", email="hemi@mmmi.sdu.dk" },
+]
+maintainers = [
+  { name="Henrik Skov Midtiby", email="hemi@mmmi.sdu.dk" },
+  { name="Henrik Dyrberg Egemose", email="hde@mmmi.sdu.dk" },
+]
 requires-python = ">=3.12"
 dependencies = [
     "cdc>=1.1.2",
@@ -9,15 +16,8 @@ dependencies = [
     "pyqt5>=5.15.11",
     "qgis-stubs>=0.2.0.post1",
     "rasterio>=1.4.3",
-    "sphinx>=8.2.3",
     "pandas",
     "shapely"
-]
-
-[project.optional-dependencies]
-dev = [
-  "pre-commit>=4.0.1",
-  "mypy>=1.13.0",
 ]
 
 [tool.codespell]
@@ -113,3 +113,15 @@ disallow_any_generics = false
 disallow_untyped_calls = true
 disallow_incomplete_defs = true
 disallow_untyped_defs = true
+
+[dependency-groups]
+dev = [
+    "pre-commit",
+    "mypy",
+    "sphinx<9",
+    "myst_parser",
+    "furo",
+    "sphinx_copybutton",
+    "sphinx_reredirects",
+    "sphinx-argparse",
+]

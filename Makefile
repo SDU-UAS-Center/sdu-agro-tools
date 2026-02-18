@@ -163,6 +163,19 @@ deploy: compile compile-ui doc transcompile
 	$(foreach EXTRA_DIR,$(EXTRA_DIRS), cp -R $(EXTRA_DIR) $(HOME)/$(QGISDIR)/python/plugins/$(PLUGINNAME)/;)
 
 
+mock-deploy: compile compile-ui doc transcompile
+	@echo
+	@echo "------------------------------------------"
+	@echo "Deploying plugin to temp directory."
+	@echo "------------------------------------------"
+	rm -fr $(CURDIR)/temp/$(PLUGINNAME)
+	mkdir -p $(CURDIR)/temp/$(PLUGINNAME)
+	cp -vf $(PY_FILES) $(CURDIR)/temp/$(PLUGINNAME)
+	cp -vf $(COMPILED_RESOURCE_FILES) $(CURDIR)/temp/$(PLUGINNAME)
+	cp -vf $(EXTRAS) $(CURDIR)/temp/$(PLUGINNAME)
+	cp -vfr i18n $(CURDIR)/temp/$(PLUGINNAME)
+	$(foreach EXTRA_DIR,$(EXTRA_DIRS), cp -R $(EXTRA_DIR) $(CURDIR)/temp/$(PLUGINNAME)/;)
+
 # The dclean target removes compiled python files from plugin directory
 # also deletes any .git entry
 dclean:
@@ -191,7 +204,15 @@ zip: deploy dclean
 	rm -f $(PLUGINNAME).zip
 	cd $(HOME)/$(QGISDIR)/python/plugins; zip -9r $(CURDIR)/$(PLUGINNAME).zip $(PLUGINNAME)
 
-package: compile
+package: mock-deploy
+	@echo
+	@echo "---------------------------"
+	@echo "Creating plugin package."
+	@echo "---------------------------"
+	rm -f $(PLUGINNAME).zip
+	cd $(CURDIR)/temp; zip -9r $(CURDIR)/$(PLUGINNAME).zip $(PLUGINNAME)
+
+package-from-git: compile
 	# Create a zip package of the plugin named $(PLUGINNAME).zip.
 	# This requires use of git (your plugin development directory must be a
 	# git repository).

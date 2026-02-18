@@ -64,3 +64,4 @@ resources_rc.py
 *_ui.py
 # zip packages
 *.zip
+temp/
