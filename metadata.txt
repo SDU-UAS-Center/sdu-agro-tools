@@ -6,7 +6,7 @@
 name=SDU Agro Tools
 qgisMinimumVersion=3.0
 description=Precision agriculture application. This plug-in segments the raster layer based on a color distribution calculated from a shape file or a cropped image over the raster layer. (In development)
-version=0.1
+version=0.1.1
 author=Syddansk Universitet
 email=aqu@mmmi.sdu.dk
 
