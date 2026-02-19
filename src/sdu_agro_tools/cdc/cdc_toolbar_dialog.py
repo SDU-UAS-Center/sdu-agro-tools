@@ -20,8 +20,8 @@ from qgis.PyQt.QtCore import QUrl
 from qgis.PyQt.QtGui import QDesktopServices, QPixmap
 from qgis.PyQt.QtWidgets import QFileDialog, QMessageBox
 
+from ..utils.task_progress_bar import TaskProgressBarDialog
 from .cdc_toolbar_dialog_ui import Ui_CDCToolbarDialog
-from .task_progress_bar import TaskProgressBarDialog
 
 
 class CDCToolbarDialog(QtWidgets.QDialog, Ui_CDCToolbarDialog):  # type: ignore[misc]

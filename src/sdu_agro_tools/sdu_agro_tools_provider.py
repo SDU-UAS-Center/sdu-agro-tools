@@ -4,8 +4,8 @@ import os
 from qgis.core import QgsProcessingProvider
 from qgis.PyQt.QtGui import QIcon
 
-from .cdc_algorithm import CDCAlgorithm
-from .crop_row_algorithm import CropRowAlgorithm
+from .cdc.cdc_algorithm import CDCAlgorithm
+from .crop_row_detector.crop_row_algorithm import CropRowAlgorithm
 
 
 class SDUAgroToolsProvider(QgsProcessingProvider):  # type: ignore[misc]

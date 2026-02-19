@@ -7,10 +7,10 @@ from qgis.PyQt.QtCore import QCoreApplication, QSettings, Qt, QTranslator, QUrl
 from qgis.PyQt.QtGui import QDesktopServices, QIcon
 from qgis.PyQt.QtWidgets import QAction, QMenu, QToolButton
 
-from .cdc_algorithm import CDCAlgorithm
-from .cdc_toolbar_dialog import CDCToolbarDialog
-from .crop_row_algorithm import CropRowAlgorithm
-from .crop_row_toolbar_dialog import CropRowToolbarDialog
+from .cdc.cdc_algorithm import CDCAlgorithm
+from .cdc.cdc_toolbar_dialog import CDCToolbarDialog
+from .crop_row_detector.crop_row_algorithm import CropRowAlgorithm
+from .crop_row_detector.crop_row_toolbar_dialog import CropRowToolbarDialog
 from .sdu_agro_tools_provider import SDUAgroToolsProvider
 
 

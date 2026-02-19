@@ -20,8 +20,8 @@ from qgis.PyQt.QtCore import QUrl
 from qgis.PyQt.QtGui import QDesktopServices, QPixmap
 from qgis.PyQt.QtWidgets import QFileDialog, QMessageBox
 
+from ..utils.task_progress_bar import TaskProgressBarDialog
 from .crop_row_toolbar_dialog_ui import Ui_CropRowToolbarDialog
-from .task_progress_bar import TaskProgressBarDialog
 
 
 class CropRowToolbarDialog(QtWidgets.QDialog, Ui_CropRowToolbarDialog):  # type: ignore[misc]
