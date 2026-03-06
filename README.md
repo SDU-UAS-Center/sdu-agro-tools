@@ -2,83 +2,38 @@
 
 ## Description
 
-Precision agriculture application. This plug-in segments the raster layer based on a color distribution calculated from a shape file or a cropped image over the raster layer. (In development)
+SDU Agro Tools is a collection of tools for agricultural use on large orthomosaics neatly packaged as a QGIS plugin.
 
-## Installation Instructions Windows
+## Installation
 
-Follow these steps to load and activate the plugin in QGIS:
+Download the latest release from [github releases](https://github.com/SDU-UAS-Center/sdu-agro-tools/releases) as a ZIP file.
 
-### 0. Install PyQt and Qt Designer
+In QGIS under the plugin menu - "manage and install plugins" select "install from ZIP"
 
-Download and install the necessary dependencies for PyQt5 and Qt Designer. This is usually done when you install QGIS, but make sure these components are available.
+Select the ZIP file and click install.
 
-### 1. Locate the QGIS Plugin Directory
+When installing it will install another plugin called "qpip" that will manage python dependencies.
 
-- Open QGIS.
-- Navigate to **Settings > User Profiles > Open Active Profile Folder**.
-- This will open the directory where QGIS stores your active profile and plugins.
+Qpip will open a new window and ask for installing python dependencies. Clicking "OK" will install the necessary dependencies.
 
-### 2. Add the Plugin Folder
+See [documentation](https://sdu-uas-center.github.io/sdu-agro-tools/) for other installation methods.
 
-- Clone the plugin repository or copy the plugin folder to the `python/plugins` directory found inside the profile folder from Step 1.
-- If needed change the name of the folder to 'agrotool_colorsegmenter' to ensure compatibility.
-- Make sure to restart QGIS after copying the plugin folder to ensure it is detected.
+## Usage
 
-### 3. Compile the GUI .ui File
+How to guides for using the different tools can be found here [How-To](https://sdu-uas-center.github.io/sdu-agro-tools/).
 
-- Locate the `compile.bat` file in the plugin directory.
-- Open the `compile.bat` file in a text editor and update the paths to match your QGIS installation location. It should look something like this:
+## Documentation
 
-  ```bat
-  @echo off
-  call "C:\Path\To\QGIS\bin\o4w_env.bat"
-  call "C:\Path\To\QGIS\bin\qt5_env.bat"
-  call "C:\Path\To\QGIS\bin\py3_env.bat"
+Further documentation can be found at [documentation](https://sdu-uas-center.github.io/sdu-agro-tools/).
 
-  @echo on
-  pyrcc5 -o resources.py resources.qrc
-  ```
+## Contributing
 
-Replacing `C:\Path\To\QGIS` with the actual QGIS installation directory on your machine.
+For contribution guidelines, please see the [Documentation](https://sdu-uas-center.github.io/sdu-agro-tools/contributing.html).
 
-- Double-click the `compile.bat` file. This will run the necessary commands to **generate the `resources.py` file** from the `resources.qrc` file, which is required for the plugin to work.
+## License
 
-## Installation Instructions Linux
+The software is licensed under the BSD-3-Clause license, see [License](LICENSE).
 
-- First make sure QGIS is installed and clone the repository to a directory of your choice.
+## Acknowledgement
 
-- Sphinx is needed and must be installed. this is best done in a virtual environment:
-
-```sh
-python -m venv venv
-source ./venv/bin/activate
-pip install sphinx
-```
-
-- Check that the QGISDIR variable in the makefile references the correct folder for the QGIS installation. The default linux install directory is used but it may differ depending on the QGIS installation.
-
-- Run make deploy to compile GUI files and copy the needed files into the QGIS plugin directory. With the virtual environment sourced.
-
-```sh
-make deploy
-```
-
-If updating user interface in Qt Designer running `make compile-ui` will update the corresponding python files which is used to import the dialogs and will give autocomplete i editor.
-
-## Access the Plugin Manager
-
-- Open a new instance of QGIS.
-- In QGIS, go to **Plugins > Manage and Install Plugins...**.
-- Look for the plugin named **"SDU Agro Tools"** in the list of available plugins.
-- Click **Install Plugin** or **Enable Plugin**.
-- If this gives an error, it is most likely because of missing python dependencies. This can be solved by installing the QPIP plugin.
-  - Install QPIP plugin
-  - If a popup does not appear try to disable and enable the **"SDU Agro Tools"** plugin.
-  - In the popup allow it to install the needed python dependencies.
-
-## Use the Plugin
-
-- After activation, look for the **SDU Agro Tools** icon in the toolbar. The icon will display the SDU logo.
-- Click on the icon to open the plugin's GUI.
-
-For questions or support, please contact aqu@mmmi.sdu.dk.
+SDU Agro Tools was developed by SDU UAS Center as part of the project Præcisionsfrøavl, that was supported by the [Green Development and Demonstration Programme (GUDP)](https://gudp.lbst.dk/) and [Frøafgiftsfonden](https://froeafgiftsfonden.dk/) both from Denmark.
