@@ -1,10 +1,30 @@
-.. AgroTool_ColorSegmenter documentation master file, created by
-   sphinx-quickstart on Sun Feb 12 17:11:03 2012.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+SDU Agro Tools
+==============
 
-Welcome to AgroTool_ColorSegmenter's documentation!
-=======================================================
+SDU Agro Tools is a collection of tools for agricultural use on large orthomosaics neatly packaged as a QGIS plugin.
+
+Installation
+------------
+
+Download the latest release from `github releases <https://github.com/SDU-UAS-Center/sdu-agro-tools/releases>`_ as a ZIP file.
+
+In QGIS under the plugin menu - *Manage and install plugins* select *install from ZIP*.
+
+Select the ZIP file and click install.
+
+When installing it will install another plugin called *qpip* that will manage python dependencies.
+
+*Qpip* will open a new window and ask for installing python dependencies. Clicking *OK* will install the necessary dependencies.
+
+See :doc:`Installation <installation>` for other installation methods.
+
+Acknowledgement
+---------------
+
+*SDU Agro Tools* was developed by SDU UAS Center as part of the project *Præcisionsfrøavl*, that was supported by the `Green Development and Demonstration Programme (GUDP) <https://gudp.lbst.dk/>`_ and `Frøafgiftsfonden <https://froeafgiftsfonden.dk/>`_ both from Denmark.
+
+Index
+-----
 
 Contents:
 
@@ -12,11 +32,11 @@ Contents:
    :maxdepth: 2
 
    installation
-   tutorial_guides
-   how_to_create_dataset
-   how_to_guide
-   background
+   tutorials_guides
    references
+   notes
+   background
+   contributing
 
 Indices and tables
 ==================
@@ -24,5 +44,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
-.. Run with make html in ubuntu
