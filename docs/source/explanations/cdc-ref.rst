@@ -20,7 +20,7 @@ To use the plugin, you must provide two input elements:
 
 To choose between these reference types, select the corresponding tag in the plugin menu.
 
-.. figure:: _static/how_to/ReferenceSelector.png
+.. figure:: ../_static/how_to/ReferenceSelector.png
 
 How to Load Files
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -38,7 +38,7 @@ For each input, you can either:
 * Use the **drop-down menu** |drop-down-icon| to chose compatible files from the current QGIS project.
 * Click the |three-dot-icon| button to browse local files.
 
-.. figure:: _static/how_to/LoadInputOptions.png
+.. figure:: ../_static/how_to/LoadInputOptions.png
 
 **Heads-up:**  If no files appear in the drop-down menu:
 
@@ -66,7 +66,7 @@ Save Output File
 
 Click the |three-dot-icon| button next to the :guilabel:`Output segmented orthomosaic` label to open a file browser. Select the destination folder and filename; the chosen path will appear in the adjacent text box.
 
-.. figure:: _static/how_to/OutputOptions.png
+.. figure:: ../_static/how_to/OutputOptions.png
 
 Saving options
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -100,7 +100,7 @@ Calculate Color Distance from Shape File
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 You can define the :ref:`Color Distribution <color_distribution>` using a ShapeFile by selecting the :guilabel:`Shape File` tab in the :guilabel:`Color Distribution Reference` section:
 
-.. figure:: _static/how_to/ShapeFileSelector.png
+.. figure:: ../_static/how_to/ShapeFileSelector.png
 
 This is the most straightforward method for generating a color reference.
 If you need to create a shapefile, refer to: :ref:`How to Create Shape File <shapefile>`.
@@ -108,7 +108,7 @@ If you need to create a shapefile, refer to: :ref:`How to Create Shape File <sha
 The **Shape File** should be a QGIS vector layer containing a polygon.
 All pixels from the input raster layer that fall within this polygon will be used to compute the color distribution.
 
-.. figure:: _static/how_to/ShapeFile.png
+.. figure:: ../_static/how_to/ShapeFile.png
 
 If you're unsure how to load the shapefile, see: :ref:`Load Input Image <load_files>`.
 The :guilabel:`Shape File` dropdown menu |drop-down-icon| will display only files with the ``.shp`` extension.
@@ -122,7 +122,7 @@ Calculate Color Distance from Images
 
 You can define the :ref:`Color Distribution <color_distribution>` using image input by selecting the :guilabel:`Image` tab in the **Color Distribution Reference** section:
 
-.. figure:: _static/how_to/ImageColorReference.png
+.. figure:: ../_static/how_to/ImageColorReference.png
 
 This method requires two perfectly aligned images:
 
@@ -138,14 +138,14 @@ The color distribution is calculated based on the **Reference Image**, using onl
 
     <div style="display: flex; gap: 10px; justify-content: center;">
         <div style="flex: 1; display: flex; justify-content: center;">
-            <div style="width: 70%; text-align: center;">
-                <img src="_static/example_pumpkins/crop_from_orthomosaic.png" alt="Original crop" style="width: 100%;">
+            <div style="width: 100%; text-align: center;">
+                <img src="../_static/example_pumpkins/crop_from_orthomosaic.png" alt="Original crop" style="width: 100%;">
                 <p><code>Reference Image</code></p>
             </div>
         </div>
         <div style="flex: 1; display: flex; justify-content: center;">
-            <div style="width: 70%; text-align: center;">
-                <img src="_static/example_pumpkins/crop_from_orthomosaic_annotated.png" alt="Annotated crop" style="width: 100%;">
+            <div style="width: 100%; text-align: center;">
+                <img src="../_static/example_pumpkins/crop_from_orthomosaic_annotated.png" alt="Annotated crop" style="width: 100%;">
                 <p><code>Pixel Mask</code></p>
             </div>
         </div>
@@ -183,7 +183,7 @@ If you want to explore underlying principles, see the :ref:`background section o
 Mahalanobis is the **default metric** used by the plugin as it is the most direct and computationally efficient way to compute color distance.
 To apply it, ensure that :guilabel:`Mahalanobis` is selected in the :guilabel:`Metric` dropdown menu |drop-down-icon| within the :guilabel:`Color Distance Metric` section:
 
-.. figure:: _static/how_to/MahalanobisSelection.png
+.. figure:: ../_static/how_to/MahalanobisSelection.png
 
 It is possible to restrict the computation to specific color bands by modifying the checkboxes in the :guilabel:`Band to Use` setting.
 In this case, the Mahalanobis distance will be computed using only the selected channels. To learn how to adjust these settings, refer to :ref:`Select Color Bands <bands_to_use>`.
@@ -202,7 +202,7 @@ To understand how GMM works and how pixel distances are calculated, refer to the
 
 To use the GMM metric, select :guilabel:`Gaussian Mixture Model` from the :guilabel:`Metric` dropdown menu |drop-down-icon| within the :guilabel:`Color Distance Metric` section:
 
-.. figure:: _static/how_to/GMMSelection.png
+.. figure:: ../_static/how_to/GMMSelection.png
 
 Selecting this metric will enable the option :guilabel:`Number of Components`, which allows you to specify the number of Gaussian components to use (default is 2).
 Increasing the number of components may improve the approximation of complex color distributions, but it will also increase computation time.
@@ -232,7 +232,7 @@ Bands that are not selected are excluded from the statistical distribution, mean
 In the :guilabel:`Band to Use` section, the **checkboxes** for the red (R), green (G), and blue (B) bands are selected by default, as shown in the image below.
 Unchecking a band excludes it from the calculation.
 
-.. figure:: _static/how_to/BandSelector.png
+.. figure:: ../_static/how_to/BandSelector.png
 
 This feature allows you to tailor the color distance computation to your specific application.
 For example, exclude the blue channel for better contrast in vegetation analysis or focus only on the red channel to highlight areas with high reflectance in thermal imaging.
@@ -253,7 +253,7 @@ This behavior is enabled when the :guilabel:`Tiles processing` checkbox is selec
 If disabled, the raster layer is processed as a **single tile**, which means the entire image is analyzed sequentially pixel by pixel.
 This single-tile approach can be useful for small orthomosaic.
 
-.. figure:: _static/how_to/TilesProcessing.png
+.. figure:: ../_static/how_to/TilesProcessing.png
 
 When multi-tile processing is active, you can configure the **tile size** to control how the raster is split.
 Additionally, you can choose to **save intermediate results** for each tile, such as the original cropped image and the corresponding color distance image.
@@ -261,7 +261,7 @@ These output options are only available when tile-based processing is enabled.
 
 .. |arrows-icon| raw:: html
 
-    <img src="_static/icon/icon_arrows.png" style="height:1.2em; vertical-align:middle;" alt="Three dots icon">
+    <img src="../_static/icon/icon_arrows.png" style="height:1.2em; vertical-align:middle;" alt="Three dots icon">
 
 
 Select the Tile Dimensions
@@ -273,7 +273,7 @@ These dimensions determine how the raster is split and directly impact the **num
 To adjust the tile size, use the |arrows-icon| in the :guilabel:`Tiles width` and :guilabel:`Tiles height` fields, or enter the desired values manually in the corresponding text boxes.
 The default tile size is **300 × 300 pixels**.
 
-.. figure:: _static/how_to/TileSize.png
+.. figure:: ../_static/how_to/TileSize.png
 
 .. _save-tiles-images:
 
@@ -291,7 +291,7 @@ To enable it, check the following options:
 - :guilabel:`Save tile images` — to save the cropped sections of the orthomosaic.
 - :guilabel:`Save tile distance images` — to save the corresponding distance results.
 
-.. figure:: _static/how_to/SaveTiles.png
+.. figure:: ../_static/how_to/SaveTiles.png
 
 Once one or both options are enabled, the plugin requires a directory path where the images will be saved.
 Specify this by clicking the |three-dot-icon| button next to :guilabel:`Save directory`.
@@ -302,14 +302,14 @@ The tile image output should look like this:
 
     <div style="display: flex; gap: 10px; justify-content: center;">
         <div style="flex: 1; display: flex; justify-content: center;">
-            <div style="width: 70%; text-align: center;">
-                <img src="_static/example_pumpkins/tile.png" alt="Tile Image" style="width: 100%;">
+            <div style="width: 100%; text-align: center;">
+                <img src="../_static/example_pumpkins/tile.png" alt="Tile Image" style="width: 100%;">
                 <p><code>Reference Image</code></p>
             </div>
         </div>
         <div style="flex: 1; display: flex; justify-content: center;">
-            <div style="width: 70%; text-align: center;">
-                <img src="_static/example_pumpkins/tile_distance.png" alt="Tile distance image" style="width: 100%;">
+            <div style="width: 100%; text-align: center;">
+                <img src="../_static/example_pumpkins/tile_distance.png" alt="Tile distance image" style="width: 100%;">
                 <p><code>Distance Image</code></p>
             </div>
         </div>
@@ -322,19 +322,19 @@ Start and Cancel Processing
 
 .. |ok-icon| raw:: html
 
-    <img src="_static/icon/ok_icon.png" style="height:1.2em; vertical-align:middle;" alt="OK icon">
+    <img src="../_static/icon/ok_icon.png" style="height:1.2em; vertical-align:middle;" alt="OK icon">
 
 .. |cancel-icon| raw:: html
 
-    <img src="_static/icon/Cancel_button.png" style="height:1.2em; vertical-align:middle;" alt="Cancel icon">
+    <img src="../_static/icon/Cancel_button.png" style="height:1.2em; vertical-align:middle;" alt="Cancel icon">
 
 Once you have configured all plugin parameters, start the process by clicking the |ok-icon| button.
 
-If there is an issue with the input configureation, an error message will appear. Refer to the relevant sections of this documentation to resolve the specific error described.
+If there is an issue with the input configuration, an error message will appear. Refer to the relevant sections of this documentation to resolve the specific error described.
 
 If everything is correct, the plugin will begin execution. A progress bar like the one shown below will indicate the current status of the operation:
 
-.. figure:: _static/how_to/ProgressBar.png
+.. figure:: ../_static/how_to/ProgressBar.png
    :align: center
 
 You can **cancel the operation at any time** during processing by clicking the |cancel-icon| button in the progress bar window. The plugin will take a moment to stop execution and attempt to clean up intermediate data.
