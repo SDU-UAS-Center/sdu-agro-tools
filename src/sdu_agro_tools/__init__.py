@@ -1,11 +1,13 @@
-import toml
+from pathlib import Path
+
 from qgis.gui import QgisInterface
 
 from .sdu_agro_tools import SDUAgroTools
 
 # Current version
 version = None
-with open("../../src/sdu_agro_tools/metadata.txt") as f:
+metadata_file = Path(__file__).parent / "metadata.txt"
+with open(metadata_file) as f:
     for line in f.readlines():
         if line.startswith("version="):
             version = line.split("=")[-1]
