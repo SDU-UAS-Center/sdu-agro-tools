@@ -21,7 +21,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: qgis-package
-          path: SDU_Agro_Tools.zip
+          path: src/sdu_agro_tools/SDU_Agro_Tools.zip
   github-release:
     name: Make github release and upload package
     needs:
