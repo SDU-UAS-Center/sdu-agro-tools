@@ -16,7 +16,7 @@ jobs:
       - name: Install the project
         run: uv sync --all-extras --dev
       - name: Package project
-        run: uv run make package
+        run: uv run make -C src/sdu_agro_tools/ package
       - name: Store the QGIS package
         uses: actions/upload-artifact@v7
         with:
