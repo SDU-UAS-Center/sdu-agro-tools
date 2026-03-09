@@ -173,7 +173,9 @@ class CropRowToolbarDialog(QtWidgets.QDialog, Ui_CropRowToolbarDialog):  # type:
         self.reject()
 
     def on_help(self) -> None:
-        QDesktopServices.openUrl(QUrl("https://google.com"))  # todo change to documentation
+        QDesktopServices.openUrl(
+            QUrl("https://sdu-uas-center.github.io/sdu-agro-tools/")
+        )  # todo change to documentation
 
 
 class CropRowToolbarTask(QgsTask):  # type: ignore[misc]

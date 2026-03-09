@@ -69,7 +69,7 @@ class SDUAgroTools:
         QgsApplication.processingRegistry().removeProvider(self.provider)
 
     def open_help(self) -> None:
-        QDesktopServices.openUrl(QUrl("https://google.com"))  # todo add link to docs
+        QDesktopServices.openUrl(QUrl("https://sdu-uas-center.github.io/sdu-agro-tools/"))  # todo add link to docs
 
     def run_cdc(self) -> None:
         """Run method that performs all the real work"""
