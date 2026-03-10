@@ -1,6 +1,8 @@
 Notes
 =====
 
+This is a collection of notes collected during development.
+
 Color Distance Calculator
 -------------------------
 
