@@ -1,10 +1,8 @@
-.. _background:
-
 Background
 ============================================
 
 
-.. _color_distribution:
+.. _cdc-color-distribution:
 
 Color Distribution
 ---------------------------------------------------
@@ -30,7 +28,7 @@ This allows the identification of pixels belonging to the target element to be s
 
 
 
-.. _mahalanobis_distance:
+.. _cdc-mahalanobis-distance:
 
 Mahalanobis distance
 ---------------------------------------------------
@@ -60,7 +58,7 @@ For a more detailed theoretical explanation, refer to the `Mahalanobis distance 
 To explore the specific implementation used in this plugin, consult the `CDC documentation <https://henrikmidtiby.github.io/CDC/notes/calculate_dist.html#calculating-distance-to-the-color-model-using-mahalanobis>`_.
 
 
-.. _gmm_distance:
+.. _cdc-gmm-distance:
 
 GMM distance
 ---------------------------------------------------
