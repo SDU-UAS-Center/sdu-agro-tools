@@ -1,6 +1,6 @@
 # This file contains metadata for your plugin.
-
-# This file should be included when you package your plugin.# Mandatory items:
+# This file should be included when you package your plugin.
+# Mandatory items:
 
 [general]
 name=SDU Agro Tools
@@ -15,6 +15,7 @@ about=Precision agriculture application. This plug-in segments the raster layer 
 
 tracker=https://github.com/SDU-UAS-Center/sdu-agro-tools/issues
 repository=https://github.com/SDU-UAS-Center/sdu-agro-tools
+
 # End of mandatory metadata
 
 # Recommended items:
@@ -40,11 +41,5 @@ deprecated=False
 # Check the documentation for more information.
 plugin_dependencies=qpip
 
-Category of the plugin: Raster, Vector, Database or Web
-# category=Raster
-
 # If the plugin can run on QGIS Server.
 server=False
-
-# Requirements
-requires:
