@@ -34,9 +34,9 @@ Contents:
    installation
    tutorials_guides
    references
-   notes
    background
    contributing
+   notes
 
 Indices and tables
 ==================
