@@ -37,7 +37,7 @@ class SDUAgroToolsProvider(QgsProcessingProvider):  # type: ignore[misc]
         string should be a unique, short, character only string, eg "qgis" or
         "gdal". This string should not be localized.
         """
-        return "SDU"
+        return "SDU Agro Tools"
 
     def name(self) -> str:
         """
@@ -46,7 +46,7 @@ class SDUAgroToolsProvider(QgsProcessingProvider):  # type: ignore[misc]
 
         This string should be short (e.g. "Lastools") and localized.
         """
-        return self.tr("SDU")  # type: ignore[no-any-return]
+        return self.tr("SDU Agro Tools")  # type: ignore[no-any-return]
 
     def icon(self) -> QIcon:
         """
