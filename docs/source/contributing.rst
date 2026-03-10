@@ -19,14 +19,25 @@ Install pre-commit hooks
 
 You are now ready to contribute.
 
-Generating Documentation
-------------------------
+Apply changes to local QGIS plugin
+----------------------------------
 
-To generate this documentation, in the *docs* folder run:
+First install plugin from source by running the make file in src/sdu_agro_tools:
 
 .. code-block:: shell
 
-    uv run make html
+    uv run make -C src/sdu_agro_tools/ deploy
+
+This will copy the code into the QGIS plugin folder.
+
+Generating Documentation
+------------------------
+
+To generate this documentation run:
+
+.. code-block:: shell
+
+    uv run make -C docs/ clean html
 
 This will generate html documentation in the *docs/build/html* folder.
 
