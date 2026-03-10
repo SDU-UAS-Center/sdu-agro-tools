@@ -1,22 +1,16 @@
-Create dataset guide
-====================
+Create dataset for CDC
+======================
 
-*QGIS AgrooTool Color Segmenter* needs a source of data to calculate the :ref:`Color Distribution <color_distribution>`, whether:
+To calculate the distance to a given color distribution a set of reference colors is needed. This guide will show how to annotate a small section of a larger orthomosaic to use as input for CDC (Color Distance Calculator).
 
-- **Shape File**: Define a region on the input orthomosaic which contain the pixel to be used as reference.
+CDC can extract reference color values from two methods, either from a Vector Layer with polygon annotations or from a set og images, one reference and one with annotations.
 
-- **Reference image** and **Pixel Mask**: A section of the input orthomsaic where the reference pixels are annotated. This options requires two files.
+This guide assumes we have an orthomosaic with the name ``ortho.tif``. We will work on an example dataset with pumpkins which can be downloaded from `zenodo.org <https://zenodo.org/records/8254412>`_.
 
-In this guide we will show how to define a shape file or extract a section of a orthomosaic and how to annotate the section.
+From Vector Layer
+-----------------
 
-This guide assumes we have an orthomosaic with the name ``ortho.tif``. We will work on the pumpkins segmentation example from the :ref:`Tutorial <tutorial>`.
-
-.. _shapefile:
-
-Shape File
-----------------
-In this section, we explain how to create a **QGIS Shape File** created with polygon type. with polygon geometry. This is a vector file format that stores the geometries of closed areas (polygons). The pixel from ``ortho.tif`` within the shapefile are used to calculate the :ref:`Color Distribution <color_distribution>` used for the distance calculation.
-
+In this section, we explain how to create a **QGIS Vector Layer** with polygons for annotation. The pixel from ``ortho.tif`` within the polygons are used to calculate the :ref:`Color Distribution <color_distribution>` used for the color distance calculation.
 
 1. **Open your QGIS project** with the input raster file ``ortho.tif``.
 
@@ -62,19 +56,15 @@ We now have all we need to :ref:`Calculate Color Distance from Shape File <calcu
 - The orthomosaic ``ortho.tif``.
 - ShapeFile ``shape_file.shp``.
 
+From Reference Image
+--------------------
 
-
-.. _ref_image:
-
-Image
----------------------
-
-It is possible to define a color reference directly from an image. In this section, we explain how to create a :guilabel:`Reference Image` as a **cropped orthomosaic**, along with a corresponding :guilabel:`Pixel Mask`.
+It is possible to define a color reference directly from an image. In this section, we explain how to create a :guilabel:`Reference Image` as a crop from the larger orthomosaic, along with a corresponding :guilabel:`Pixel Mask`.
 
 The :guilabel:`Pixel Mask` determines which pixels from the :guilabel:`Reference Image` will be used to compute the :ref:`Color Distribution <color_distribution>`. These two files must be perfectly aligned, meaning they must have identical dimensions and pixel arrangements.
 
 Crop orthomosaic
-~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~
 
 To extract a specific area from the orthomosaic, we will use the `GDAL <https://gdal.org/en/stable/index.html>`_ tools integrated into the QGIS framework.
 
@@ -101,25 +91,14 @@ To extract a specific area from the orthomosaic, we will use the `GDAL <https://
 
 4. Scroll down to the :guilabel:`Clipped (mask)` section, click the |three-dot-icon| button, and select ``Save to File...``.
    Choose a location and filename for the reference image — in this tutorial, we’ll save it as ``ref_image.tif``.
-   You may also save the reference image as a ``.jpg`` or ``.jpeg``; these are the only three formats supported by the plugin.
-   Click :guilabel:`Run`. The reference image will be added to your current project. The result should look similar to this:
+   Click :guilabel:`Run`. The reference image will be added to your current project. It is important to save the reference image as a ``.tif`` as to preserve the colors. The result should look similar to this:
 
 .. figure:: ../_static/how_to/CropRefImage.png
 
+Pixel Mask Annotation
+~~~~~~~~~~~~~~~~~~~~~
 
-Regarding the color format of the reference image:
- - If saved as a ``.tif`` file, it will retain the original color bands from the input orthomosaic ``ortho.tif``, typically in **RGBA** format.
- - If saved as a ``.jpg`` or ``.jpeg``, the alpha channel (**A**) will be discarded, resulting in an **RGB** image.
-
-If the source raster layer is not in RGBA format, the cropping process will still apply successfully, and the reference image will preserve the same color characteristics as the original layer.
-
-
-
-
-Mask Annotation
-~~~~~~~~~~~~~~~~~~~~~~
-
-Now we proceed to mark over the reference image the desired pixeles to use for the :ref:`Reference Color Distribution <color_distribution>`.
+Now we proceed to mark over the reference image the desired pixels to use for the :ref:`Reference Color Distribution <color_distribution>`.
 
 To annotate the mask we will use `GIMP <https://www.gimp.org/>`_, but another image manipulations software can also be used.
 
@@ -133,8 +112,9 @@ To annotate the mask we will use `GIMP <https://www.gimp.org/>`_, but another im
 
 .. figure:: ../_static/how_to/CropMask.png
 
+5. Export the image ``File ► Export as``. We save the pixel mask as ``mask.tiff``.
 
-5. Export the image ``File ► Export as``. We save the annotated mas as ``mask.tiff``.
+The pixel mask can also be a black and white image with white as the annotation.
 
 We now have all we need to :ref:`Calculate Color Distance from Images <calculate-color-distribution-image>`:
 
