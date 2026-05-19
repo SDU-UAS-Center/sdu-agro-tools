@@ -1,6 +1,8 @@
 CDC Reference
 =============
 
+This is a reference manual for CDC (Color Distance Calculator), where all parameters and options are explained in more details.
+
 .. _cdc-load-files:
 
 Load Input Files

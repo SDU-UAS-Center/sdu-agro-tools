@@ -1,11 +1,11 @@
 CDC - Color Distance Calculator
 ===============================
 
-This tutorial will walk you on how to use the color distance calculator with a real example.
+This tutorial will walk you though how to use the **color distance calculator** with a real example.
 
 If *SDU Agro Tools* is not already installed, see :doc:`../installation`.
 
-We will processed an orthomosaic to segment pumpkins in a crop field.  At the end of this tutorial, you may expect your result orthomosaic to look like this:
+We will processed an orthomosaic to segment pumpkins in a crop field.  At the end of this tutorial, you may expect your resulting orthomosaic to look like this:
 
 .. figure:: ../_static/example_pumpkins/color_distance_crop.png
 
