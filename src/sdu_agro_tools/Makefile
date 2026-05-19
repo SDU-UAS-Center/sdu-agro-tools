@@ -68,7 +68,7 @@ compile-ui: $(UI_FILES)
 %.py : %.qrc $(RESOURCES_SRC)
 	pyrcc5 -o $*.py  $<
 
-deploy: compile compile-ui
+deploy: compile
 	@echo
 	@echo "------------------------------------------"
 	@echo "Deploying plugin to your qgis directory."
@@ -84,7 +84,7 @@ deploy: compile compile-ui
 	$(foreach EXTRA_DIR,$(EXTRA_DIRS), cp -R $(EXTRA_DIR) $(HOME)/$(QGISDIR)/python/plugins/$(PLUGINNAME)/;)
 
 
-mock-deploy: compile compile-ui
+mock-deploy: compile
 	@echo
 	@echo "------------------------------------------"
 	@echo "Deploying plugin to temp directory."

@@ -15,16 +15,17 @@ from qgis.core import (
     QgsTask,
     QgsVectorLayer,
 )
-from qgis.PyQt import QtWidgets
+from qgis.PyQt import QtWidgets, uic
 from qgis.PyQt.QtCore import QUrl
 from qgis.PyQt.QtGui import QDesktopServices, QPixmap
 from qgis.PyQt.QtWidgets import QFileDialog, QMessageBox
 
 from ..utils.task_progress_bar import TaskProgressBarDialog
-from .crop_row_toolbar_dialog_ui import Ui_CropRowToolbarDialog
+
+DIALOG_CLASS = uic.loadUiType(os.path.join(os.path.dirname(__file__), "crop_row_toolbar_dialog.ui"))[0]
 
 
-class CropRowToolbarDialog(QtWidgets.QDialog, Ui_CropRowToolbarDialog):  # type: ignore[misc]
+class CropRowToolbarDialog(QtWidgets.QDialog, DIALOG_CLASS):  # type: ignore[misc, valid-type]
     def __init__(
         self,
         alg: QgsProcessingAlgorithm,
