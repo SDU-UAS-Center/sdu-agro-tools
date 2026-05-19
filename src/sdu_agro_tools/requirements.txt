@@ -1,6 +1,6 @@
 CDC>=1.1.3
 crop-row-detector>=0.2.2
 rasterio
-numpy<2.0.0
+numpy
 pandas
 shapely
