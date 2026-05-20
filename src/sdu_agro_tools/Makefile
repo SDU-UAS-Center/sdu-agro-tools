@@ -68,7 +68,7 @@ compile-ui: $(UI_FILES)
 %.py : %.qrc $(RESOURCES_SRC)
 	pyrcc5 -o $*.py  $<
 
-deploy: compile
+deploy:
 	@echo
 	@echo "------------------------------------------"
 	@echo "Deploying plugin to your qgis directory."
@@ -78,13 +78,13 @@ deploy: compile
 	# $(HOME)/$(QGISDIR)/python/plugins
 	mkdir -p $(HOME)/$(QGISDIR)/python/plugins/$(PLUGINNAME)
 	cp -vf $(PY_FILES) $(HOME)/$(QGISDIR)/python/plugins/$(PLUGINNAME)
-	cp -vf $(COMPILED_RESOURCE_FILES) $(HOME)/$(QGISDIR)/python/plugins/$(PLUGINNAME)
+	# cp -vf $(COMPILED_RESOURCE_FILES) $(HOME)/$(QGISDIR)/python/plugins/$(PLUGINNAME)
 	cp -vf $(EXTRAS) $(HOME)/$(QGISDIR)/python/plugins/$(PLUGINNAME)
 	# Copy extra directories if any
 	$(foreach EXTRA_DIR,$(EXTRA_DIRS), cp -R $(EXTRA_DIR) $(HOME)/$(QGISDIR)/python/plugins/$(PLUGINNAME)/;)
 
 
-mock-deploy: compile
+mock-deploy:
 	@echo
 	@echo "------------------------------------------"
 	@echo "Deploying plugin to temp directory."
@@ -92,7 +92,7 @@ mock-deploy: compile
 	rm -fr $(CURDIR)/temp/$(PLUGINNAME)
 	mkdir -p $(CURDIR)/temp/$(PLUGINNAME)
 	cp -vf $(PY_FILES) $(CURDIR)/temp/$(PLUGINNAME)
-	cp -vf $(COMPILED_RESOURCE_FILES) $(CURDIR)/temp/$(PLUGINNAME)
+	# cp -vf $(COMPILED_RESOURCE_FILES) $(CURDIR)/temp/$(PLUGINNAME)
 	cp -vf $(EXTRAS) $(CURDIR)/temp/$(PLUGINNAME)
 	$(foreach EXTRA_DIR,$(EXTRA_DIRS), cp -R $(EXTRA_DIR) $(CURDIR)/temp/$(PLUGINNAME)/;)
 
