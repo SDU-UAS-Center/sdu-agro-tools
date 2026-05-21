@@ -1,4 +1,4 @@
-# SDU Agro Tools Plugin
+# SDU Agro Tools QGIS Plugin
 
 ## Description
 
@@ -32,7 +32,7 @@ For contribution guidelines, please see the [Documentation](https://sdu-uas-cent
 
 ## License
 
-The software is licensed under the BSD-3-Clause license, see [License](LICENSE).
+The software is licensed under the GPLv2-Clause license, see [License](LICENSE).
 
 ## Acknowledgement
 
