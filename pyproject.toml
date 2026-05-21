@@ -124,3 +124,8 @@ dev = [
     "sphinx_reredirects",
     "sphinx-argparse",
 ]
+security = [
+    "bandit",
+    "detect-secrets",
+    "flake8"
+]
