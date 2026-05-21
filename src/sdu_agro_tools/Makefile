@@ -19,7 +19,9 @@ EXTRAS = \
 	metadata.txt \
 	icon.png \
 	sdu_logo_hs.jpg \
-	requirements.txt
+	requirements.txt \
+	../../LICENSE \
+	../../README.md
 
 EXTRA_DIRS = \
 	cdc \
