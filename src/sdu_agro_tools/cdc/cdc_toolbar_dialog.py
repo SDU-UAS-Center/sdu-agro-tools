@@ -236,8 +236,8 @@ class CDCToolbarTask(QgsTask):  # type: ignore[misc]
         results = self.alg.runPrepared(self.params, self.context, self.feedback)
         if self.feedback.isCanceled():
             return False
-        if results["OUTPUT"].startswith("/tmp"):
-            name = "Output"
+        if self.params["OUTPUT"] == "TEMPORARY_OUTPUT":
+            name = "CDC Output"
         else:
             name = os.path.splitext(os.path.basename(results["OUTPUT"]))[0]
         output = QgsRasterLayer(results["OUTPUT"], name)

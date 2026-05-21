@@ -214,21 +214,21 @@ class CropRowToolbarTask(QgsTask):  # type: ignore[misc]
         if self.feedback.isCanceled():
             return False
         if results["OUTPUT_ORTHO"] is not None:
-            if results["OUTPUT_ORTHO"].startswith("/tmp"):
+            if self.params["OUTPUT_ORTHO"] == "TEMPORARY_OUTPUT":
                 name = "Output orthomosaic with crop rows"
             else:
                 name = os.path.splitext(os.path.basename(results["OUTPUT_ORTHO"]))[0]
             output = QgsRasterLayer(results["OUTPUT_ORTHO"], name)
             QgsProject.instance().addMapLayer(output)
         if results["OUTPUT_POINTS"] is not None:
-            if results["OUTPUT_POINTS"].startswith("/tmp"):
+            if self.params["OUTPUT_POINTS"] == "TEMPORARY_OUTPUT":
                 name = "Output crop points"
             else:
                 name = os.path.splitext(os.path.basename(results["OUTPUT_POINTS"]))[0]
             output = QgsVectorLayer(results["OUTPUT_POINTS"], name)
             QgsProject.instance().addMapLayer(output)
         if results["OUTPUT_ROWS"] is not None:
-            if results["OUTPUT_ROWS"].startswith("/tmp"):
+            if self.params["OUTPUT_ROWS"] == "TEMPORARY_OUTPUT":
                 name = "Output crop rows"
             else:
                 name = os.path.splitext(os.path.basename(results["OUTPUT_ROWS"]))[0]
