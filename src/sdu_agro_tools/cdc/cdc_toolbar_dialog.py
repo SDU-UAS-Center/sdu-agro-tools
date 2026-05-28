@@ -40,7 +40,8 @@ class CDCToolbarDialog(QtWidgets.QDialog, DIALOG_CLASS):  # type: ignore[misc, v
         self.feedback = feedback
         self.set_initial_param()
         self.connect_signals()
-        icon_path = str(Path(__file__).parent / "sdu_logo_hs.jpg")
+        icon_path = str(Path(__file__).parent.parent / "sdu_logo_hs.jpg")
+        QgsMessageLog.logMessage(f"icon_path: {icon_path}", tag="SDU Agro Tools", level=Qgis.MessageLevel.Info)
         self.logo.setPixmap(QPixmap(icon_path))
 
     def set_initial_param(self) -> None:

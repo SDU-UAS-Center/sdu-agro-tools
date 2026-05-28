@@ -40,7 +40,7 @@ class CropRowToolbarDialog(QtWidgets.QDialog, DIALOG_CLASS):  # type: ignore[mis
         self.feedback = feedback
         self.set_initial_param()
         self.connect_signals()
-        icon_path = str(Path(__file__).parent / "sdu_logo_hs.jpg")
+        icon_path = str(Path(__file__).parent.parent / "sdu_logo_hs.jpg")
         self.logo.setPixmap(QPixmap(icon_path))
 
     def set_initial_param(self) -> None:
