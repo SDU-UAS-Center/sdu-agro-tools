@@ -235,36 +235,6 @@
     </layout>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_5">
-     <item>
-      <widget class="QLabel" name="input_label_ortho">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="toolTip">
-        <string>Orthomosaic on which to draw found crop-rows.</string>
-       </property>
-       <property name="text">
-        <string>Input Orthomosaic: (optional)</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QgsMapLayerComboBox" name="input_file_ortho_map_layer_combo_box"/>
-     </item>
-     <item>
-      <widget class="QToolButton" name="input_file_ortho_button">
-       <property name="text">
-        <string>...</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
-   <item>
     <widget class="Line" name="input_ref_line">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
@@ -781,24 +751,9 @@
     </widget>
    </item>
    <item>
-    <widget class="QCheckBox" name="tile_boundary_checkbox">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="toolTip">
-      <string>Enable to draw tile boundary on the output.</string>
-     </property>
-     <property name="layoutDirection">
-      <enum>Qt::LeftToRight</enum>
-     </property>
+    <widget class="QLabel" name="output_ortho_label">
      <property name="text">
-      <string>Draw tile boundary on output orthomosaic</string>
-     </property>
-     <property name="checked">
-      <bool>false</bool>
+      <string>Save an orthomosaic with crop rows draw on:</string>
      </property>
     </widget>
    </item>
@@ -852,11 +807,11 @@
     </layout>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_11">
+    <layout class="QHBoxLayout" name="horizontalLayout_5">
      <item>
-      <widget class="QCheckBox" name="output_crop_points_checkbox">
+      <widget class="QLabel" name="input_label_ortho">
        <property name="sizePolicy">
-        <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
@@ -868,16 +823,69 @@
         </size>
        </property>
        <property name="toolTip">
-        <string>Save crops as points in pgkg format.</string>
-       </property>
-       <property name="layoutDirection">
-        <enum>Qt::LeftToRight</enum>
+        <string>Only needed if save output orthomosaic. On this orthomosaic the crop rows are drawn.</string>
        </property>
        <property name="text">
-        <string>Save output crop points</string>
+        <string>Orthomosaic to draw crop rows on: </string>
        </property>
-       <property name="checked">
-        <bool>false</bool>
+      </widget>
+     </item>
+     <item>
+      <widget class="QgsMapLayerComboBox" name="input_file_ortho_map_layer_combo_box"/>
+     </item>
+     <item>
+      <widget class="QToolButton" name="input_file_ortho_button">
+       <property name="text">
+        <string>...</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="tile_boundary_checkbox">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="toolTip">
+      <string>Enable to draw tile boundary on the output.</string>
+     </property>
+     <property name="layoutDirection">
+      <enum>Qt::LeftToRight</enum>
+     </property>
+     <property name="text">
+      <string>Draw tile boundary on output orthomosaic</string>
+     </property>
+     <property name="checked">
+      <bool>false</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="output_rows_and_point_label">
+     <property name="text">
+      <string>Save the found crop rows and points:</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_11">
+     <item>
+      <widget class="QLabel" name="output_crop_points_label">
+       <property name="minimumSize">
+        <size>
+         <width>200</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="toolTip">
+        <string>Save points in rows with vegetation</string>
+       </property>
+       <property name="text">
+        <string>Output crop points: </string>
        </property>
       </widget>
      </item>
@@ -903,13 +911,7 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_12">
      <item>
-      <widget class="QCheckBox" name="output_crop_rows_checkbox">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
+      <widget class="QLabel" name="output_crop_row_label">
        <property name="minimumSize">
         <size>
          <width>200</width>
@@ -917,16 +919,10 @@
         </size>
        </property>
        <property name="toolTip">
-        <string>Save crops rows as lines in pgkg format.</string>
-       </property>
-       <property name="layoutDirection">
-        <enum>Qt::LeftToRight</enum>
+        <string>Save crop rows from all tiles</string>
        </property>
        <property name="text">
-        <string>Save output crop rows</string>
-       </property>
-       <property name="checked">
-        <bool>false</bool>
+        <string>Output crop rows: </string>
        </property>
       </widget>
      </item>
@@ -942,49 +938,6 @@
      </item>
      <item>
       <widget class="QToolButton" name="output_crop_row_button">
-       <property name="text">
-        <string>...</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_13">
-     <item>
-      <widget class="QLabel" name="output_crop_folder_label">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="minimumSize">
-        <size>
-         <width>200</width>
-         <height>0</height>
-        </size>
-       </property>
-       <property name="toolTip">
-        <string>Output folder where all crop row information is saved as csv files.</string>
-       </property>
-       <property name="text">
-        <string>Save crop information</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLineEdit" name="output_crop_folder_line_edit">
-       <property name="placeholderText">
-        <string>Choose a folder to save csv files to</string>
-       </property>
-       <property name="clearButtonEnabled">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QToolButton" name="output_crop_folder_button">
        <property name="text">
         <string>...</string>
        </property>

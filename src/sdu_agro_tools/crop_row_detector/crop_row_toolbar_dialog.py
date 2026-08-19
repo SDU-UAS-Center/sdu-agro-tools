@@ -54,7 +54,6 @@ class CropRowToolbarDialog(QtWidgets.QDialog, DIALOG_CLASS):  # type: ignore[mis
         self.output_ortho_button.clicked.connect(self.choose_save_ortho)
         self.output_crop_points_button.clicked.connect(self.choose_save_crop_points)
         self.output_crop_row_button.clicked.connect(self.choose_save_crop_row)
-        self.output_crop_folder_button.clicked.connect(self.choose_save_folder)
         self.dialog_button_box.accepted.connect(self.on_accepted)
         self.dialog_button_box.rejected.connect(self.on_rejected)
         self.dialog_button_box.helpRequested.connect(self.on_help)
@@ -102,24 +101,6 @@ class CropRowToolbarDialog(QtWidgets.QDialog, DIALOG_CLASS):  # type: ignore[mis
                 output_file += ".gpkg"
             self.output_crop_row_line_edit.setText(output_file)
 
-    def choose_save_folder(self) -> None:
-        output_folder = QFileDialog.getExistingDirectory(self, "Select Output Folder", "")
-        if self.output_exists(output_folder):
-            QMessageBox.warning(
-                self,
-                "Output folder already contains crop information.",
-                "Output folder already contains crop information. \nCrop information will be overwritten.",
-            )
-        if output_folder:
-            self.output_crop_folder_line_edit.setText(output_folder)
-
-    def output_exists(self, output_folder: str) -> bool:
-        output_path = Path(output_folder)
-        points_path = output_path.joinpath("points_in_rows.csv")
-        row_path = output_path.joinpath("row_information.csv")
-        global_row_path = output_path.joinpath("row_information_global.csv")
-        return bool(points_path.exists() or row_path.exists() or global_row_path.exists())
-
     def on_accepted(self) -> None:
         params = {}
         params.update({"INPUT": self.input_file_cdc_map_layer_combo_box.currentLayer()})
@@ -140,16 +121,7 @@ class CropRowToolbarDialog(QtWidgets.QDialog, DIALOG_CLASS):  # type: ignore[mis
             params.update({"OUTPUT_ROWS": self.output_crop_row_line_edit.text()})
         else:
             params.update({"OUTPUT_ROWS": "TEMPORARY_OUTPUT"})
-        if self.output_crop_folder_line_edit.text():
-            params.update({"OUTPUT_FOLDER": self.output_crop_folder_line_edit.text()})
-        else:
-            QMessageBox.warning(
-                self, "Missing output folder", "Please select a folder to save crop row information to."
-            )
-            return
         params.update({"SAVE_ORTHO": self.output_ortho_checkbox.isChecked()})
-        params.update({"SAVE_CROP_POINTS": self.output_crop_points_checkbox.isChecked()})
-        params.update({"SAVE_CROP_ROWS": self.output_crop_rows_checkbox.isChecked()})
         params.update({"THRESHOLD": self.threshold_spin_box.value()})
         params.update({"VEG_THRESHOLD": self.veg_threshold_spin_box.value()})
         params.update({"CROP_ROW_DISTANCE": self.crop_row_distance_spinbox.value()})
