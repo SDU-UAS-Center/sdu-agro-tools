@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import concurrent.futures
-import inspect
-import os
 import threading
 from typing import Any
 
@@ -26,7 +24,6 @@ from qgis.core import (
     QgsProcessingParameterString,
 )
 from qgis.PyQt.QtCore import QCoreApplication
-from qgis.PyQt.QtGui import QIcon
 from rasterio.enums import Resampling
 
 
@@ -357,15 +354,10 @@ class CDCAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
         contain lowercase alphanumeric characters only and no spaces or other
         formatting characters.
         """
-        return "Raster layer tools"
+        return ""
 
     def tr(self, string: str) -> str:
         return QCoreApplication.translate("Processing", string)  # type: ignore[no-any-return]
 
     def createInstance(self) -> CDCAlgorithm:
         return CDCAlgorithm()
-
-    def icon(self) -> QIcon:
-        cmd_folder = os.path.split(inspect.getfile(inspect.currentframe()))[0]  # type: ignore[arg-type]
-        icon = QIcon(os.path.join(os.path.join(cmd_folder, "icon.png")))
-        return icon
