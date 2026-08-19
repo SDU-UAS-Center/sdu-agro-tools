@@ -3,4 +3,3 @@ crop-row-detector>=0.2.2
 rasterio
 numpy
 pandas
-shapely

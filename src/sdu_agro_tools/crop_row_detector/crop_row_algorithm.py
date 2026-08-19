@@ -1,26 +1,26 @@
 from __future__ import annotations
 
 import concurrent.futures
-import os
 import threading
+from contextlib import nullcontext
 from copy import deepcopy
 from functools import partial
-from pathlib import Path
 from typing import Any
 
 import numpy as np
-import pandas as pd
 import rasterio
 from crop_row_detector import CropRowDetector, OrthomosaicTiles, Tile
 from qgis.core import (
     Qgis,
+    QgsFeature,
+    QgsField,
+    QgsGeometry,
     QgsMessageLog,
+    QgsPoint,
     QgsProcessingAlgorithm,
     QgsProcessingContext,
     QgsProcessingFeedback,
     QgsProcessingParameterBoolean,
-    QgsProcessingParameterFeatureSource,
-    QgsProcessingParameterFolderDestination,
     QgsProcessingParameterNumber,
     QgsProcessingParameterRasterDestination,
     QgsProcessingParameterRasterLayer,
@@ -29,9 +29,8 @@ from qgis.core import (
     QgsVectorFileWriter,
     QgsVectorLayer,
 )
-from qgis.PyQt.QtCore import QCoreApplication
+from qgis.PyQt.QtCore import QCoreApplication, QMetaType
 from rasterio.enums import Resampling
-from shapely import linestrings, points
 
 
 class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
@@ -50,11 +49,8 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
 
     SAVE_ORTHO = "SAVE_ORTHO"
     OUTPUT_ORTHO = "OUTPUT_ORTHO"
-    SAVE_CROP_POINTS = "SAVE_CROP_POINTS"
     OUTPUT_POINTS = "OUTPUT_POINTS"
-    SAVE_CROP_ROWS = "SAVE_CROP_ROWS"
     OUTPUT_ROWS = "OUTPUT_ROWS"
-    OUTPUT_FOLDER = "OUTPUT_FOLDER"
     INPUT = "INPUT"
     ORTHO = "ORTHO"
     THRESHOLD = "THRESHOLD"
@@ -67,8 +63,6 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
     MIN_ANGLE = "MIN_ANGLE"
     MAX_ANGLE = "MAX_ANGLE"
     ANGLE_RESOLUTION = "ANGLE_RESOLUTION"
-    SAVE_STATS = "SAVE_STATS"
-    SAVE_STATS_LOCATION = "SAVE_STATS_LOCATION"
     USE_PROCESS_POOL = "USE_PROCESS_POOL"
 
     def initAlgorithm(self, config: dict[str, Any]) -> None:
@@ -76,16 +70,7 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
         Here we define the inputs and output of the algorithm, along
         with some other properties.
         """
-        self.ref_type_choices = ["Shape File", "Reference Images"]
-        self.color_model_choices = ["Mahalanobis", "Gaussian Mixture Model"]
-        self.transform_choices = ["No transform", "Lambda expression", "Gamma"]
-
         self.addParameter(QgsProcessingParameterRasterLayer(self.INPUT, self.tr("Input Distance orthomosaic")))
-        self.addParameter(
-            QgsProcessingParameterRasterLayer(
-                self.ORTHO, self.tr("Orthomosaic on which to draw crop rows"), optional=True
-            )
-        )
         self.addParameter(
             QgsProcessingParameterNumber(
                 self.THRESHOLD,
@@ -135,13 +120,6 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
             )
         )
         self.addParameter(
-            QgsProcessingParameterBoolean(
-                self.TILE_BOUNDARY,
-                self.tr("Draw tile boundaries on output"),
-                defaultValue=False,
-            )
-        )
-        self.addParameter(
             QgsProcessingParameterNumber(
                 self.CROP_ROW_DISTANCE,
                 self.tr("Initial gauss of distance between crop rows in cm"),
@@ -181,20 +159,6 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
             )
         )
         self.addParameter(
-            QgsProcessingParameterBoolean(
-                self.SAVE_STATS,
-                self.tr("Save statistics"),
-                defaultValue=False,
-            )
-        )
-        self.addParameter(
-            QgsProcessingParameterFeatureSource(
-                self.SAVE_STATS_LOCATION,
-                self.tr("Stats location"),
-                optional=True,
-            )
-        )
-        self.addParameter(
             QgsProcessingParameterBoolean(self.USE_PROCESS_POOL, self.tr("Use Processing Pool instead of Threads"))
         )
         self.addParameter(
@@ -205,25 +169,22 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
             )
         )
         self.addParameter(
+            QgsProcessingParameterRasterLayer(
+                self.ORTHO, self.tr("Orthomosaic on which to draw crop rows"), optional=True
+            )
+        )
+        self.addParameter(
+            QgsProcessingParameterBoolean(
+                self.TILE_BOUNDARY,
+                self.tr("Draw tile boundaries on output"),
+                defaultValue=False,
+            )
+        )
+        self.addParameter(
             QgsProcessingParameterRasterDestination(self.OUTPUT_ORTHO, self.tr("Output orthomosaic with crop rows"))
         )
-        self.addParameter(
-            QgsProcessingParameterBoolean(
-                self.SAVE_CROP_POINTS,
-                self.tr("Save output crop row points."),
-                defaultValue=False,
-            )
-        )
         self.addParameter(QgsProcessingParameterVectorDestination(self.OUTPUT_POINTS, self.tr("Output crop points")))
-        self.addParameter(
-            QgsProcessingParameterBoolean(
-                self.SAVE_CROP_ROWS,
-                self.tr("Save output crop rows."),
-                defaultValue=False,
-            )
-        )
         self.addParameter(QgsProcessingParameterVectorDestination(self.OUTPUT_ROWS, self.tr("Output crop rows")))
-        self.addParameter(QgsProcessingParameterFolderDestination(self.OUTPUT_FOLDER, self.tr("Output folder")))
 
     def prepareAlgorithm(
         self, parameters: dict[str, Any], context: QgsProcessingContext, feedback: QgsProcessingFeedback
@@ -260,27 +221,15 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
     ) -> dict[str, Any]:
         use_process_pool = self.parameterAsBoolean(parameters, self.USE_PROCESS_POOL, context)
         save_raster = self.parameterAsBoolean(parameters, self.SAVE_ORTHO, context)
-        if save_raster or not use_process_pool:
+        if save_raster:
             raster_output = self.parameterAsOutputLayer(parameters, self.OUTPUT_ORTHO, context)
         else:
             raster_output = None
-        save_points = self.parameterAsBoolean(parameters, self.SAVE_CROP_POINTS, context)
-        if save_points:
-            points_output = self.parameterAsOutputLayer(parameters, self.OUTPUT_POINTS, context)
-        else:
-            points_output = None
-        save_rows = self.parameterAsBoolean(parameters, self.SAVE_CROP_ROWS, context)
-        if save_rows:
-            rows_output = self.parameterAsOutputLayer(parameters, self.OUTPUT_ROWS, context)
-        else:
-            rows_output = None
-        output_folder = Path(self.parameterAsFileOutput(parameters, self.OUTPUT_FOLDER, context))
-        if not os.path.isdir(output_folder):
-            os.makedirs(output_folder)
+        points_output = self.parameterAsOutputLayer(parameters, self.OUTPUT_POINTS, context)
+        rows_output = self.parameterAsOutputLayer(parameters, self.OUTPUT_ROWS, context)
         self.segmented_tiler.divide_orthomosaic_into_tiles()
         self.plot_tiler.divide_orthomosaic_into_tiles()
         crd = CropRowDetector()
-        crd.output_location = output_folder
         crd.tile_boundary = self.parameterAsBool(parameters, self.TILE_BOUNDARY, context)
         crd.expected_crop_row_distance_cm = self.parameterAsDouble(parameters, self.CROP_ROW_DISTANCE, context)
         if crd.expected_crop_row_distance is None:
@@ -297,9 +246,7 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
         if use_process_pool:
             return self.run_using_processing_pools(crd, raster_output, points_output, rows_output, context, feedback)
         else:
-            return self.run_using_threads(
-                crd, save_raster, raster_output, points_output, rows_output, context, feedback
-            )
+            return self.run_using_threads(crd, raster_output, points_output, rows_output, context, feedback)
 
     def run_using_processing_pools(
         self,
@@ -312,13 +259,46 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
     ) -> dict[str, Any]:
         segmented_tiles = self.segmented_tiler.tiles
         plot_tiles = self.plot_tiler.tiles
-        crd.prepare_csv_files(overwrite=True)
         total = 100.0 / len(segmented_tiles)
         with rasterio.open(self.plot_tiler.orthomosaic) as src:
             profile = src.profile
             crs = src.crs.to_string()
             overview_factors = src.overviews(src.indexes[0])
         tiles = []
+        lines_uri = f"LineString?crs={crs}"
+        lines_layer = QgsVectorLayer(lines_uri, "temporary_lines", "memory")
+        lines_provider = lines_layer.dataProvider()
+        lines_layer.startEditing()
+        lines_provider.addAttributes(
+            [
+                QgsField("tile", QMetaType.Type.Int),
+                QgsField("x_position", QMetaType.Type.Int),
+                QgsField("y_position", QMetaType.Type.Int),
+                QgsField("angle", QMetaType.Type.Double),
+                QgsField("row", QMetaType.Type.Int),
+                QgsField("x_start", QMetaType.Type.Double),
+                QgsField("y_start", QMetaType.Type.Double),
+                QgsField("x_end", QMetaType.Type.Double),
+                QgsField("y_end", QMetaType.Type.Double),
+                QgsField("x_mid", QMetaType.Type.Double),
+                QgsField("y_mid", QMetaType.Type.Double),
+            ]
+        )
+        lines_layer.updateFields()
+        points_uri = f"Point?crs={crs}"
+        points_layer = QgsVectorLayer(points_uri, "temporary_points", "memory")
+        points_provider = points_layer.dataProvider()
+        points_layer.startEditing()
+        points_provider.addAttributes(
+            [
+                QgsField("tile", QMetaType.Type.Int),
+                QgsField("row", QMetaType.Type.Int),
+                QgsField("x", QMetaType.Type.Double),
+                QgsField("y", QMetaType.Type.Double),
+                QgsField("vegetation", QMetaType.Type.Double),
+            ]
+        )
+        points_layer.updateFields()
         with concurrent.futures.ProcessPoolExecutor(max_workers=context.maximumThreads()) as executor:
             for current, result in enumerate(
                 executor.map(partial(process_in_pools, crd=crd), segmented_tiles, plot_tiles)
@@ -331,9 +311,46 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
                 vegetation_lines = result[2]
                 vegetation_df = result[3]
                 tiles.append(tile)
-                crd.append_to_csv_of_row_information(tile, direction, vegetation_lines)
-                crd.append_to_csv_of_row_information_global(tile, direction, vegetation_lines)
-                crd.append_to_csv_vegetation_row(vegetation_df)
+                if direction < 0:
+                    direction = np.pi + direction
+                line_features = []
+                for row_number, row in enumerate(vegetation_lines):
+                    x_start = tile.ulc_global[0] + tile.resolution[0] * row[0][0]
+                    y_start = tile.ulc_global[1] - tile.resolution[1] * row[0][1]
+                    x_end = tile.ulc_global[0] + tile.resolution[0] * row[1][0]
+                    y_end = tile.ulc_global[1] - tile.resolution[1] * row[1][1]
+                    x_mid = (2 * tile.ulc_global[0] + tile.resolution[0] * (row[0][0] + row[1][0])) / 2
+                    y_mid = (2 * tile.ulc_global[1] - tile.resolution[1] * (row[0][1] + row[1][1])) / 2
+                    line_feature = QgsFeature()
+                    line_feature.setGeometry(
+                        QgsGeometry.fromPolyline([QgsPoint(x_start, y_start), QgsPoint(x_end, y_end)])
+                    )
+                    line_feature.setAttributes(
+                        [
+                            int(tile.tile_number),
+                            tile.tile_position[0],
+                            tile.tile_position[1],
+                            direction,
+                            row_number,
+                            x_start,
+                            y_start,
+                            x_end,
+                            y_end,
+                            x_mid,
+                            y_mid,
+                        ]
+                    )
+                    line_features.append(line_feature)
+                lines_provider.addFeatures(line_features)
+                point_features = []
+                for row in vegetation_df.itertuples(index=False):
+                    point_feature = QgsFeature()
+                    point_feature.setGeometry(QgsGeometry.fromPoint(QgsPoint(row.x, row.y)))
+                    point_feature.setAttributes([row.tile, row.row, row.x, row.y, row.vegetation])
+                    point_features.append(point_feature)
+                points_provider.addFeatures(point_features)
+        lines_layer.updateExtents()
+        points_layer.updateExtents()
         if raster_output is not None:
             with rasterio.open(raster_output, "w", **profile) as dst:
                 for tile in tiles:
@@ -342,38 +359,22 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
                         dst.write_mask(tile.mask, window=tile.window)
             with rasterio.open(raster_output, "r+") as dst:
                 dst.build_overviews(overview_factors, Resampling.average)
-        if points_output is not None:
-            self.make_wkt_point_field_csv(
-                crd.output_location.joinpath("points_in_rows.csv"),
-                crd.output_location.joinpath("points_in_rows_wkt.csv"),
-            )
-            file = crd.output_location.joinpath("points_in_rows_wkt.csv")
-            points_uri = f"file://{file}?type=csv&wktField=points&crs={crs}"
-            points_layer = QgsVectorLayer(points_uri, "Crop Points", "delimitedtext")
-            # points_layer.setSubsetString("vegetation > 50")
-            options = QgsVectorFileWriter.SaveVectorOptions()
-            options.layerName = "Crop Points"
-            QgsVectorFileWriter.writeAsVectorFormatV3(
-                points_layer, points_output, QgsProject.instance().transformContext(), options=options
-            )
-        if rows_output is not None:
-            self.make_wkt_line_field_csv(
-                crd.output_location.joinpath("row_information_global.csv"),
-                crd.output_location.joinpath("row_information_global_wkt.csv"),
-            )
-            line_uri = f"file://{crd.output_location.joinpath('row_information_global_wkt.csv')}?type=csv&wktField=linestrings&crs={crs}"
-            line_layer = QgsVectorLayer(line_uri, "Crop Rows", "delimitedtext")
-            options = QgsVectorFileWriter.SaveVectorOptions()
-            options.layerName = "Crop Rows"
-            QgsVectorFileWriter.writeAsVectorFormatV3(
-                line_layer, rows_output, QgsProject.instance().transformContext(), options=options
-            )
+        points_layer.setSubsetString("vegetation > 50")
+        options = QgsVectorFileWriter.SaveVectorOptions()
+        options.layerName = "Crop Points"
+        QgsVectorFileWriter.writeAsVectorFormatV3(
+            points_layer, points_output, QgsProject.instance().transformContext(), options=options
+        )
+        options = QgsVectorFileWriter.SaveVectorOptions()
+        options.layerName = "Crop Rows"
+        QgsVectorFileWriter.writeAsVectorFormatV3(
+            lines_layer, rows_output, QgsProject.instance().transformContext(), options=options
+        )
         return {self.OUTPUT_ORTHO: raster_output, self.OUTPUT_POINTS: points_output, self.OUTPUT_ROWS: rows_output}
 
     def run_using_threads(
         self,
         crd: CropRowDetector,
-        save_raster: bool,
         raster_output: str | None,
         points_output: str | None,
         rows_output: str | None,
@@ -382,11 +383,9 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
     ) -> dict[str, Any]:
         segmented_tiles = self.segmented_tiler.tiles
         plot_tiles = self.plot_tiler.tiles
-        crd.prepare_csv_files(overwrite=True)
         read_segmented_lock = threading.Lock()
         read_plot_lock = threading.Lock()
         write_lock = threading.Lock()
-        row_info_lock = threading.Lock()
         row_info_global_lock = threading.Lock()
         row_vegetation_lock = threading.Lock()
         process_lock = threading.Lock()
@@ -398,7 +397,41 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
             profile = plot_src.profile
             crs = segmented_src.crs.to_string()
             overview_factors = plot_src.overviews(plot_src.indexes[0])
-            with rasterio.open(raster_output, "w", **profile) as dst:
+            lines_uri = f"LineString?crs={crs}"
+            lines_layer = QgsVectorLayer(lines_uri, "temporary_lines", "memory")
+            lines_provider = lines_layer.dataProvider()
+            lines_layer.startEditing()
+            lines_provider.addAttributes(
+                [
+                    QgsField("tile", QMetaType.Type.Int),
+                    QgsField("x_position", QMetaType.Type.Int),
+                    QgsField("y_position", QMetaType.Type.Int),
+                    QgsField("angle", QMetaType.Type.Double),
+                    QgsField("row", QMetaType.Type.Int),
+                    QgsField("x_start", QMetaType.Type.Double),
+                    QgsField("y_start", QMetaType.Type.Double),
+                    QgsField("x_end", QMetaType.Type.Double),
+                    QgsField("y_end", QMetaType.Type.Double),
+                    QgsField("x_mid", QMetaType.Type.Double),
+                    QgsField("y_mid", QMetaType.Type.Double),
+                ]
+            )
+            lines_layer.updateFields()
+            points_uri = f"Point?crs={crs}"
+            points_layer = QgsVectorLayer(points_uri, "temporary_points", "memory")
+            points_provider = points_layer.dataProvider()
+            points_layer.startEditing()
+            points_provider.addAttributes(
+                [
+                    QgsField("tile", QMetaType.Type.Int),
+                    QgsField("row", QMetaType.Type.Int),
+                    QgsField("x", QMetaType.Type.Double),
+                    QgsField("y", QMetaType.Type.Double),
+                    QgsField("vegetation", QMetaType.Type.Double),
+                ]
+            )
+            points_layer.updateFields()
+            with rasterio.open(raster_output, "w", **profile) if raster_output is not None else nullcontext() as dst:
 
                 def process(segmented_tile: Tile, plot_tile: Tile) -> None:
                     with read_segmented_lock:
@@ -416,73 +449,76 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
                         output_img, direction, vegetation_lines, vegetation_df = crd.detect_crop_rows(
                             segmented_img, segmented_tile, plot_img, plot_tile
                         )
-                    with row_info_lock:
-                        crd.append_to_csv_of_row_information(plot_tile, direction, vegetation_lines)
                     with row_info_global_lock:
-                        crd.append_to_csv_of_row_information_global(plot_tile, direction, vegetation_lines)
+                        line_features = []
+                        for row_number, row in enumerate(vegetation_lines):
+                            x_start = plot_tile.ulc_global[0] + plot_tile.resolution[0] * row[0][0]
+                            y_start = plot_tile.ulc_global[1] - plot_tile.resolution[1] * row[0][1]
+                            x_end = plot_tile.ulc_global[0] + plot_tile.resolution[0] * row[1][0]
+                            y_end = plot_tile.ulc_global[1] - plot_tile.resolution[1] * row[1][1]
+                            x_mid = (
+                                2 * plot_tile.ulc_global[0] + plot_tile.resolution[0] * (row[0][0] + row[1][0])
+                            ) / 2
+                            y_mid = (
+                                2 * plot_tile.ulc_global[1] - plot_tile.resolution[1] * (row[0][1] + row[1][1])
+                            ) / 2
+                            line_feature = QgsFeature()
+                            line_feature.setGeometry(
+                                QgsGeometry.fromPolyline([QgsPoint(x_start, y_start), QgsPoint(x_end, y_end)])
+                            )
+                            line_feature.setAttributes(
+                                [
+                                    int(plot_tile.tile_number),
+                                    plot_tile.tile_position[0],
+                                    plot_tile.tile_position[1],
+                                    direction,
+                                    row_number,
+                                    x_start,
+                                    y_start,
+                                    x_end,
+                                    y_end,
+                                    x_mid,
+                                    y_mid,
+                                ]
+                            )
+                            line_features.append(line_feature)
+                        lines_provider.addFeatures(line_features)
                     with row_vegetation_lock:
-                        crd.append_to_csv_vegetation_row(vegetation_df)
+                        point_features = []
+                        for row in vegetation_df.itertuples(index=False):
+                            point_feature = QgsFeature()
+                            point_feature.setGeometry(QgsGeometry.fromPoint(QgsPoint(row.x, row.y)))
+                            point_feature.setAttributes([row.tile, row.row, row.x, row.y, row.vegetation])
+                            point_features.append(point_feature)
+                        points_provider.addFeatures(point_features)
                     output = plot_tile.get_window_pixels(output_img)
                     if mask is not None:
                         mask = plot_tile.get_window_pixels(np.expand_dims(mask, 0)).squeeze()
                     with write_lock:
-                        dst.write(output, window=plot_tile.window)
-                        if mask is not None:
-                            dst.write_mask(mask, window=plot_tile.window)
+                        if dst is not None:
+                            dst.write(output, window=plot_tile.window)
+                            if mask is not None:
+                                dst.write_mask(mask, window=plot_tile.window)
 
                 with concurrent.futures.ThreadPoolExecutor(max_workers=context.maximumThreads()) as executor:
                     for current, _ in enumerate(executor.map(process, segmented_tiles, plot_tiles)):
                         if feedback.isCanceled():
                             return {}
                         feedback.setProgress(int(current * total))
-        with rasterio.open(raster_output, "r+") as dst:
-            dst.build_overviews(overview_factors, Resampling.average)
-        if points_output is not None:
-            self.make_wkt_point_field_csv(
-                crd.output_location.joinpath("points_in_rows.csv"),
-                crd.output_location.joinpath("points_in_rows_wkt.csv"),
-            )
-            file = crd.output_location.joinpath("points_in_rows_wkt.csv")
-            points_uri = f"file://{file}?type=csv&wktField=points&crs={crs}"
-            points_layer = QgsVectorLayer(points_uri, "Crop Points", "delimitedtext")
-            options = QgsVectorFileWriter.SaveVectorOptions()
-            options.layerName = "Crop Points"
-            QgsVectorFileWriter.writeAsVectorFormatV3(
-                points_layer, points_output, QgsProject.instance().transformContext(), options=options
-            )
-        if rows_output is not None:
-            self.make_wkt_line_field_csv(
-                crd.output_location.joinpath("row_information_global.csv"),
-                crd.output_location.joinpath("row_information_global_wkt.csv"),
-            )
-            line_uri = f"file://{crd.output_location.joinpath('row_information_global_wkt.csv')}?type=csv&wktField=linestrings&crs={crs}"
-            line_layer = QgsVectorLayer(line_uri, "Crop Rows", "delimitedtext")
-            options = QgsVectorFileWriter.SaveVectorOptions()
-            options.layerName = "Crop Rows"
-            QgsVectorFileWriter.writeAsVectorFormatV3(
-                line_layer, rows_output, QgsProject.instance().transformContext(), options=options
-            )
-        if not save_raster:
-            raster_output = None
+        if raster_output is not None:
+            with rasterio.open(raster_output, "r+") as dst:
+                dst.build_overviews(overview_factors, Resampling.average)
+        options = QgsVectorFileWriter.SaveVectorOptions()
+        options.layerName = "Crop Points"
+        QgsVectorFileWriter.writeAsVectorFormatV3(
+            points_layer, points_output, QgsProject.instance().transformContext(), options=options
+        )
+        options = QgsVectorFileWriter.SaveVectorOptions()
+        options.layerName = "Crop Rows"
+        QgsVectorFileWriter.writeAsVectorFormatV3(
+            lines_layer, rows_output, QgsProject.instance().transformContext(), options=options
+        )
         return {self.OUTPUT_ORTHO: raster_output, self.OUTPUT_POINTS: points_output, self.OUTPUT_ROWS: rows_output}
-
-    def make_wkt_line_field_csv(self, csv_file_in: Path, csv_file_out: Path) -> None:
-        def make_lines(row: Any):  # type: ignore[no-untyped-def]
-            line = linestrings([[row["x_start"], row["y_start"]], [row["x_end"], row["y_end"]]])
-            return line
-
-        data = pd.read_csv(csv_file_in)
-        data["linestrings"] = data.apply(make_lines, axis="columns")
-        data.to_csv(csv_file_out)
-
-    def make_wkt_point_field_csv(self, csv_file_in: Path, csv_file_out: Path) -> None:
-        def make_points(row: Any):  # type: ignore[no-untyped-def]
-            point = points([row["x"], row["y"]])
-            return point
-
-        data = pd.read_csv(csv_file_in)
-        data["points"] = data.apply(make_points, axis="columns")
-        data.to_csv(csv_file_out)
 
     def name(self) -> str:
         """
