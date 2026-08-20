@@ -5,6 +5,7 @@ from qgis.core import QgsProcessingProvider
 from qgis.PyQt.QtGui import QIcon
 
 from .cdc.cdc_algorithm import CDCAlgorithm
+from .crop_row_connector.crop_row_connector_algorithm import CropRowConnectorAlgorithm
 from .crop_row_detector.crop_row_algorithm import CropRowAlgorithm
 
 
@@ -28,6 +29,7 @@ class SDUAgroToolsProvider(QgsProcessingProvider):  # type: ignore[misc]
         """
         self.addAlgorithm(CDCAlgorithm())
         self.addAlgorithm(CropRowAlgorithm())
+        self.addAlgorithm(CropRowConnectorAlgorithm())
         # add additional algorithms here
         # self.addAlgorithm(MyOtherAlgorithm())
 

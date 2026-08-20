@@ -26,6 +26,7 @@ EXTRAS = \
 EXTRA_DIRS = \
 	cdc \
 	crop_row_detector \
+	crop_row_connector \
 	utils
 
 COMPILED_RESOURCE_FILES = resources.py
