@@ -46,7 +46,8 @@ class CropRowToolbarDialog(QtWidgets.QDialog, DIALOG_CLASS):  # type: ignore[mis
     def set_initial_param(self) -> None:
         self.input_file_cdc_map_layer_combo_box.setFilters(QgsMapLayerProxyModel.RasterLayer)
         self.input_file_ortho_map_layer_combo_box.setFilters(QgsMapLayerProxyModel.RasterLayer)
-        self.input_file_ortho_map_layer_combo_box.setAllowEmptyLayer(True, text="Use Color Distance Image")
+        self.input_file_ortho_map_layer_combo_box.setAllowEmptyLayer(True, text="Not set")
+        self.input_file_ortho_map_layer_combo_box.setLayer(None)
 
     def connect_signals(self) -> None:
         self.input_file_cdc_button.clicked.connect(self.load_input_color_distance_image)
@@ -106,6 +107,11 @@ class CropRowToolbarDialog(QtWidgets.QDialog, DIALOG_CLASS):  # type: ignore[mis
         params.update({"INPUT": self.input_file_cdc_map_layer_combo_box.currentLayer()})
         if "INPUT" not in params:
             QMessageBox.warning(self, "Missing input raster", "Please load a valid input raster layer.")
+            return
+        if self.output_ortho_checkbox.isChecked() and self.input_file_ortho_map_layer_combo_box.currentLayer() is None:
+            QMessageBox.warning(
+                self, "Missing orthomosaic to draw on", "Please load a valid orthomosaic/raster layer to draw on."
+            )
             return
         if self.input_file_ortho_map_layer_combo_box.currentLayer() is not None:
             params.update({"ORTHO": self.input_file_ortho_map_layer_combo_box.currentLayer()})

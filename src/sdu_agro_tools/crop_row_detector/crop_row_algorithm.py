@@ -3,7 +3,6 @@ from __future__ import annotations
 import concurrent.futures
 import threading
 from contextlib import nullcontext
-from copy import deepcopy
 from functools import partial
 from typing import Any
 
@@ -206,7 +205,7 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
         }
         self.segmented_tiler = OrthomosaicTiles(**tiler_params)
         if self.ortho_input is None:
-            self.plot_tiler = deepcopy(self.segmented_tiler)
+            self.plot_tiler = None
         else:
             tiler_params = {
                 "orthomosaic": self.ortho_input.source(),
@@ -228,7 +227,8 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
         points_output = self.parameterAsOutputLayer(parameters, self.OUTPUT_POINTS, context)
         rows_output = self.parameterAsOutputLayer(parameters, self.OUTPUT_ROWS, context)
         self.segmented_tiler.divide_orthomosaic_into_tiles()
-        self.plot_tiler.divide_orthomosaic_into_tiles()
+        if self.plot_tiler is not None:
+            self.plot_tiler.divide_orthomosaic_into_tiles()
         crd = CropRowDetector()
         crd.tile_boundary = self.parameterAsBool(parameters, self.TILE_BOUNDARY, context)
         crd.expected_crop_row_distance_cm = self.parameterAsDouble(parameters, self.CROP_ROW_DISTANCE, context)
@@ -252,18 +252,24 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
         self,
         crd: CropRowDetector,
         raster_output: str | None,
-        points_output: str | None,
-        rows_output: str | None,
+        points_output: str,
+        rows_output: str,
         context: QgsProcessingContext,
         feedback: QgsProcessingFeedback,
     ) -> dict[str, Any]:
         segmented_tiles = self.segmented_tiler.tiles
-        plot_tiles = self.plot_tiler.tiles
-        total = 100.0 / len(segmented_tiles)
-        with rasterio.open(self.plot_tiler.orthomosaic) as src:
-            profile = src.profile
+        with rasterio.open(self.segmented_tiler.orthomosaic) as src:
             crs = src.crs.to_string()
-            overview_factors = src.overviews(src.indexes[0])
+        if self.plot_tiler is not None:
+            plot_tiles = self.plot_tiler.tiles
+            with rasterio.open(self.plot_tiler.orthomosaic) as src:
+                profile = src.profile
+                overview_factors = src.overviews(src.indexes[0])
+        else:
+            plot_tiles = None
+            profile = None
+            overview_factors = None
+        total = 100.0 / len(segmented_tiles)
         tiles = []
         lines_uri = f"LineString?crs={crs}"
         lines_layer = QgsVectorLayer(lines_uri, "temporary_lines", "memory")
@@ -300,17 +306,20 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
         )
         points_layer.updateFields()
         with concurrent.futures.ProcessPoolExecutor(max_workers=context.maximumThreads()) as executor:
-            for current, result in enumerate(
-                executor.map(partial(process_in_pools, crd=crd), segmented_tiles, plot_tiles)
-            ):
+            if plot_tiles is not None:
+                executer_map = executor.map(partial(process_in_pools, crd=crd), segmented_tiles, plot_tiles)
+            else:
+                executer_map = executor.map(partial(process_in_pools, plot_tile=None, crd=crd), segmented_tiles)
+            for current, result in enumerate(executer_map):
                 if feedback.isCanceled():
                     return {}
                 feedback.setProgress(int(current * total))
                 tile = result[0]
-                direction = result[1]
-                vegetation_lines = result[2]
-                vegetation_df = result[3]
-                tiles.append(tile)
+                plot_tile = result[1]
+                direction = result[2]
+                vegetation_lines = result[3]
+                vegetation_df = result[4]
+                tiles.append(plot_tile)
                 if direction < 0:
                     direction = np.pi + direction
                 line_features = []
@@ -351,12 +360,12 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
                 points_provider.addFeatures(point_features)
         lines_layer.updateExtents()
         points_layer.updateExtents()
-        if raster_output is not None:
+        if raster_output is not None and self.plot_tiler is not None:
             with rasterio.open(raster_output, "w", **profile) as dst:
                 for tile in tiles:
-                    dst.write(tile.output, window=tile.window)
-                    if tile.output.shape[0] <= 3:
-                        dst.write_mask(tile.mask, window=tile.window)
+                    dst.write(tile.output, window=tile.window)  # type: ignore[union-attr]
+                    if tile.output.shape[0] <= 3:  # type: ignore[union-attr]
+                        dst.write_mask(tile.mask, window=tile.window)  # type: ignore[union-attr]
             with rasterio.open(raster_output, "r+") as dst:
                 dst.build_overviews(overview_factors, Resampling.average)
         points_layer.setSubsetString("vegetation > 50")
@@ -382,7 +391,10 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
         feedback: QgsProcessingFeedback,
     ) -> dict[str, Any]:
         segmented_tiles = self.segmented_tiler.tiles
-        plot_tiles = self.plot_tiler.tiles
+        if self.plot_tiler is not None:
+            plot_tiles = self.plot_tiler.tiles
+        else:
+            plot_tiles = None
         read_segmented_lock = threading.Lock()
         read_plot_lock = threading.Lock()
         write_lock = threading.Lock()
@@ -391,12 +403,16 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
         process_lock = threading.Lock()
         total = 100.0 / len(segmented_tiles)
         with (
-            rasterio.open(self.plot_tiler.orthomosaic) as plot_src,
+            rasterio.open(self.plot_tiler.orthomosaic) if self.plot_tiler is not None else nullcontext() as plot_src,
             rasterio.open(self.segmented_tiler.orthomosaic) as segmented_src,
         ):
-            profile = plot_src.profile
+            if plot_src is not None:
+                profile = plot_src.profile
+                overview_factors = plot_src.overviews(plot_src.indexes[0])
+            else:
+                profile = None
+                overview_factors = None
             crs = segmented_src.crs.to_string()
-            overview_factors = plot_src.overviews(plot_src.indexes[0])
             lines_uri = f"LineString?crs={crs}"
             lines_layer = QgsVectorLayer(lines_uri, "temporary_lines", "memory")
             lines_provider = lines_layer.dataProvider()
@@ -433,18 +449,22 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
             points_layer.updateFields()
             with rasterio.open(raster_output, "w", **profile) if raster_output is not None else nullcontext() as dst:
 
-                def process(segmented_tile: Tile, plot_tile: Tile) -> None:
+                def process(segmented_tile: Tile, plot_tile: Tile | None = None) -> None:
                     with read_segmented_lock:
                         segmented_img = segmented_src.read(window=segmented_tile.window_with_overlap)
-                    with read_plot_lock:
-                        plot_img = plot_src.read(window=plot_tile.window_with_overlap)
-                        if plot_img.shape[0] > 3:
-                            mask = None
-                        else:
-                            mask_temp = plot_src.read_masks(window=plot_tile.window_with_overlap)
-                            mask = mask_temp[0]
-                            for band in range(mask_temp.shape[0]):
-                                mask = mask & mask_temp[band]
+                    if plot_src is not None:
+                        with read_plot_lock:
+                            plot_img = plot_src.read(window=plot_tile.window_with_overlap)  # type: ignore[union-attr]
+                            if plot_img.shape[0] > 3:
+                                mask = None
+                            else:
+                                mask_temp = plot_src.read_masks(window=plot_tile.window_with_overlap)  # type: ignore[union-attr]
+                                mask = mask_temp[0]
+                                for band in range(mask_temp.shape[0]):
+                                    mask = mask & mask_temp[band]
+                    else:
+                        plot_img = None
+                        mask = None
                     with process_lock:
                         output_img, direction, vegetation_lines, vegetation_df = crd.detect_crop_rows(
                             segmented_img, segmented_tile, plot_img, plot_tile
@@ -452,15 +472,17 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
                     with row_info_global_lock:
                         line_features = []
                         for row_number, row in enumerate(vegetation_lines):
-                            x_start = plot_tile.ulc_global[0] + plot_tile.resolution[0] * row[0][0]
-                            y_start = plot_tile.ulc_global[1] - plot_tile.resolution[1] * row[0][1]
-                            x_end = plot_tile.ulc_global[0] + plot_tile.resolution[0] * row[1][0]
-                            y_end = plot_tile.ulc_global[1] - plot_tile.resolution[1] * row[1][1]
+                            x_start = segmented_tile.ulc_global[0] + segmented_tile.resolution[0] * row[0][0]
+                            y_start = segmented_tile.ulc_global[1] - segmented_tile.resolution[1] * row[0][1]
+                            x_end = segmented_tile.ulc_global[0] + segmented_tile.resolution[0] * row[1][0]
+                            y_end = segmented_tile.ulc_global[1] - segmented_tile.resolution[1] * row[1][1]
                             x_mid = (
-                                2 * plot_tile.ulc_global[0] + plot_tile.resolution[0] * (row[0][0] + row[1][0])
+                                2 * segmented_tile.ulc_global[0]
+                                + segmented_tile.resolution[0] * (row[0][0] + row[1][0])
                             ) / 2
                             y_mid = (
-                                2 * plot_tile.ulc_global[1] - plot_tile.resolution[1] * (row[0][1] + row[1][1])
+                                2 * segmented_tile.ulc_global[1]
+                                - segmented_tile.resolution[1] * (row[0][1] + row[1][1])
                             ) / 2
                             line_feature = QgsFeature()
                             line_feature.setGeometry(
@@ -468,9 +490,9 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
                             )
                             line_feature.setAttributes(
                                 [
-                                    int(plot_tile.tile_number),
-                                    plot_tile.tile_position[0],
-                                    plot_tile.tile_position[1],
+                                    int(segmented_tile.tile_number),
+                                    segmented_tile.tile_position[0],
+                                    segmented_tile.tile_position[1],
                                     direction,
                                     row_number,
                                     x_start,
@@ -491,17 +513,22 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
                             point_feature.setAttributes([row.tile, row.row, row.x, row.y, row.vegetation])
                             point_features.append(point_feature)
                         points_provider.addFeatures(point_features)
-                    output = plot_tile.get_window_pixels(output_img)
-                    if mask is not None:
-                        mask = plot_tile.get_window_pixels(np.expand_dims(mask, 0)).squeeze()
-                    with write_lock:
-                        if dst is not None:
-                            dst.write(output, window=plot_tile.window)
-                            if mask is not None:
-                                dst.write_mask(mask, window=plot_tile.window)
+                    if plot_tile is not None:
+                        output = plot_tile.get_window_pixels(output_img)
+                        if mask is not None:
+                            mask = plot_tile.get_window_pixels(np.expand_dims(mask, 0)).squeeze()
+                        with write_lock:
+                            if dst is not None:
+                                dst.write(output, window=plot_tile.window)
+                                if mask is not None:
+                                    dst.write_mask(mask, window=plot_tile.window)
 
                 with concurrent.futures.ThreadPoolExecutor(max_workers=context.maximumThreads()) as executor:
-                    for current, _ in enumerate(executor.map(process, segmented_tiles, plot_tiles)):
+                    if plot_tiles is not None:
+                        executer_map = executor.map(process, segmented_tiles, plot_tiles)
+                    else:
+                        executer_map = executor.map(process, segmented_tiles)
+                    for current, _ in enumerate(executer_map):
                         if feedback.isCanceled():
                             return {}
                         feedback.setProgress(int(current * total))
@@ -562,20 +589,25 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
 
 
 def process_in_pools(
-    segmented_tile: Tile, plot_tile: Tile, crd: CropRowDetector | None = None
-) -> tuple[Tile, Any, Any, Any]:
+    segmented_tile: Tile, plot_tile: Tile | None = None, crd: CropRowDetector | None = None
+) -> tuple[Tile, Tile | None, Any, Any, Any]:
     if crd is None:
         raise ValueError("crd must be set to a instance if CropRowDetector")
     segmented_image, _ = segmented_tile.read_tile()
-    plot_image, plot_mask = plot_tile.read_tile()
-    mask = plot_mask[0]
-    for band in range(plot_mask.shape[0]):
-        mask = mask & plot_mask[band]
+    if plot_tile is not None:
+        plot_image, plot_mask = plot_tile.read_tile()
+        mask = plot_mask[0]
+        for band in range(plot_mask.shape[0]):
+            mask = mask & plot_mask[band]
+    else:
+        plot_image = None
+        mask = None
     output_img, direction, vegetation_lines, vegetation_df = crd.detect_crop_rows(
         segmented_image, segmented_tile, plot_image, plot_tile
     )
-    output = plot_tile.get_window_pixels(output_img)
-    mask = plot_tile.get_window_pixels(np.expand_dims(mask, 0)).squeeze()
-    plot_tile.output = output
-    plot_tile.mask = mask
-    return plot_tile, direction, vegetation_lines, vegetation_df
+    if plot_tile is not None:
+        output = plot_tile.get_window_pixels(output_img)
+        mask = plot_tile.get_window_pixels(np.expand_dims(mask, 0)).squeeze()
+        plot_tile.output = output
+        plot_tile.mask = mask
+    return segmented_tile, plot_tile, direction, vegetation_lines, vegetation_df
