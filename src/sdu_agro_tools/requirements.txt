@@ -1,5 +1,7 @@
-CDC>=1.1.3
-crop-row-detector>=0.2.2
+CDC>=1.1.4
+crop-row-connector>=1.2.0
+crop-row-detector>=0.3.0
 rasterio
-numpy
 pandas
+numpy
+opencv-python < 5.0.0
