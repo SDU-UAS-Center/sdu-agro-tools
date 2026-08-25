@@ -6,11 +6,7 @@ SDU Agro Tools is a collection of tools for agricultural use on large orthomosai
 Installation
 ------------
 
-Download the latest release from `github releases <https://github.com/SDU-UAS-Center/sdu-agro-tools/releases>`_ as a ZIP file.
-
-In QGIS under the plugin menu - *Manage and install plugins* select *install from ZIP*.
-
-Select the ZIP file and click install.
+The plugin is available in the QGIS plugin manager and can be installed though QGIS.
 
 When installing it will install another plugin called *qpip* that will manage python dependencies.
 

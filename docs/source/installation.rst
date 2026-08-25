@@ -1,7 +1,9 @@
 Installation
 ============
 
-**SDU Agro Tools** is a plugin within `QGIS <https://qgis.org/>`_.
+**SDU Agro Tools** is a plugin within `QGIS <https://qgis.org/>`_. It can be installed with the QGIS plugin Manager.
+
+Below is alternative ways to install the latest release or from source code.
 
 Install from ZIP
 ----------------
