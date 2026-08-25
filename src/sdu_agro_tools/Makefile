@@ -8,11 +8,13 @@ PY_FILES = \
 UI_FILES = \
 	cdc/cdc_toolbar_dialog.ui \
 	crop_row_detector/crop_row_toolbar_dialog.ui \
+	crop_row_connector/crop_row_connector_toolbar_dialog.ui \
 	utils/task_progress_bar.ui
 
 COMPILED_UI_FILES = \
 	cdc/cdc_toolbar_dialog_ui.py \
 	crop_row_detector/crop_row_toolbar_dialog_ui.py \
+	crop_row_connector/crop_row_connector_toolbar_dialog_ui.py \
 	utils/task_progress_bar_ui.py
 
 EXTRAS = \

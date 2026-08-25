@@ -9,6 +9,8 @@ from qgis.PyQt.QtWidgets import QAction, QMenu, QToolButton
 
 from .cdc.cdc_algorithm import CDCAlgorithm
 from .cdc.cdc_toolbar_dialog import CDCToolbarDialog
+from .crop_row_connector.crop_row_connector_algorithm import CropRowConnectorAlgorithm
+from .crop_row_connector.crop_row_connector_toolbar_dialog import CropRowConnectorToolbarDialog
 from .crop_row_detector.crop_row_algorithm import CropRowAlgorithm
 from .crop_row_detector.crop_row_toolbar_dialog import CropRowToolbarDialog
 from .sdu_agro_tools_provider import SDUAgroToolsProvider
@@ -48,6 +50,10 @@ class SDUAgroTools:
         crop_row_action.triggered.connect(self.run_crop_row)
         toolButtonMenu.addAction(crop_row_action)
         self.menu.addAction(crop_row_action)
+        crop_row_connector_action = QAction(icon, self.tr("Connect Crop Rows"), self.iface.mainWindow())
+        crop_row_connector_action.triggered.connect(self.run_crop_row_connector)
+        toolButtonMenu.addAction(crop_row_connector_action)
+        self.menu.addAction(crop_row_connector_action)
         toolButtonMenu.addSeparator()
         self.menu.addSeparator()
         help_action = QAction(
@@ -81,4 +87,10 @@ class SDUAgroTools:
         """Run method that performs all the real work"""
         alg = CropRowAlgorithm()
         alg_dialog = CropRowToolbarDialog(alg)
+        alg_dialog.exec()
+
+    def run_crop_row_connector(self) -> None:
+        """Run method that performs all the real work"""
+        alg = CropRowConnectorAlgorithm()
+        alg_dialog = CropRowConnectorToolbarDialog(alg)
         alg_dialog.exec()
