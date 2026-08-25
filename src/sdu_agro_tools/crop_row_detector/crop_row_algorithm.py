@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import concurrent.futures
+import platform
 import threading
 from contextlib import nullcontext
 from functools import partial
@@ -157,9 +158,10 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
                 maxValue=32,
             )
         )
-        self.addParameter(
-            QgsProcessingParameterBoolean(self.USE_PROCESS_POOL, self.tr("Use Processing Pool instead of Threads"))
-        )
+        if platform.system() != "Windows":
+            self.addParameter(
+                QgsProcessingParameterBoolean(self.USE_PROCESS_POOL, self.tr("Use Processing Pool instead of Threads"))
+            )
         self.addParameter(
             QgsProcessingParameterBoolean(
                 self.SAVE_ORTHO,

@@ -1,4 +1,5 @@
 import os
+import platform
 from pathlib import Path
 from typing import Any
 
@@ -48,6 +49,8 @@ class CropRowToolbarDialog(QtWidgets.QDialog, DIALOG_CLASS):  # type: ignore[mis
         self.input_file_ortho_map_layer_combo_box.setFilters(QgsMapLayerProxyModel.Filter.RasterLayer)
         self.input_file_ortho_map_layer_combo_box.setAllowEmptyLayer(True, text="Not set")
         self.input_file_ortho_map_layer_combo_box.setLayer(None)
+        if platform.system() == "Windows":
+            self.use_processing_pools_checkbox.setEnabled(False)
 
     def connect_signals(self) -> None:
         self.input_file_cdc_button.clicked.connect(self.load_input_color_distance_image)
