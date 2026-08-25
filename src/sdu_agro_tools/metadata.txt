@@ -14,7 +14,7 @@ description=A collection of tools for agricultural use. Including color segmenta
 about=Precision agriculture application. This plug-in segments the raster layer based on a color distribution calculated from a shape file or a cropped image over the raster layer. Can detect crop rows on a grayscale raster layer from color distribution calculations.
     This plugin uses to Qpip plugin to install the following python packages. CDC, crop-row-detector and shapely. Some of the python packages may already be installed but the Qpip plugin will handle installing missing packages.
 
-version=0.5.0
+version=0.5.1
 
 tracker=https://github.com/SDU-UAS-Center/sdu-agro-tools/issues
 repository=https://github.com/SDU-UAS-Center/sdu-agro-tools
