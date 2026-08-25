@@ -44,8 +44,8 @@ class CropRowToolbarDialog(QtWidgets.QDialog, DIALOG_CLASS):  # type: ignore[mis
         self.logo.setPixmap(QPixmap(icon_path))
 
     def set_initial_param(self) -> None:
-        self.input_file_cdc_map_layer_combo_box.setFilters(QgsMapLayerProxyModel.RasterLayer)
-        self.input_file_ortho_map_layer_combo_box.setFilters(QgsMapLayerProxyModel.RasterLayer)
+        self.input_file_cdc_map_layer_combo_box.setFilters(QgsMapLayerProxyModel.Filter.RasterLayer)
+        self.input_file_ortho_map_layer_combo_box.setFilters(QgsMapLayerProxyModel.Filter.RasterLayer)
         self.input_file_ortho_map_layer_combo_box.setAllowEmptyLayer(True, text="Not set")
         self.input_file_ortho_map_layer_combo_box.setLayer(None)
 
@@ -165,7 +165,7 @@ class CropRowToolbarTask(QgsTask):  # type: ignore[misc]
         context: QgsProcessingContext,
         feedback: QgsProcessingFeedback,
     ) -> None:
-        super().__init__("CropRowToolbarTask", QgsTask.CanCancel)
+        super().__init__("CropRowToolbarTask", QgsTask.Flag.CanCancel)
         self.alg = alg
         self.params = params
         if context is None:

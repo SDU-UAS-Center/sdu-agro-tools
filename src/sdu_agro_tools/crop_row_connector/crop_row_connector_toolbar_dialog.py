@@ -44,8 +44,8 @@ class CropRowConnectorToolbarDialog(QtWidgets.QDialog, DIALOG_CLASS):  # type: i
         self.logo.setPixmap(QPixmap(icon_path))
 
     def set_initial_param(self) -> None:
-        self.input_file_points_map_layer_combo_box.setFilters(QgsMapLayerProxyModel.VectorLayer)
-        self.input_file_rows_map_layer_combo_box.setFilters(QgsMapLayerProxyModel.VectorLayer)
+        self.input_file_points_map_layer_combo_box.setFilters(QgsMapLayerProxyModel.Filter.VectorLayer)
+        self.input_file_rows_map_layer_combo_box.setFilters(QgsMapLayerProxyModel.Filter.VectorLayer)
 
     def connect_signals(self) -> None:
         self.input_file_points_button.clicked.connect(self.load_input_points)
@@ -141,7 +141,7 @@ class CropRowConnectorToolbarTask(QgsTask):  # type: ignore[misc]
         context: QgsProcessingContext,
         feedback: QgsProcessingFeedback,
     ) -> None:
-        super().__init__("CropRowToolbarTask", QgsTask.CanCancel)
+        super().__init__("CropRowToolbarTask", QgsTask.Flag.CanCancel)
         self.alg = alg
         self.params = params
         if context is None:

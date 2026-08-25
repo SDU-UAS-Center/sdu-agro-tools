@@ -45,10 +45,10 @@ class CDCToolbarDialog(QtWidgets.QDialog, DIALOG_CLASS):  # type: ignore[misc, v
         self.logo.setPixmap(QPixmap(icon_path))
 
     def set_initial_param(self) -> None:
-        self.input_map_layer_combo_box.setFilters(QgsMapLayerProxyModel.RasterLayer)
-        self.shape_file_map_layer_combo_box.setFilters(QgsMapLayerProxyModel.PolygonLayer)
-        self.ref_image_map_layer_combo_box.setFilters(QgsMapLayerProxyModel.RasterLayer)
-        self.pixel_mask_map_layer_combo_box.setFilters(QgsMapLayerProxyModel.RasterLayer)
+        self.input_map_layer_combo_box.setFilters(QgsMapLayerProxyModel.Filter.RasterLayer)
+        self.shape_file_map_layer_combo_box.setFilters(QgsMapLayerProxyModel.Filter.PolygonLayer)
+        self.ref_image_map_layer_combo_box.setFilters(QgsMapLayerProxyModel.Filter.RasterLayer)
+        self.pixel_mask_map_layer_combo_box.setFilters(QgsMapLayerProxyModel.Filter.RasterLayer)
         self.set_bands_to_use()
         self.metric_combo_box.addItems(["Mahalanobis", "GMM"])
 
@@ -211,7 +211,7 @@ class CDCToolbarTask(QgsTask):  # type: ignore[misc]
         context: QgsProcessingContext | None,
         feedback: QgsProcessingFeedback | None,
     ) -> None:
-        super().__init__("CDCToolbarTask", QgsTask.CanCancel)
+        super().__init__("CDCToolbarTask", QgsTask.Flag.CanCancel)
         self.alg = alg
         self.params = params
         if context is None:

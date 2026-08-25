@@ -107,7 +107,7 @@ class CDCAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
             QgsProcessingParameterNumber(
                 self.GMM_PARAM,
                 self.tr("GMM parameters"),
-                type=QgsProcessingParameterNumber.Integer,
+                type=QgsProcessingParameterNumber.Type.Integer,
                 defaultValue=2,
                 optional=True,
             )
@@ -116,7 +116,7 @@ class CDCAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
             QgsProcessingParameterNumber(
                 self.SCALE,
                 self.tr("Scale"),
-                type=QgsProcessingParameterNumber.Double,
+                type=QgsProcessingParameterNumber.Type.Double,
                 defaultValue=5,
                 minValue=0,
             )
@@ -125,7 +125,7 @@ class CDCAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
             QgsProcessingParameterNumber(
                 self.TILE_WIDTH,
                 self.tr("Tile Width"),
-                type=QgsProcessingParameterNumber.Integer,
+                type=QgsProcessingParameterNumber.Type.Integer,
                 defaultValue=2048,
                 minValue=64,
             )
@@ -134,7 +134,7 @@ class CDCAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
             QgsProcessingParameterNumber(
                 self.TILE_HEIGHT,
                 self.tr("Tile Height"),
-                type=QgsProcessingParameterNumber.Integer,
+                type=QgsProcessingParameterNumber.Type.Integer,
                 defaultValue=2048,
                 minValue=64,
             )
@@ -143,7 +143,7 @@ class CDCAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
             QgsProcessingParameterNumber(
                 self.TILE_OVERLAP,
                 self.tr("Tile Overlap as a percentage"),
-                type=QgsProcessingParameterNumber.Integer,
+                type=QgsProcessingParameterNumber.Type.Integer,
                 defaultValue=0,
                 minValue=0,
                 maxValue=50,
@@ -163,7 +163,7 @@ class CDCAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
             QgsProcessingParameterNumber(
                 self.GAMMA,
                 self.tr("Gamma value for the gamma transform"),
-                type=QgsProcessingParameterNumber.Double,
+                type=QgsProcessingParameterNumber.Type.Double,
                 defaultValue=0.5,
                 minValue=0,
                 maxValue=5,

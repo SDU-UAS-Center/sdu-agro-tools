@@ -61,7 +61,7 @@ class CropRowConnectorAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
             QgsProcessingParameterNumber(
                 self.ANGLE_TOLERANCE,
                 self.tr("Tolerance of angle between connected crop rows in degrees"),
-                type=QgsProcessingParameterNumber.Double,
+                type=QgsProcessingParameterNumber.Type.Double,
                 defaultValue=10,
                 minValue=0,
                 maxValue=90,
@@ -71,7 +71,7 @@ class CropRowConnectorAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
             QgsProcessingParameterNumber(
                 self.DISTANCE_TOLERANCE,
                 self.tr("Tolerance of distance between connected crop rows in meters"),
-                type=QgsProcessingParameterNumber.Double,
+                type=QgsProcessingParameterNumber.Type.Double,
                 defaultValue=0.1,
                 minValue=0,
                 maxValue=100,
@@ -81,7 +81,7 @@ class CropRowConnectorAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
             QgsProcessingParameterNumber(
                 self.VEGETATION_THRESHOLD,
                 self.tr("Vegetation threshold for a point to be considered healthy"),
-                type=QgsProcessingParameterNumber.Double,
+                type=QgsProcessingParameterNumber.Type.Double,
                 defaultValue=127,
                 minValue=0,
                 maxValue=255,
@@ -91,7 +91,7 @@ class CropRowConnectorAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
             QgsProcessingParameterNumber(
                 self.MIN_UNHEALTHY_VEGETATION_LENGTH,
                 self.tr("Minimum length for a segment to be considered unhealthy in meters"),
-                type=QgsProcessingParameterNumber.Double,
+                type=QgsProcessingParameterNumber.Type.Double,
                 defaultValue=0.1,
                 minValue=0,
                 maxValue=100,
@@ -101,7 +101,7 @@ class CropRowConnectorAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
             QgsProcessingParameterNumber(
                 self.MAX_SEGMENT_LENGTH,
                 self.tr("Maximum length of segments in meters"),
-                type=QgsProcessingParameterNumber.Double,
+                type=QgsProcessingParameterNumber.Type.Double,
                 defaultValue=5,
                 minValue=0,
             )

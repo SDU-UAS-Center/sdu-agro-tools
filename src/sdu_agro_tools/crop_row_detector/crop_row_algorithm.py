@@ -74,7 +74,7 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
             QgsProcessingParameterNumber(
                 self.THRESHOLD,
                 self.tr("Threshold to apply to distance orthomosaic"),
-                type=QgsProcessingParameterNumber.Double,
+                type=QgsProcessingParameterNumber.Type.Double,
                 defaultValue=30,
                 minValue=0,
                 maxValue=255,
@@ -84,7 +84,7 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
             QgsProcessingParameterNumber(
                 self.VEG_THRESHOLD,
                 self.tr("Threshold to apply to crop row point vegetation"),
-                type=QgsProcessingParameterNumber.Double,
+                type=QgsProcessingParameterNumber.Type.Double,
                 defaultValue=30,
                 minValue=0,
                 maxValue=255,
@@ -94,7 +94,7 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
             QgsProcessingParameterNumber(
                 self.TILE_WIDTH,
                 self.tr("Tile Width"),
-                type=QgsProcessingParameterNumber.Integer,
+                type=QgsProcessingParameterNumber.Type.Integer,
                 defaultValue=512,
                 minValue=64,
             )
@@ -103,7 +103,7 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
             QgsProcessingParameterNumber(
                 self.TILE_HEIGHT,
                 self.tr("Tile Height"),
-                type=QgsProcessingParameterNumber.Integer,
+                type=QgsProcessingParameterNumber.Type.Integer,
                 defaultValue=512,
                 minValue=64,
             )
@@ -112,7 +112,7 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
             QgsProcessingParameterNumber(
                 self.TILE_OVERLAP,
                 self.tr("Tile Overlap as a percentage"),
-                type=QgsProcessingParameterNumber.Integer,
+                type=QgsProcessingParameterNumber.Type.Integer,
                 defaultValue=0,
                 minValue=0,
                 maxValue=50,
@@ -122,7 +122,7 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
             QgsProcessingParameterNumber(
                 self.CROP_ROW_DISTANCE,
                 self.tr("Initial gauss of distance between crop rows in cm"),
-                type=QgsProcessingParameterNumber.Double,
+                type=QgsProcessingParameterNumber.Type.Double,
                 defaultValue=25,
                 minValue=1,
             )
@@ -131,7 +131,7 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
             QgsProcessingParameterNumber(
                 self.MIN_ANGLE,
                 self.tr("Min angle of crop row direction"),
-                type=QgsProcessingParameterNumber.Integer,
+                type=QgsProcessingParameterNumber.Type.Integer,
                 defaultValue=0,
                 minValue=0,
                 maxValue=180,
@@ -141,7 +141,7 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
             QgsProcessingParameterNumber(
                 self.MAX_ANGLE,
                 self.tr("Max angle of crop row direction"),
-                type=QgsProcessingParameterNumber.Integer,
+                type=QgsProcessingParameterNumber.Type.Integer,
                 defaultValue=180,
                 minValue=0,
                 maxValue=180,
@@ -151,7 +151,7 @@ class CropRowAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
             QgsProcessingParameterNumber(
                 self.ANGLE_RESOLUTION,
                 self.tr("Number of subdivision of each degree"),
-                type=QgsProcessingParameterNumber.Integer,
+                type=QgsProcessingParameterNumber.Type.Integer,
                 defaultValue=8,
                 minValue=1,
                 maxValue=32,
