@@ -15,7 +15,7 @@ dependencies = [
     "numpy",
     "rasterio",
     "pandas",
-    "crop-row-connector>=1.2.0",
+    "crop-row-connector>=1.2.1",
     "opencv-python < 5.0.0",
 ]
 

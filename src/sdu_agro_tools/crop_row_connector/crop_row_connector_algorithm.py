@@ -168,7 +168,7 @@ class CropRowConnectorAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
         grid = ccr.create_tile_grid(row_information, tiles)
         if feedback.isCanceled():
             return {}
-        ccr.connect_rows_in_tiles(grid, tiles)
+        ccr.connect_rows_in_tiles(grid, tiles, tqdm_disable=True)
         if feedback.isCanceled():
             return {}
         ccr.ccrc.sort_connected_crop_rows()

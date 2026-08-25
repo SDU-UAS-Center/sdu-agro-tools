@@ -1,5 +1,5 @@
 CDC>=1.1.4
-crop-row-connector>=1.2.0
+crop-row-connector>=1.2.1
 crop-row-detector>=0.3.0
 rasterio
 pandas
