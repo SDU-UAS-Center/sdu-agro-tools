@@ -166,16 +166,28 @@ class CropRowConnectorAlgorithm(QgsProcessingAlgorithm):  # type: ignore[misc]
         row_information = rows.to_numpy(dtype=np.float64)
         tiles = ccr.separate_row_information_to_tile(row_information)
         grid = ccr.create_tile_grid(row_information, tiles)
+        if feedback.isCanceled():
+            return {}
         ccr.connect_rows_in_tiles(grid, tiles)
+        if feedback.isCanceled():
+            return {}
         ccr.ccrc.sort_connected_crop_rows()
+        if feedback.isCanceled():
+            return {}
         ccr.ccrc.check_dublicates()
+        if feedback.isCanceled():
+            return {}
         point_features = self.input_points.getFeatures()
         points = pd.DataFrame([point_f.attributeMap() for point_f in point_features])
         DF_vegetation_rows = points[["tile", "row", "x", "y", "vegetation"]]
         DF_crop_rows_new = ccr.merge_all_points_in_all_crop_rows_remove(
             ccr.ccrc.connected_crop_rows, DF_vegetation_rows, row_information, tiles
         )
+        if feedback.isCanceled():
+            return {}
         segments = ccr.separate_healthy_and_unhealthy_vegetation_segments(DF_crop_rows_new)
+        if feedback.isCanceled():
+            return {}
         crs = self.input_rows.sourceCrs().toWkt()
         healthy_layer, unhealthy_layer = self.create_vector_layers(segments, crs)
 
