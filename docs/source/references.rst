@@ -9,3 +9,4 @@ Here is a reference to the different tools, where more information on options an
 
     explanations/cdc-ref
     explanations/crop-row-detector-ref
+    explanations/crop-row-connector-ref

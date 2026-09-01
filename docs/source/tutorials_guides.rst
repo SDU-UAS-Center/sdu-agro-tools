@@ -10,3 +10,4 @@ Here is a list of tutorials and guides on how to use SDU Agro tools different to
     tutorials/cdc-dataset
     tutorials/cdc
     tutorials/crop-row-detector
+    tutorials/crop-row-connector
