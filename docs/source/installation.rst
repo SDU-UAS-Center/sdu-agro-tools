@@ -5,6 +5,25 @@ Installation
 
 Below is alternative ways to install the latest release or from source code.
 
+.. note::
+
+    On some systems (Ubuntu 24, flatpak and maybe more) the automatic installation of dependencies may fail by installing python packages not needed as the system python packages are to be used. QPIP will install numpy and scipy no matter what options are selected in QPIP. If this is the case it solution is to delete the installed packages manually. This can be done by opening the dependencies folder in QGIS:
+
+    ``Plugins ► QPIP ► Show library folder in explorer``
+
+    Find the following folders and delete them:
+
+    * numpy
+    * numpy.libs
+    * nmumpy-2.5.2.dist-info
+    * scipy
+    * scipy.libs
+    * scipy-1.18.1.dist-info
+
+    nmumpy-2.5.2.dist-info and scipy-1.18.1.dist-info might have a different number depending on the installed version.
+
+    Now close and open QGIS again and the plugin should work.
+
 Install from ZIP
 ----------------
 
