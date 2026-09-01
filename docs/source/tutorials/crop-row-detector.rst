@@ -7,9 +7,9 @@ If *SDU Agro Tools* is not already installed, see :doc:`../installation`.
 
 We will processed an orthomosaic of a grass field to find the individual crop rows and detect gaps in the rows. At the end of this tutorial, you may expect your results to look like this:
 
-.. figure:: ../_static/example_grass/result.png
+.. figure:: ../_static/tutorial/crop-row-detector/result.png
 
-The example dataset can be downloaded from Zenodo on this link: https://zenodo.org/record/8254412.
+The example dataset can be downloaded from Zenodo on this link: https://zenodo.org/TODO.
 
 Save the dataset in a easy to reach location. The dataset contains the following files:
 
@@ -17,12 +17,14 @@ Save the dataset in a easy to reach location. The dataset contains the following
 * a crop of the orthomosaic ``crop_from_orthomosaic.tif``.
 * an annotated copy of the cropped orthomosaic ``crop_from_orthomosaic_annotated.tif``.
 
+TODO update file names.
+
 Get Color Distance
 ------------------
 
-First we need to calculate the color distance, which can be done by following this CDC (Color Distance Calculator) guide: :doc:`./cdc.rst`.
+First we need to calculate the color distance, which can be done by following this CDC (Color Distance Calculator) guide: :doc:`./cdc`.
 
-In this guide we will assume the output of CDC is open i QGIS as a temporary layer with the name ``color_distance``.
+In this guide we will assume the output of CDC is open i QGIS as a temporary layer with the name ``CDC Output``.
 
 Determine Threshold
 -------------------
@@ -58,6 +60,12 @@ By comparing this to the original orthomosaic we can see that most of the crops 
 Run Crop Row Detector
 ---------------------
 
-In this tutorial we will select ``Save output crop points`` and leave it as is to save as a temporary file. This will add a layer in QGIS with the detected crop points. Select a place to save the detected crop information. This saves all crop rows and points as csv files. All other parameters we will leave as default.
+.. figure:: ../_static/tutorial/crop-row-detector/dialog.png
+
+As the input we select the **CDC Output** and set the threshold to 30. The crop settings we leave as is since we want all crop angles and the crop distance between rows is 25cm. Tile processing settings we will keep the default.
+
+In the output we will skip drawing the rows on an orthomosaic. If desired :guilabel:`Output crop points` and :guilabel:`Output crop rows` can be set to files or leaved as default temporary layers in memory.
 
 Clicking ``OK`` will run crop row detector. This will take some time but a progress bar will appear.
+
+When done two new vector layers are added to QGIS. One with the crop rows and one with crop points in the crop rows.
