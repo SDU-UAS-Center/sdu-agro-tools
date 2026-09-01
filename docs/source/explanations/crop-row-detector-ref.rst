@@ -3,17 +3,16 @@ Crop Row Detector Reference
 
 This is a reference manual for Crop Row Detector, where all parameters and options are explained in more details.
 
+
+.. figure:: ../_static/tutorial/crop-row-detector/dialog.png
+
 Input and Thresholds
 --------------------
 
 Crop Row Detector needs one input, which is a gray scale raster layer where the crops have values closes to zero.
 Such gray scale raster can be obtained from running CDC, see :doc:`cdc-ref`.
 
-Optionally the original orthomosaic can be supplied under ``Input Orthomosaic`` if one wants to save a raster layer with crop rows draw on.
-
 In ``Threshold to apply to Color Distance Image`` a threshold value need to be supplied which will convert the input gray scale into black and white in order to segment the crops from the background.
-
-In ``Threshold to apply to crop row vegetation`` a threshold value can be supplied which is applied to the amount of vegetation "around" a crop point for it to be considered crop or a gap in the crop row. This is only applied to the output ``Save output crop points`` and all crop point regardless of vegetation value is saved in ``Save crop information``. See :ref:`crd-output for more information on the different output formats.
 
 Crop Settings
 -------------
@@ -23,7 +22,7 @@ Crop Settings
 
 If the direction of the crop rows is know and uniform across the entire orthomosaic, limiting the crop row angle can help speed up the crop row detecting. This can also be use full if only crop rows of a certain direction is desired but the orthomosaic contain multiple directions.
 
-By setting `M̀in Angle of Crop Rows`` and ``Max Angle of Crop Rows`` one can limit crop row to be within these degrees. The degrees are measured as on a compass with 0:raw-html:`&deg; being North, 90:raw-html:`&deg; being East, 180:raw-html:`&deg; being South and 270:raw-html:`&deg; being West. Since a crop row pointing east is also pointing west only degrees between 0:raw-html:`&deg; and 180:raw-html:`&deg; is used.
+By setting `M̀in Angle of Crop Rows`` and ``Max Angle of Crop Rows`` one can limit crop row to be within these degrees. The degrees are measured as on a compass with 0 :raw-html:`&deg;` being North, 90 :raw-html:`&deg;` being East, 180 :raw-html:`&deg;` being South and 270 :raw-html:`&deg;` being West. Since a crop row pointing east is also pointing west only degrees between 0 :raw-html:`&deg;` and 180 :raw-html:`&deg;` is used.
 
 In ``ANgular division`` the number that each degree is split into can be supplied. A higher number will be a better resolution for crop row angle but at the cost of computation time and resources.
 
@@ -38,7 +37,7 @@ For in-depth information on multithreaded execution, refer to the :ref:`notes-co
 
 You can configure the **tile size** to control how the raster is split.
 
-.. _cdc-tile-size:
+If running QGIS on Windows the option to run tiles as **processing pools** is disabled as it is not compatible with Windows.
 
 Tile Dimensions
 ~~~~~~~~~~~~~~~
@@ -61,18 +60,6 @@ Each tile is processed with it own crop row direction so decreasing the tile siz
 Output
 ------
 
-The main output is saved as csv files and a location in which to save the files can be chosen with :guilabel:`Save Crop information`. The output consist of the following files:
+The main output is two QGIS vector layers, one with all the crop rows and one with points representing all the crops in the rows. As default these layers are saved as temporary files in memory and are discarded when QGIS is closed unless saved.
 
-* points_in_rows.csv
-* points_in_rows_wkt.csv
-* row_information.csv
-* row_information_global.csv
-* row_information_global_wkt.csv
-
-describe content for csv files.
-
-Optionally the orthomosaic with crop rows draw on can be saved with :guilabel:`Save output orthomosaic`. Default saves it as a temporary file open in QGIS that is discarded when QGIS is closed.
-
-Optionally crop points can be saved with :guilabel:`Save output crop points` which default saves a temporary QGIS vector layer which is discarded when QGIS is closed.
-
-Optionally crop rows can be saved with :guilabel:`Save output crop rows` which default saves a temporary QGIS vector layer which is discarded when QGIS is closed.
+Optionally an orthomosaic with crop rows draw on can be saved with :guilabel:`Save output orthomosaic`. Default saves it as a temporary file open in QGIS that is discarded when QGIS is closed. If this option is chosen an input orthomosaic to draw on can be supplied with :guilabel:`Orthomosaic to draw crop rows on`. In :guilabel:`Threshold to apply to crop row vegetation` a value can be given on which crop points in the rows with less vegetation will be drawn with a different color. If the output seems wrong the option to draw tile boundary on the orthomosaic can be toggled to improve debugging.
